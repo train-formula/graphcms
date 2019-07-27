@@ -1,0 +1,19 @@
+type Query {
+    health: String
+}
+
+type Mutation {
+    health: String
+}
+
+type PageInfo {
+    startCursor: ID!
+    endCursor: ID!
+    hasNextPage: Boolean!
+}
+
+type Unit {
+    id: ID!
+    unit: String
+    indicatesTime: Boolean
+}

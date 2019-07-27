@@ -1,0 +1,20 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema:
+- "schema/**/*.graphql"
+exec:
+  filename: generated/generated.go
+  package: generated
+model:
+  filename: generated/models.go
+  package: generated
+resolver:
+  filename: resolver.go
+  type: Resolver
+autobind:
+  - github.com/train-formula/graphcms/models
+  - github.com/train-formula/graphcms/models/workout
+  - github.com/train-formula/graphcms/models/trainer

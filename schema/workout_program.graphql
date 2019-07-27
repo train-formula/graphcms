@@ -1,0 +1,17 @@
+
+
+enum WorkoutProgramType {
+    RELATIVE
+    STATIC
+}
+
+# An program that a client would subscribe to
+# Describes how workouts are distributed
+type WorkoutProgram {
+
+    id: ID!
+    trainerAccount: ID!
+
+    # Connections
+    workouts(first: Int, after: ID!): WorkoutConnection!
+}

@@ -1,0 +1,26 @@
+extend type Query {
+    workout(id: ID!): Workout
+}
+
+type Workout {
+    id: ID!
+    trainerAccount: ID!
+    name: String
+
+    orderNumber: Int!
+    occursOnDate: String
+
+    # Connections
+    categories(first: Int, after: ID!): WorkoutCategoryConnection!
+}
+
+type WorkoutConnection {
+    totalCount: Int!
+    edges: [WorkoutEdge!]
+    pageInfo: PageInfo!
+}
+
+type WorkoutEdge {
+    cursor: ID!
+    node: Workout!
+}

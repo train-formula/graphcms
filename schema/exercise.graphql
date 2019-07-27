@@ -1,0 +1,44 @@
+
+type Exercise {
+    id: ID!
+    trainerAccount: ID!
+    clientAccount: ID!
+
+    name: String!
+    categoryID: ID!
+
+    exerciseText: String!
+
+    hasReps: Boolean!
+    hasSets: Boolean!
+
+    repNumeral: Int
+    repText: String
+
+    repModifierNumeral: Int
+    repModifierText: String
+
+    setNumeral: Int
+    setText: String
+
+    duration: Int
+
+    # Fetchers
+    category: WorkoutCategory
+    repUnit: Unit
+    repModifierUnit: Unit
+    setUnit: Unit
+
+}
+
+
+type ExerciseConnection {
+    totalCount: Int!
+    edges: [ExerciseEdge!]
+    pageInfo: PageInfo!
+}
+
+type ExerciseEdge {
+    cursor: ID!
+    node: Exercise!
+}
