@@ -1,0 +1,2 @@
+DROP SCHEMA trainer CASCADE;
+DROP SCHEMA workout CASCADE;
