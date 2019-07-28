@@ -7,7 +7,7 @@ require (
 	github.com/agnivade/levenshtein v1.0.2 // indirect
 	github.com/go-pg/pg/v9 v9.0.0-beta.1
 	github.com/golang-migrate/migrate v3.5.4+incompatible // indirect
-	github.com/golang-migrate/migrate/v4 v4.5.0 // indirect
+	github.com/golang-migrate/migrate/v4 v4.5.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/train-formula/october v0.0.0-20190728011848-d8be2eaa2231
 	github.com/vektah/gqlparser v1.1.2

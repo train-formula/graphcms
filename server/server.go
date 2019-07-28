@@ -12,7 +12,6 @@ import (
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-
 )
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 
 	config := Config{}
 
-	configurator.MustDecodeEnv(&config, "");
+	configurator.MustDecodeEnv(&config, "")
 
 	databaseApplicationName := strings.TrimSpace(config.PGApplication)
 
@@ -32,25 +31,24 @@ func main() {
 	}
 
 	db := pg.Connect(&pg.Options{
-		Addr:fmt.Sprintf("%s:%s", config.PGHost, config.PGPort),
-		User: config.PGUsername,
-		Password: config.PGPassword,
-		Database: config.PGDatabase,
+		Addr:            fmt.Sprintf("%s:%s", config.PGHost, config.PGPort),
+		User:            config.PGUsername,
+		Password:        config.PGPassword,
+		Database:        config.PGDatabase,
 		ApplicationName: databaseApplicationName,
-		MinIdleConns: 5,
-		PoolSize: 10,
-
+		MinIdleConns:    5,
+		PoolSize:        10,
 	})
 	defer db.Close()
 
-	migrator, err := migrate.New("file://./schema/postgres", fmt.Sprintf("postgres://%s:%s@%s:%s/graphcms?sslmode=disable", config.PGUsername, config.PGPassword, config.PGHost, config.PGPort))
+	migrator, err := migrate.New("file://./schema/postgres", fmt.Sprintf("postgres://%s:%s@%s:%s/graphcms?sslmode=disable&x-migrations-table=graphcms_migrations", config.PGUsername, config.PGPassword, config.PGHost, config.PGPort))
 	if err != nil {
-		zap.L().Fatal("Migrator creation error ",zap.Error(err))
+		zap.L().Fatal("Migrator creation error ", zap.Error(err))
 	}
 
 	err = migrator.Up()
 	if err != nil && err != migrate.ErrNoChange {
-		zap.L().Fatal("Migrate error ",zap.Error(err))
+		zap.L().Fatal("Migrate error ", zap.Error(err))
 	}
 
 	ginServer := octoberServer.MustGenerateGQLGenServerServerFromEnv()
