@@ -1,7 +1,3 @@
-extend type Query {
-    workout(id: ID!): Workout
-}
-
 type Workout {
     id: ID!
     trainerAccount: ID!

@@ -18,7 +18,7 @@ CREATE TABLE "trainer"."organization" (
     "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "name" varchar(50) NOT NULL,
-    "description" TEXT NOT NULL
+    "description" TEXT NOT NULL,
     PRIMARY KEY ("id")
 );
 
@@ -52,11 +52,11 @@ CREATE TABLE "workout"."program" (
     "id" uuid NOT NULL,
     "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "trainer_organization_id" uuid NOT NULL,
+    "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
     "name" varchar(100) NOT NULL,
-    "description" TEXT not null,
-    "public" boolean default true not null,
-    "price" decimal(15,6) not null
+    "description" TEXT NOT NULL,
+    "public" boolean DEFAULT TRUE NOT NULL,
+    "price" decimal(15,6) NOT NULL,
     PRIMARY KEY ("id")
 );
 
@@ -71,15 +71,15 @@ CREATE TABLE "workout"."workout" (
     "id" uuid NOT NULL,
     "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "program_id" uuid NOT NULL,
-    "name" varchar(100) NOT NULL,
-    "description" TEXT not null,
-    "number" int not null
+    "program_id" uuid NOT NULL REFERENCES workout.program(id) DEFERRABLE INITIALLY DEFERRED,
+    "name" VARCHAR(100) NOT NULL,
+    "description" TEXT NOT NULL,
+    "number" INT NOT NULL,
     PRIMARY KEY ("id")
 );
 
 CREATE TRIGGER set_timestamp
-BEFORE UPDATE ON workout.program
+BEFORE UPDATE ON workout.workout
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
@@ -88,11 +88,11 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TABLE "workout"."category" (
     "id" uuid NOT NULL,
-    "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "trainer_organization_id" uuid NOT NULL,
-    "name" varchar(100) NOT NULL,
-    "description" TEXT not null
+    "created_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+    "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
+    "name" VARCHAR(100) NOT NULL,
+    "description" TEXT NOT NULL,
     PRIMARY KEY ("id")
 );
 
@@ -106,11 +106,11 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TABLE "workout"."workout_category" (
     "id" uuid NOT NULL,
-    "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "workout_id" uuid NOT NULL,
-    "category_id" uuid NOT NULL,
-    "order" INT DEFAULT 0 NOT NULL
+    "created_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+    "workout_id" uuid NOT NULL REFERENCES workout.workout(id) DEFERRABLE INITIALLY DEFERRED,
+    "category_id" uuid NOT NULL REFERENCES workout.category(id) DEFERRABLE INITIALLY DEFERRED,
+    "order" INT DEFAULT 0 NOT NULL,
     PRIMARY KEY ("id")
 );
 
@@ -125,7 +125,7 @@ CREATE TABLE "workout"."exercise" (
     "id" uuid NOT NULL,
     "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "trainer_organization_id" uuid NOT NULL,
+    "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
     "name" varchar(50) NOT NULL,
     "rep_numeral" int NOT NULL,
     "rep_text" varchar(50) NOT NULL,
@@ -145,20 +145,20 @@ BEFORE UPDATE ON workout.exercise
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
---- Category exercises
+--- Exercise categories
 
-CREATE TABLE "workout"."category_exercise" (
+CREATE TABLE "workout"."exercise_category" (
     "id" uuid NOT NULL,
     "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "category_id" uuid NOT NULL,
-    "exercise_id" uuid NOT NULL,
-    "order" INT DEFAULT 0 NOT NULL
+    "category_id" uuid NOT NULL REFERENCES workout.category(id) DEFERRABLE INITIALLY DEFERRED,
+    "exercise_id" uuid NOT NULL REFERENCES workout.exercise(id) DEFERRABLE INITIALLY DEFERRED,
+    "order" INT DEFAULT 0 NOT NULL,
     PRIMARY KEY ("id")
 );
 
 CREATE TRIGGER set_timestamp
-BEFORE UPDATE ON workout.category_exercise
+BEFORE UPDATE ON workout.exercise_category
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
@@ -169,11 +169,11 @@ CREATE TABLE "workout"."exercise_media" (
   id "uuid",
   "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
   "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-  "trainer_organization_id" uuid NOT NULL,
-  "exercise_id" "uuid" NOT NULL,
+  "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
+  "exercise_id" "uuid" NOT NULL REFERENCES workout.exercise(id) DEFERRABLE INITIALLY DEFERRED,
   "media_id" "uuid" NOT NULL,
   "order" int default 0 not null,
-  "type" public.media_type not null
+  "type" public.media_type not null,
   PRIMARY KEY ("id")
 );
 
@@ -188,11 +188,11 @@ CREATE TABLE "workout"."program_media" (
   id "uuid",
   "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
   "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-  "trainer_organization_id" uuid NOT NULL,
-  "program_id" "uuid" NOT NULL,
+  "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
+  "program_id" "uuid" NOT NULL REFERENCES workout.program(id) DEFERRABLE INITIALLY DEFERRED,
   "media_id" "uuid" NOT NULL,
   "order" int default 0 not null,
-  "type" public.media_type not null
+  "type" public.media_type not null,
   PRIMARY KEY ("id")
 );
 

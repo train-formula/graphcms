@@ -3,6 +3,7 @@
 package generated
 
 import (
+	"github.com/satori/go.uuid"
 	"github.com/train-formula/graphcms/models"
 	"github.com/train-formula/graphcms/models/workout"
 )
@@ -14,7 +15,7 @@ type ExerciseConnection struct {
 }
 
 type ExerciseEdge struct {
-	Cursor string            `json:"cursor"`
+	Cursor uuid.UUID         `json:"cursor"`
 	Node   *workout.Exercise `json:"node"`
 }
 
@@ -25,7 +26,7 @@ type WorkoutCategoryConnection struct {
 }
 
 type WorkoutCategoryEdge struct {
-	Cursor string                   `json:"cursor"`
+	Cursor uuid.UUID                `json:"cursor"`
 	Node   *workout.WorkoutCategory `json:"node"`
 }
 
@@ -36,6 +37,6 @@ type WorkoutConnection struct {
 }
 
 type WorkoutEdge struct {
-	Cursor string           `json:"cursor"`
+	Cursor uuid.UUID        `json:"cursor"`
 	Node   *workout.Workout `json:"node"`
 }

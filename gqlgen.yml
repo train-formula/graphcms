@@ -18,3 +18,8 @@ autobind:
   - github.com/train-formula/graphcms/models
   - github.com/train-formula/graphcms/models/workout
   - github.com/train-formula/graphcms/models/trainer
+
+models:
+  ID:
+    model:
+      - github.com/train-formula/graphcms/models.UUID

@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/go-pg/pg/v9"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/train-formula/graphcms"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/october"
 	"go.uber.org/zap"
-	"strings"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -41,7 +42,9 @@ func main() {
 	})
 	defer db.Close()
 
-	migrator, err := migrate.New("file://./schema/postgres", fmt.Sprintf("postgres://%s:%s@%s:%s/graphcms?sslmode=disable&x-migrations-table=graphcms_migrations", config.PGUsername, config.PGPassword, config.PGHost, config.PGPort))
+	migrator, err := migrate.New("file://./schema/postgres",
+		fmt.Sprintf("postgres://%s:%s@%s:%s/graphcms?sslmode=disable&x-migrations-table=graphcms_migrations",
+			config.PGUsername, config.PGPassword, config.PGHost, config.PGPort))
 	if err != nil {
 		zap.L().Fatal("Migrator creation error ", zap.Error(err))
 	}
@@ -53,7 +56,9 @@ func main() {
 
 	ginServer := octoberServer.MustGenerateGQLGenServerServerFromEnv()
 
-	ginServer.WithExecutableSchema(generated.NewExecutableSchema(generated.Config{Resolvers: &graphcms.Resolver{}}))
+	ginServer.WithExecutableSchema(generated.NewExecutableSchema(generated.Config{Resolvers: &graphcms.Resolver{
+		DB: db,
+	}}))
 
 	err = ginServer.Start()
 

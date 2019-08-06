@@ -1,9 +1,9 @@
 type Query {
-    health: String
+    health: String!
 }
 
 type Mutation {
-    health: String
+    health: String!
 }
 
 type PageInfo {
