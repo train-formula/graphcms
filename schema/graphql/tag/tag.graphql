@@ -1,0 +1,8 @@
+
+type Tag {
+    id: ID!
+
+
+    tag: String!
+    trainerOrganizationID: ID!
+}

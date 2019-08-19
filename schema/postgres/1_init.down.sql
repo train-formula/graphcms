@@ -1,3 +1,4 @@
 DROP SCHEMA trainer CASCADE;
 DROP SCHEMA workout CASCADE;
+DROP SCHEMA tag CASCADE;
 DROP TYPE public.media_type;

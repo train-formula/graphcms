@@ -1,3 +1,7 @@
+extend type Query {
+
+    workoutProgram(id: ID!): WorkoutProgram
+}
 
 
 enum WorkoutProgramType {
@@ -10,7 +14,10 @@ enum WorkoutProgramType {
 type WorkoutProgram {
 
     id: ID!
-    trainerAccount: ID!
+    trainerOrganizationID: ID!
+
+    name: String
+    description: String
 
     # Connections
     workouts(first: Int, after: ID!): WorkoutConnection!

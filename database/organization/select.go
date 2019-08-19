@@ -3,11 +3,12 @@ package organization
 import (
 	"context"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/trainer"
 )
 
+// Retrieves an individual organization by its ID
 func GetOrganization(ctx context.Context, conn database.Conn, id uuid.UUID) (trainer.Organization, error) {
 
 	var result trainer.Organization

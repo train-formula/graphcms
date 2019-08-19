@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models"
 	"github.com/train-formula/graphcms/models/trainer"

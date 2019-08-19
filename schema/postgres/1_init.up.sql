@@ -1,7 +1,9 @@
 CREATE SCHEMA trainer;
 CREATE SCHEMA workout;
+CREATE SCHEMA tag;
 
 CREATE TYPE public.media_type AS ENUM ('PHOTO','VIDEO');
+CREATE TYPE tag.taggable AS ENUM ('WORKOUT_PROGRAM');
 
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
 RETURNS TRIGGER AS $$
@@ -27,6 +29,47 @@ BEFORE UPDATE ON trainer.organization
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
+
+--- Tags
+
+CREATE TABLE "tag"."tags" (
+  "id" uuid NOT NULL,
+  "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
+  "tag" VARCHAR(100) NOT NULL,
+  "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
+  PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX tag_tags_trainer_organization_id_tag_idx ON tag.tags(trainer_organization_id uuid_ops, (lower(tag::text)) text_ops);
+
+CREATE TRIGGER set_timestamp
+BEFORE UPDATE ON tag.tags
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+
+
+--- Tags tagged
+
+CREATE TABLE "tag"."tagged" (
+  "id" uuid NOT NULL,
+  "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
+  "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
+  "tag_uuid" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
+  "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
+  "tag_on" tag.taggable NOT NULL,
+  "tagged_uuid" uuid NOT NULL,
+  PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX tagged_tag_uuid_tagged_uuid_tag_on_idx ON tag.tagged(tag_uuid uuid_ops, tagged_uuid uuid_ops, tag_on enum_ops);
+CREATE INDEX tagged_tagged_uuid_tag_on_idx ON tag.tagged(tagged_uuid uuid_ops, tag_on enum_ops);
+
+CREATE TRIGGER set_timestamp
+BEFORE UPDATE ON tag.tagged
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
 
 --- Exercise Unit
 
@@ -64,6 +107,8 @@ CREATE TRIGGER set_timestamp
 BEFORE UPDATE ON workout.program
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE INDEX "program_trainer_organization_id_idx" ON "workout"."program"("trainer_organization_id");
 
 --- Workout
 

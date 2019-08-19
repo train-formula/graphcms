@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/99designs/gqlgen/graphql"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 )
 
 func MarshalUUID(u uuid.UUID) graphql.Marshaler {

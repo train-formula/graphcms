@@ -17,3 +17,5 @@ type Unit {
     unit: String
     indicatesTime: Boolean
 }
+
+scalar Time
