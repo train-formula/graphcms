@@ -7,6 +7,7 @@ import (
 	uuid "github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models"
+	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/trainer"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/resolver/query"
@@ -22,9 +23,6 @@ func (r *Resolver) Exercise() generated.ExerciseResolver {
 func (r *Resolver) Mutation() generated.MutationResolver {
 	return &mutationResolver{r}
 }
-func (r *Resolver) PageInfo() generated.PageInfoResolver {
-	return &pageInfoResolver{r}
-}
 func (r *Resolver) Query() generated.QueryResolver {
 	return query.NewQueryResolver(r.DB)
 }
@@ -39,6 +37,10 @@ func (r *Resolver) WorkoutCategory() generated.WorkoutCategoryResolver {
 }
 func (r *Resolver) WorkoutProgram() generated.WorkoutProgramResolver {
 	return &workoutProgramResolver{r}
+}
+
+func (r *Resolver) WorkoutProgramConnection() generated.WorkoutProgramConnectionResolver {
+	return &connections.WorkoutProgramConnection{}
 }
 
 type exerciseResolver struct{ *Resolver }
@@ -59,15 +61,6 @@ func (r *exerciseResolver) CategoryID(ctx context.Context, obj *workout.Exercise
 type mutationResolver struct{ *Resolver }
 
 func (r *mutationResolver) Health(ctx context.Context) (string, error) {
-	panic("not implemented")
-}
-
-type pageInfoResolver struct{ *Resolver }
-
-func (r *pageInfoResolver) StartCursor(ctx context.Context, obj *models.PageInfo) (uuid.UUID, error) {
-	panic("not implemented")
-}
-func (r *pageInfoResolver) EndCursor(ctx context.Context, obj *models.PageInfo) (uuid.UUID, error) {
 	panic("not implemented")
 }
 

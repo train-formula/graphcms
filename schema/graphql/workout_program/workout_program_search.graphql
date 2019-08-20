@@ -14,5 +14,5 @@ type WorkoutProgramSearchResults {
 
     tag_facet: TagFacet
 
-    results: [WorkoutProgram!]
+    results: WorkoutProgramConnection!
 }

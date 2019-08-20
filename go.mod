@@ -9,6 +9,8 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang-migrate/migrate/v4 v4.5.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/onsi/gomega v1.5.0
+	github.com/satori/go.uuid v1.2.0
 	github.com/train-formula/october v0.0.0-20190728011848-d8be2eaa2231
 	github.com/vektah/gqlparser v1.1.2
 	go.uber.org/zap v1.10.0

@@ -5,6 +5,7 @@ package generated
 import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/models"
+	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/workout"
 )
 
@@ -57,6 +58,6 @@ type WorkoutProgramSearchRequest struct {
 }
 
 type WorkoutProgramSearchResults struct {
-	TagFacet *TagFacet                 `json:"tag_facet"`
-	Results  []*workout.WorkoutProgram `json:"results"`
+	TagFacet *TagFacet                             `json:"tag_facet"`
+	Results  *connections.WorkoutProgramConnection `json:"results"`
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/models"
+	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/trainer"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/vektah/gqlparser"
@@ -40,12 +41,12 @@ type Config struct {
 type ResolverRoot interface {
 	Exercise() ExerciseResolver
 	Mutation() MutationResolver
-	PageInfo() PageInfoResolver
 	Query() QueryResolver
 	Unit() UnitResolver
 	Workout() WorkoutResolver
 	WorkoutCategory() WorkoutCategoryResolver
 	WorkoutProgram() WorkoutProgramResolver
+	WorkoutProgramConnection() WorkoutProgramConnectionResolver
 }
 
 type DirectiveRoot struct {
@@ -173,6 +174,17 @@ type ComplexityRoot struct {
 		Workouts              func(childComplexity int, first *int, after uuid.UUID) int
 	}
 
+	WorkoutProgramConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	WorkoutProgramEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
 	WorkoutProgramSearchResults struct {
 		Results  func(childComplexity int) int
 		TagFacet func(childComplexity int) int
@@ -188,10 +200,6 @@ type ExerciseResolver interface {
 }
 type MutationResolver interface {
 	Health(ctx context.Context) (string, error)
-}
-type PageInfoResolver interface {
-	StartCursor(ctx context.Context, obj *models.PageInfo) (uuid.UUID, error)
-	EndCursor(ctx context.Context, obj *models.PageInfo) (uuid.UUID, error)
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (string, error)
@@ -220,6 +228,11 @@ type WorkoutCategoryResolver interface {
 }
 type WorkoutProgramResolver interface {
 	Workouts(ctx context.Context, obj *workout.WorkoutProgram, first *int, after uuid.UUID) (*WorkoutConnection, error)
+}
+type WorkoutProgramConnectionResolver interface {
+	TotalCount(ctx context.Context, obj *connections.WorkoutProgramConnection) (int, error)
+
+	PageInfo(ctx context.Context, obj *connections.WorkoutProgramConnection) (*models.PageInfo, error)
 }
 
 type executableSchema struct {
@@ -757,6 +770,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WorkoutProgram.Workouts(childComplexity, args["first"].(*int), args["after"].(uuid.UUID)), true
 
+	case "WorkoutProgramConnection.edges":
+		if e.complexity.WorkoutProgramConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.WorkoutProgramConnection.Edges(childComplexity), true
+
+	case "WorkoutProgramConnection.pageInfo":
+		if e.complexity.WorkoutProgramConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.WorkoutProgramConnection.PageInfo(childComplexity), true
+
+	case "WorkoutProgramConnection.totalCount":
+		if e.complexity.WorkoutProgramConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.WorkoutProgramConnection.TotalCount(childComplexity), true
+
+	case "WorkoutProgramEdge.cursor":
+		if e.complexity.WorkoutProgramEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.WorkoutProgramEdge.Cursor(childComplexity), true
+
+	case "WorkoutProgramEdge.node":
+		if e.complexity.WorkoutProgramEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.WorkoutProgramEdge.Node(childComplexity), true
+
 	case "WorkoutProgramSearchResults.results":
 		if e.complexity.WorkoutProgramSearchResults.Results == nil {
 			break
@@ -886,8 +934,8 @@ type Mutation {
 }
 
 type PageInfo {
-    startCursor: ID!
-    endCursor: ID!
+    startCursor: String!
+    endCursor: String!
     hasNextPage: Boolean!
 }
 
@@ -1004,7 +1052,18 @@ type WorkoutProgram {
     # Connections
     workouts(first: Int, after: ID!): WorkoutConnection!
 }
-`},
+
+
+type WorkoutProgramConnection {
+    totalCount: Int!
+    edges: [WorkoutProgramEdge!]
+    pageInfo: PageInfo!
+}
+
+type WorkoutProgramEdge {
+    cursor: String!
+    node: WorkoutProgram!
+}`},
 	&ast.Source{Name: "schema/graphql/workout_program/workout_program_search.graphql", Input: `extend type Query {
 
     workoutProgramSearch(request: WorkoutProgramSearchRequest!, first: Int!, after: String): WorkoutProgramSearchResults
@@ -1021,7 +1080,7 @@ type WorkoutProgramSearchResults {
 
     tag_facet: TagFacet
 
-    results: [WorkoutProgram!]
+    results: WorkoutProgramConnection!
 }`},
 )
 
@@ -2213,13 +2272,13 @@ func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field gra
 		Object:   "PageInfo",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.PageInfo().StartCursor(rctx, obj)
+		return obj.StartCursor, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2231,10 +2290,10 @@ func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *models.PageInfo) (ret graphql.Marshaler) {
@@ -2250,13 +2309,13 @@ func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graph
 		Object:   "PageInfo",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.PageInfo().EndCursor(rctx, obj)
+		return obj.EndCursor, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2268,10 +2327,10 @@ func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *models.PageInfo) (ret graphql.Marshaler) {
@@ -3832,6 +3891,188 @@ func (ec *executionContext) _WorkoutProgram_workouts(ctx context.Context, field 
 	return ec.marshalNWorkoutConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutConnection(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _WorkoutProgramConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *connections.WorkoutProgramConnection) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutProgramConnection",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.WorkoutProgramConnection().TotalCount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkoutProgramConnection_edges(ctx context.Context, field graphql.CollectedField, obj *connections.WorkoutProgramConnection) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutProgramConnection",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*workout.WorkoutProgram)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkoutProgramConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.WorkoutProgramConnection) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutProgramConnection",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.WorkoutProgramConnection().PageInfo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.PageInfo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkoutProgramEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutProgram) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutProgramEdge",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkoutProgramEdge_node(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutProgram) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutProgramEdge",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*workout.WorkoutProgram)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNWorkoutProgram2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _WorkoutProgramSearchResults_tag_facet(ctx context.Context, field graphql.CollectedField, obj *WorkoutProgramSearchResults) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -3892,12 +4133,15 @@ func (ec *executionContext) _WorkoutProgramSearchResults_results(ctx context.Con
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*workout.WorkoutProgram)
+	res := resTmp.(*connections.WorkoutProgramConnection)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOWorkoutProgram2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx, field.Selections, res)
+	return ec.marshalNWorkoutProgramConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐWorkoutProgramConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -5346,37 +5590,19 @@ func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet,
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PageInfo")
 		case "startCursor":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._PageInfo_startCursor(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._PageInfo_startCursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "endCursor":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._PageInfo_endCursor(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._PageInfo_endCursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "hasNextPage":
 			out.Values[i] = ec._PageInfo_hasNextPage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -5939,6 +6165,90 @@ func (ec *executionContext) _WorkoutProgram(ctx context.Context, sel ast.Selecti
 	return out
 }
 
+var workoutProgramConnectionImplementors = []string{"WorkoutProgramConnection"}
+
+func (ec *executionContext) _WorkoutProgramConnection(ctx context.Context, sel ast.SelectionSet, obj *connections.WorkoutProgramConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, workoutProgramConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WorkoutProgramConnection")
+		case "totalCount":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._WorkoutProgramConnection_totalCount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "edges":
+			out.Values[i] = ec._WorkoutProgramConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._WorkoutProgramConnection_pageInfo(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var workoutProgramEdgeImplementors = []string{"WorkoutProgramEdge"}
+
+func (ec *executionContext) _WorkoutProgramEdge(ctx context.Context, sel ast.SelectionSet, obj *workout.WorkoutProgram) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, workoutProgramEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WorkoutProgramEdge")
+		case "cursor":
+			out.Values[i] = ec._WorkoutProgramEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node":
+			out.Values[i] = ec._WorkoutProgramEdge_node(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var workoutProgramSearchResultsImplementors = []string{"WorkoutProgramSearchResults"}
 
 func (ec *executionContext) _WorkoutProgramSearchResults(ctx context.Context, sel ast.SelectionSet, obj *WorkoutProgramSearchResults) graphql.Marshaler {
@@ -5954,6 +6264,9 @@ func (ec *executionContext) _WorkoutProgramSearchResults(ctx context.Context, se
 			out.Values[i] = ec._WorkoutProgramSearchResults_tag_facet(ctx, field, obj)
 		case "results":
 			out.Values[i] = ec._WorkoutProgramSearchResults_results(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6441,6 +6754,34 @@ func (ec *executionContext) marshalNWorkoutProgram2ᚖgithubᚗcomᚋtrainᚑfor
 		return graphql.Null
 	}
 	return ec._WorkoutProgram(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNWorkoutProgramConnection2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐWorkoutProgramConnection(ctx context.Context, sel ast.SelectionSet, v connections.WorkoutProgramConnection) graphql.Marshaler {
+	return ec._WorkoutProgramConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWorkoutProgramConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐWorkoutProgramConnection(ctx context.Context, sel ast.SelectionSet, v *connections.WorkoutProgramConnection) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._WorkoutProgramConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNWorkoutProgramEdge2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v workout.WorkoutProgram) graphql.Marshaler {
+	return ec._WorkoutProgramEdge(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWorkoutProgramEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v *workout.WorkoutProgram) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._WorkoutProgramEdge(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNWorkoutProgramSearchRequest2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutProgramSearchRequest(ctx context.Context, v interface{}) (WorkoutProgramSearchRequest, error) {
@@ -6993,7 +7334,14 @@ func (ec *executionContext) marshalOWorkoutProgram2githubᚗcomᚋtrainᚑformul
 	return ec._WorkoutProgram(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOWorkoutProgram2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutProgram) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkoutProgram2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v *workout.WorkoutProgram) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._WorkoutProgram(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutProgram) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -7020,7 +7368,7 @@ func (ec *executionContext) marshalOWorkoutProgram2ᚕᚖgithubᚗcomᚋtrainᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNWorkoutProgram2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx, sel, v[i])
+			ret[i] = ec.marshalNWorkoutProgramEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -7031,13 +7379,6 @@ func (ec *executionContext) marshalOWorkoutProgram2ᚕᚖgithubᚗcomᚋtrainᚑ
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalOWorkoutProgram2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v *workout.WorkoutProgram) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._WorkoutProgram(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOWorkoutProgramSearchResults2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutProgramSearchResults(ctx context.Context, sel ast.SelectionSet, v WorkoutProgramSearchResults) graphql.Marshaler {

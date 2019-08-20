@@ -2,34 +2,62 @@ package workoutprogram
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/onsi/gomega/format"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
+	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"go.uber.org/zap"
 )
 
 type Search struct {
-	DB *pg.DB
+	Request generated.WorkoutProgramSearchRequest
+	First   int
+	After   cursor.Cursor
+	DB      *pg.DB
 }
 
-func (s Search) Validate(ctx context.Context, request generated.WorkoutProgramSearchRequest, first int, after *cursor.TimeUUIDCursor) bool {
+func (s Search) genQuery(count bool) (string, []interface{}) {
+
+	var query string
+
+	if count {
+		query += "SELECT COUNT(1)"
+	} else {
+		query += "SELECT *"
+	}
+
+	query += ` FROM ` + database.TableName(workout.WorkoutProgram{}) + `
+							WHERE trainer_organization_id = ?`
+
+	return query, []interface{}{s.Request.TrainerOrganizationID}
+}
+
+func (s Search) Validate(ctx context.Context) bool {
 
 	return validation.ValidationChain(ctx,
-		validation.CheckPageSize(first, 1, 50),
+		validation.CheckPageSize(s.First, 1, 50),
 	)
 }
 
-func (s Search) Call(ctx context.Context, request generated.WorkoutProgramSearchRequest, first int, after *cursor.TimeUUIDCursor) (*generated.WorkoutProgramSearchResults, error) {
+func (s Search) Call(ctx context.Context) (*generated.WorkoutProgramSearchResults, error) {
 
 	var programs []*workout.WorkoutProgram
 
-	_, err := s.DB.QueryContext(ctx, &programs, `SELECT * FROM `+database.TableName(workout.WorkoutProgram{})+`
-							WHERE trainer_organization_id = ? LIMIT ?`, request.TrainerOrganizationID, first)
+	query, params := s.genQuery(false)
+
+	query, params, err := database.BasicCursorfyQuery(query, "", s.After, workout.WorkoutProgram{}, s.First, params...)
+	if err != nil {
+		zap.L().Error("Failed to cursorfy", zap.Error(err))
+
+		return nil, err
+	}
+
+	_, err = s.DB.QueryContext(ctx, &programs, query, params...)
 
 	if err != nil {
 		zap.L().Error("Failed to search", zap.Error(err))
@@ -37,10 +65,24 @@ func (s Search) Call(ctx context.Context, request generated.WorkoutProgramSearch
 		return nil, err
 	}
 
-	fmt.Println(cursor.NewTimeUUIDCursor(programs[0].CreatedAt, programs[0].ID).Serialize())
-
 	return &generated.WorkoutProgramSearchResults{
 		TagFacet: nil,
-		Results:  programs,
+		Results: &connections.WorkoutProgramConnection{
+			ResolveTotalCount: func(ctx format.Ctx) (int, error) {
+				query, params := s.genQuery(true)
+
+				var count int
+
+				_, err := s.DB.QueryContext(ctx, pg.Scan(&count), query, params...)
+				if err != nil {
+					zap.L().Error("Failed to count", zap.Error(err))
+
+					return -1, err
+				}
+
+				return count, nil
+			},
+			Edges: programs,
+		},
 	}, nil
 }

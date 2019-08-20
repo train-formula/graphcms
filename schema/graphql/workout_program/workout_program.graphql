@@ -22,3 +22,15 @@ type WorkoutProgram {
     # Connections
     workouts(first: Int, after: ID!): WorkoutConnection!
 }
+
+
+type WorkoutProgramConnection {
+    totalCount: Int!
+    edges: [WorkoutProgramEdge!]
+    pageInfo: PageInfo!
+}
+
+type WorkoutProgramEdge {
+    cursor: String!
+    node: WorkoutProgram!
+}

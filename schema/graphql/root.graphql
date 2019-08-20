@@ -7,8 +7,8 @@ type Mutation {
 }
 
 type PageInfo {
-    startCursor: ID!
-    endCursor: ID!
+    startCursor: String!
+    endCursor: String!
     hasNextPage: Boolean!
 }
 
