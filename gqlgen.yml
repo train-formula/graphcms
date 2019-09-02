@@ -19,6 +19,7 @@ autobind:
   - github.com/train-formula/graphcms/models/connections
   - github.com/train-formula/graphcms/models/workout
   - github.com/train-formula/graphcms/models/trainer
+  - github.com/train-formula/graphcms/models/tag
 
 models:
   ID:

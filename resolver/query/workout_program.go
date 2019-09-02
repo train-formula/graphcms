@@ -4,20 +4,22 @@ import (
 	"context"
 
 	uuid "github.com/gofrs/uuid"
-	"github.com/train-formula/graphcms/calls/workoutprogram"
+	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/train-formula/graphcms/validation"
 )
 
 func (r *QueryResolver) WorkoutProgram(ctx context.Context, id uuid.UUID) (*workout.WorkoutProgram, error) {
 
-	g := workoutprogram.Get{
+	g := workoutcall.GetWorkoutProgram{
+		ID: id,
 		DB: r.db,
 	}
 
-	if g.Validate(ctx, id) {
-		return g.Call(ctx, id)
+	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
+		return g.Call(ctx)
 	}
 
 	return nil, nil
@@ -30,14 +32,14 @@ func (r *QueryResolver) WorkoutProgramSearch(ctx context.Context, request genera
 		return nil, err
 	}
 
-	s := workoutprogram.Search{
+	s := workoutcall.SearchWorkoutProgram{
 		DB:      r.db,
 		First:   first,
 		After:   curse,
 		Request: request,
 	}
 
-	if s.Validate(ctx) {
+	if validation.ValidationChain(ctx, s.Validate(ctx)...) {
 
 		return s.Call(ctx)
 	}

@@ -6,8 +6,15 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/models"
 	"github.com/train-formula/graphcms/models/connections"
+	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 )
+
+type CreateWorkoutProgram struct {
+	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
+	Name                  string    `json:"name"`
+	Description           *string   `json:"description"`
+}
 
 type ExerciseConnection struct {
 	TotalCount int              `json:"totalCount"`
@@ -20,14 +27,8 @@ type ExerciseEdge struct {
 	Node   *workout.Exercise `json:"node"`
 }
 
-type Tag struct {
-	ID                    uuid.UUID `json:"id"`
-	Tag                   string    `json:"tag"`
-	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
-}
-
 type TagFacet struct {
-	Tags []*Tag `json:"tags"`
+	Tags []*tag.Tag `json:"tags"`
 }
 
 type WorkoutCategoryConnection struct {

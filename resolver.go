@@ -10,7 +10,9 @@ import (
 	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/trainer"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/train-formula/graphcms/resolver/mutation"
 	"github.com/train-formula/graphcms/resolver/query"
+	"github.com/train-formula/graphcms/resolver/workoutprogram"
 )
 
 // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
@@ -21,7 +23,7 @@ func (r *Resolver) Exercise() generated.ExerciseResolver {
 	return &exerciseResolver{r}
 }
 func (r *Resolver) Mutation() generated.MutationResolver {
-	return &mutationResolver{r}
+	return mutation.NewMutationResolver(r.DB)
 }
 func (r *Resolver) Query() generated.QueryResolver {
 	return query.NewQueryResolver(r.DB)
@@ -36,7 +38,7 @@ func (r *Resolver) WorkoutCategory() generated.WorkoutCategoryResolver {
 	return &workoutCategoryResolver{r}
 }
 func (r *Resolver) WorkoutProgram() generated.WorkoutProgramResolver {
-	return &workoutProgramResolver{r}
+	return workoutprogram.NewResolver(r.DB)
 }
 
 func (r *Resolver) WorkoutProgramConnection() generated.WorkoutProgramConnectionResolver {

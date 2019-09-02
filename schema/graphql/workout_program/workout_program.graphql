@@ -4,6 +4,10 @@ extend type Query {
 }
 
 
+extend type Mutation {
+    createWorkoutProgram(request: CreateWorkoutProgram!): WorkoutProgram
+}
+
 enum WorkoutProgramType {
     RELATIVE
     STATIC
@@ -14,23 +18,40 @@ enum WorkoutProgramType {
 type WorkoutProgram {
 
     id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
     trainerOrganizationID: ID!
 
-    name: String
+    name: String!
     description: String
+
+    # Fetchers
+    trainerOrganization: Organization
 
     # Connections
     workouts(first: Int, after: ID!): WorkoutConnection!
 }
 
-
+# Connection for a workout program
 type WorkoutProgramConnection {
     totalCount: Int!
     edges: [WorkoutProgramEdge!]
     pageInfo: PageInfo!
 }
 
+# Edge for a workout program connection
 type WorkoutProgramEdge {
     cursor: String!
     node: WorkoutProgram!
+}
+
+
+input CreateWorkoutProgram {
+    trainerOrganizationID: ID!
+
+    name: String!
+
+    description: String
 }

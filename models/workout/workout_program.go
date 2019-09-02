@@ -9,11 +9,12 @@ import (
 )
 
 type WorkoutProgram struct {
+	tableName             struct{}  `sql:"workout.program"`
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time
-	UpdatedAt             time.Time
-	Name                  string `json:"name"`
-	Description           string `json:"description"`
+	CreatedAt             time.Time `json:"createdAt"`
+	UpdatedAt             time.Time `json:"updatedAt"`
+	Name                  string    `json:"name"`
+	Description           string    `json:"description" pg:",use_zero"`
 	Public                bool
 	Price                 string
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
@@ -38,14 +39,18 @@ func (w WorkoutProgram) CursorQuery(prefix string, c cursor.Cursor) (string, []i
 
 }
 
+// Generated a database query for the particular row represented
 func (w *WorkoutProgram) DBCursor() cursor.Cursor {
 	return cursor.NewTimeUUIDCursor(w.CreatedAt, w.ID)
 }
 
+// Serializes the result of DBCursor
+// Necessary for gqlgen, allows us to avoid creating a seperate WorkoutProgramEdge
 func (w *WorkoutProgram) Cursor() string {
 	return w.DBCursor().Serialize()
 }
 
+// Necessary for gqlgen, allows us to avoid creating a seperate WorkoutProgramEdge
 func (w *WorkoutProgram) Node() *WorkoutProgram {
 	return w
 }

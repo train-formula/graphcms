@@ -1,4 +1,5 @@
 
+
 type Exercise {
     id: ID!
     trainerAccount: ID!

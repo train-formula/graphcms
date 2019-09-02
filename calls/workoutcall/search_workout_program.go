@@ -1,4 +1,4 @@
-package workoutprogram
+package workoutcall
 
 import (
 	"context"
@@ -14,14 +14,14 @@ import (
 	"go.uber.org/zap"
 )
 
-type Search struct {
+type SearchWorkoutProgram struct {
 	Request generated.WorkoutProgramSearchRequest
 	First   int
 	After   cursor.Cursor
 	DB      *pg.DB
 }
 
-func (s Search) genQuery(count bool) (string, []interface{}) {
+func (s SearchWorkoutProgram) genQuery(count bool) (string, []interface{}) {
 
 	var query string
 
@@ -37,14 +37,14 @@ func (s Search) genQuery(count bool) (string, []interface{}) {
 	return query, []interface{}{s.Request.TrainerOrganizationID}
 }
 
-func (s Search) Validate(ctx context.Context) bool {
+func (s SearchWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
 
-	return validation.ValidationChain(ctx,
-		validation.CheckPageSize(s.First, 1, 50),
-	)
+	return []validation.ValidatorFunc{
+		validation.CheckPageSize(s.First, 1, 100),
+	}
 }
 
-func (s Search) Call(ctx context.Context) (*generated.WorkoutProgramSearchResults, error) {
+func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgramSearchResults, error) {
 
 	var programs []*workout.WorkoutProgram
 

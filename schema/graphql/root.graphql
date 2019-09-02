@@ -18,4 +18,5 @@ type Unit {
     indicatesTime: Boolean
 }
 
+# RFC 3339 datetime string
 scalar Time

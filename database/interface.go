@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/go-pg/pg/v9/orm"
 	"github.com/train-formula/graphcms/database/cursor"
 )
 
@@ -21,6 +22,8 @@ type Conn interface {
 		query interface{},
 		params ...interface{},
 	) (pg.Result, error)
+
+	ModelContext(c context.Context, model ...interface{}) *orm.Query
 }
 
 type TableModel interface {

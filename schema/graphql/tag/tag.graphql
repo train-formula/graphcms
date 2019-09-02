@@ -1,7 +1,15 @@
 
+extend type Query {
+    tag(id: ID!): Tag
+
+    tagByTag(tag: String!, trainerOrganizationID: ID!): Tag
+}
+
 type Tag {
     id: ID!
 
+    createdAt: Time!
+    updatedAt: Time!
 
     tag: String!
     trainerOrganizationID: ID!

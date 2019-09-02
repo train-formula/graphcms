@@ -56,6 +56,10 @@ func main() {
 
 	ginServer := octoberServer.MustGenerateGQLGenServerServerFromEnv()
 
+	ginServer.WithGinMiddleware(
+		RegisterLoaders(db),
+	)
+
 	ginServer.WithExecutableSchema(generated.NewExecutableSchema(generated.Config{Resolvers: &graphcms.Resolver{
 		DB: db,
 	}}))
