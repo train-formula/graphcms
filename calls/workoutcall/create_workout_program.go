@@ -20,7 +20,9 @@ type CreateWorkoutProgram struct {
 
 func (c CreateWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
 
-	return nil
+	return []validation.ValidatorFunc{
+		validation.CheckStringIsNotEmpty(c.Request.Name, "Name must not be empty"),
+	}
 }
 
 func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram, error) {

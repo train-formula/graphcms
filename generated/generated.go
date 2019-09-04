@@ -89,6 +89,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		CreateTag            func(childComplexity int, request CreateTag) int
 		CreateWorkoutProgram func(childComplexity int, request CreateWorkoutProgram) int
 		Health               func(childComplexity int) int
 	}
@@ -210,6 +211,7 @@ type ExerciseResolver interface {
 }
 type MutationResolver interface {
 	Health(ctx context.Context) (string, error)
+	CreateTag(ctx context.Context, request CreateTag) (*tag.Tag, error)
 	CreateWorkoutProgram(ctx context.Context, request CreateWorkoutProgram) (*workout.WorkoutProgram, error)
 }
 type QueryResolver interface {
@@ -431,6 +433,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ExerciseEdge.Node(childComplexity), true
+
+	case "Mutation.createTag":
+		if e.complexity.Mutation.CreateTag == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTag_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTag(childComplexity, args["request"].(CreateTag)), true
 
 	case "Mutation.createWorkoutProgram":
 		if e.complexity.Mutation.CreateWorkoutProgram == nil {
@@ -1056,6 +1070,12 @@ extend type Query {
     tag(id: ID!): Tag
 
     tagByTag(tag: String!, trainerOrganizationID: ID!): Tag
+
+
+}
+
+extend type Mutation {
+    createTag(request: CreateTag!): Tag
 }
 
 type Tag {
@@ -1063,6 +1083,12 @@ type Tag {
 
     createdAt: Time!
     updatedAt: Time!
+
+    tag: String!
+    trainerOrganizationID: ID!
+}
+
+input CreateTag {
 
     tag: String!
     trainerOrganizationID: ID!
@@ -1203,6 +1229,20 @@ type WorkoutProgramSearchResults {
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 CreateTag
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNCreateTag2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateTag(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createWorkoutProgram_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2315,6 +2355,47 @@ func (ec *executionContext) _Mutation_health(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createTag_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTag(rctx, args["request"].(CreateTag))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*tag.Tag)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTag2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createWorkoutProgram(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5769,6 +5850,30 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCreateTag(ctx context.Context, obj interface{}) (CreateTag, error) {
+	var it CreateTag
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "tag":
+			var err error
+			it.Tag, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "trainerOrganizationID":
+			var err error
+			it.TrainerOrganizationID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateWorkoutProgram(ctx context.Context, obj interface{}) (CreateWorkoutProgram, error) {
 	var it CreateWorkoutProgram
 	var asMap = obj.(map[string]interface{})
@@ -6037,6 +6142,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createTag":
+			out.Values[i] = ec._Mutation_createTag(ctx, field)
 		case "createWorkoutProgram":
 			out.Values[i] = ec._Mutation_createWorkoutProgram(ctx, field)
 		default:
@@ -7106,6 +7213,10 @@ func (ec *executionContext) unmarshalNCategoryType2githubᚗcomᚋtrainᚑformul
 
 func (ec *executionContext) marshalNCategoryType2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐCategoryType(ctx context.Context, sel ast.SelectionSet, v workout.CategoryType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNCreateTag2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateTag(ctx context.Context, v interface{}) (CreateTag, error) {
+	return ec.unmarshalInputCreateTag(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNCreateWorkoutProgram2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateWorkoutProgram(ctx context.Context, v interface{}) (CreateWorkoutProgram, error) {

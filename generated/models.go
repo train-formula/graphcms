@@ -10,6 +10,11 @@ import (
 	"github.com/train-formula/graphcms/models/workout"
 )
 
+type CreateTag struct {
+	Tag                   string    `json:"tag"`
+	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
+}
+
 type CreateWorkoutProgram struct {
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	Name                  string    `json:"name"`

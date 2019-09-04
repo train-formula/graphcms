@@ -3,6 +3,12 @@ extend type Query {
     tag(id: ID!): Tag
 
     tagByTag(tag: String!, trainerOrganizationID: ID!): Tag
+
+
+}
+
+extend type Mutation {
+    createTag(request: CreateTag!): Tag
 }
 
 type Tag {
@@ -10,6 +16,12 @@ type Tag {
 
     createdAt: Time!
     updatedAt: Time!
+
+    tag: String!
+    trainerOrganizationID: ID!
+}
+
+input CreateTag {
 
     tag: String!
     trainerOrganizationID: ID!

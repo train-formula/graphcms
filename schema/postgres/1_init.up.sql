@@ -3,7 +3,7 @@ CREATE SCHEMA workout;
 CREATE SCHEMA tag;
 
 CREATE TYPE public.media_type AS ENUM ('PHOTO','VIDEO');
-CREATE TYPE tag.taggable AS ENUM ('WORKOUT_PROGRAM');
+CREATE TYPE tag.tag_type AS ENUM ('WORKOUT_PROGRAM');
 
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
 RETURNS TRIGGER AS $$
@@ -58,7 +58,7 @@ CREATE TABLE "tag"."tagged" (
   "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
   "tag_uuid" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
   "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
-  "tag_on" tag.taggable NOT NULL,
+  "tag_type" tag.tag_type NOT NULL,
   "tagged_uuid" uuid NOT NULL,
   PRIMARY KEY ("id")
 );
