@@ -3,7 +3,7 @@ package query
 import (
 	"context"
 
-	uuid "github.com/gofrs/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
@@ -14,8 +14,9 @@ import (
 func (r *QueryResolver) WorkoutProgram(ctx context.Context, id uuid.UUID) (*workout.WorkoutProgram, error) {
 
 	g := workoutcall.GetWorkoutProgram{
-		ID: id,
-		DB: r.db,
+		ID:     id,
+		DB:     r.db,
+		Logger: r.logger,
 	}
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
@@ -27,7 +28,7 @@ func (r *QueryResolver) WorkoutProgram(ctx context.Context, id uuid.UUID) (*work
 
 func (r *QueryResolver) WorkoutProgramSearch(ctx context.Context, request generated.WorkoutProgramSearchRequest, first int, after *string) (*generated.WorkoutProgramSearchResults, error) {
 
-	curse, err := cursor.DeserializeCursor(after)
+	cursor, err := cursor.DeserializeCursor(after)
 	if err != nil {
 		return nil, err
 	}
@@ -35,8 +36,9 @@ func (r *QueryResolver) WorkoutProgramSearch(ctx context.Context, request genera
 	s := workoutcall.SearchWorkoutProgram{
 		DB:      r.db,
 		First:   first,
-		After:   curse,
+		After:   cursor,
 		Request: request,
+		Logger:  r.logger,
 	}
 
 	if validation.ValidationChain(ctx, s.Validate(ctx)...) {

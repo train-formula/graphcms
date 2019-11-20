@@ -1,35 +1,88 @@
 package workout
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
+
+	"github.com/go-pg/pg/v9/types"
 )
 
-type CategoryType string
+type CategoryType uint8
 
 const (
-	CategoryTypeGeneral    CategoryType = "GENERAL"
-	CategoryTypeRound      CategoryType = "ROUND"
-	CategoryTypeTimedRound CategoryType = "TIMED_ROUND"
+	UnknownCategoryType CategoryType = iota
+	GeneralCategoryType
+	RoundCategoryType
+	TimedRoundCategoryType
 )
 
-var AllCategoryType = []CategoryType{
-	CategoryTypeGeneral,
-	CategoryTypeRound,
-	CategoryTypeTimedRound,
-}
+func (t CategoryType) String() string {
 
-func (e CategoryType) IsValid() bool {
-	switch e {
-	case CategoryTypeGeneral, CategoryTypeRound, CategoryTypeTimedRound:
-		return true
+	switch t {
+	case GeneralCategoryType:
+		return "GENERAL"
+	case RoundCategoryType:
+		return "ROUND"
+	case TimedRoundCategoryType:
+		return "TIMED_ROUND"
 	}
-	return false
+
+	return "UNKNOWN"
 }
 
-func (e CategoryType) String() string {
-	return string(e)
+func ParseCategoryType(s string) CategoryType {
+
+	switch strings.ToUpper(strings.TrimSpace(s)) {
+	case GeneralCategoryType.String():
+		return GeneralCategoryType
+	case RoundCategoryType.String():
+		return RoundCategoryType
+	case TimedRoundCategoryType.String():
+		return TimedRoundCategoryType
+
+	}
+
+	return UnknownCategoryType
+}
+
+var _ types.ValueAppender = (*CategoryType)(nil)
+var _ types.ValueScanner = (*CategoryType)(nil)
+
+func (t *CategoryType) AppendValue(b []byte, flags int) ([]byte, error) {
+
+	if flags == 1 {
+		b = append(b, '\'')
+	}
+	b = append(b, t.String()...)
+	if flags == 1 {
+		b = append(b, '\'')
+	}
+
+	return b, nil
+}
+
+func (t *CategoryType) ScanValue(rd types.Reader, n int) error {
+	if n <= 0 {
+		return nil
+	}
+
+	tmp, err := rd.ReadFull()
+	if err != nil {
+		return err
+	}
+
+	parsed := ParseCategoryType(string(tmp))
+
+	if parsed == UnknownCategoryType {
+		return errors.New("Unknown category type")
+	}
+
+	*t = parsed
+
+	return nil
 }
 
 func (e *CategoryType) UnmarshalGQL(v interface{}) error {
@@ -38,8 +91,8 @@ func (e *CategoryType) UnmarshalGQL(v interface{}) error {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = CategoryType(str)
-	if !e.IsValid() {
+	*e = ParseCategoryType(str)
+	if *e == UnknownCategoryType {
 		return fmt.Errorf("%s is not a valid CategoryType", str)
 	}
 	return nil

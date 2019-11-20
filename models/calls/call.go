@@ -1,14 +1,10 @@
 package calls
 
-
 type Call interface {
-
 	Validation()
 }
 
-
-
 type DemoCall struct {
-	Request struct{}
+	Request  struct{}
 	Response struct{}
 }

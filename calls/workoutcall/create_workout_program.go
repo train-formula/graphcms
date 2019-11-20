@@ -53,8 +53,6 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 
 		Name:                  c.Request.Name,
 		Description:           description,
-		Public:                true,
-		Price:                 "19.99",
 		TrainerOrganizationID: c.Request.TrainerOrganizationID,
 	}
 

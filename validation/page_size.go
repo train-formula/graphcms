@@ -17,3 +17,9 @@ func CheckPageSize(input, min, max int) ValidatorFunc {
 	}
 
 }
+
+func DefaultCheckPageSize(input int) ValidatorFunc {
+
+	return CheckPageSize(input, 1, 200)
+
+}

@@ -2,6 +2,7 @@
 
 type Exercise {
     id: ID!
+
     trainerAccount: ID!
     clientAccount: ID!
 
@@ -26,9 +27,10 @@ type Exercise {
 
     # Fetchers
     category: WorkoutCategory
-    repUnit: Unit
-    repModifierUnit: Unit
-    setUnit: Unit
+
+    #repUnit: Unit
+    #repModifierUnit: Unit
+    #setUnit: Unit
 
 }
 
@@ -40,6 +42,6 @@ type ExerciseConnection {
 }
 
 type ExerciseEdge {
-    cursor: ID!
+    cursor: String!
     node: Exercise!
 }

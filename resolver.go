@@ -4,15 +4,16 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
-	uuid "github.com/gofrs/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/generated"
-	"github.com/train-formula/graphcms/models"
 	"github.com/train-formula/graphcms/models/connections"
-	"github.com/train-formula/graphcms/models/trainer"
+	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/resolver/mutation"
 	"github.com/train-formula/graphcms/resolver/query"
+	"github.com/train-formula/graphcms/resolver/workoutcategory"
 	"github.com/train-formula/graphcms/resolver/workoutprogram"
+	"go.uber.org/zap"
 )
 
 // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
@@ -23,19 +24,16 @@ func (r *Resolver) Exercise() generated.ExerciseResolver {
 	return &exerciseResolver{r}
 }
 func (r *Resolver) Mutation() generated.MutationResolver {
-	return mutation.NewMutationResolver(r.DB)
+	return mutation.NewMutationResolver(r.DB, zap.L())
 }
 func (r *Resolver) Query() generated.QueryResolver {
-	return query.NewQueryResolver(r.DB)
-}
-func (r *Resolver) Unit() generated.UnitResolver {
-	return &unitResolver{r}
+	return query.NewQueryResolver(r.DB, zap.L())
 }
 func (r *Resolver) Workout() generated.WorkoutResolver {
 	return &workoutResolver{r}
 }
 func (r *Resolver) WorkoutCategory() generated.WorkoutCategoryResolver {
-	return &workoutCategoryResolver{r}
+	return workoutcategory.NewResolver(r.DB)
 }
 func (r *Resolver) WorkoutProgram() generated.WorkoutProgramResolver {
 	return workoutprogram.NewResolver(r.DB)
@@ -43,6 +41,14 @@ func (r *Resolver) WorkoutProgram() generated.WorkoutProgramResolver {
 
 func (r *Resolver) WorkoutProgramConnection() generated.WorkoutProgramConnectionResolver {
 	return &connections.WorkoutProgramConnection{}
+}
+
+func (r *Resolver) TagConnection() generated.TagConnectionResolver {
+	return &connections.TagConnection{}
+}
+
+func (r *Resolver) WorkoutCategoryConnection() generated.WorkoutCategoryConnectionResolver {
+	return &connections.WorkoutCategoryConnection{}
 }
 
 type exerciseResolver struct{ *Resolver }
@@ -60,27 +66,6 @@ func (r *exerciseResolver) CategoryID(ctx context.Context, obj *workout.Exercise
 	panic("not implemented")
 }
 
-type mutationResolver struct{ *Resolver }
-
-func (r *mutationResolver) Health(ctx context.Context) (string, error) {
-	panic("not implemented")
-}
-
-type queryResolver struct{ *Resolver }
-
-func (r *queryResolver) Health(ctx context.Context) (string, error) {
-	panic("not implemented")
-}
-func (r *queryResolver) Organization(ctx context.Context, id uuid.UUID) (*trainer.Organization, error) {
-	panic("not implemented")
-}
-
-type unitResolver struct{ *Resolver }
-
-func (r *unitResolver) ID(ctx context.Context, obj *models.Unit) (uuid.UUID, error) {
-	panic("not implemented")
-}
-
 type workoutResolver struct{ *Resolver }
 
 func (r *workoutResolver) ID(ctx context.Context, obj *workout.Workout) (uuid.UUID, error) {
@@ -95,36 +80,16 @@ func (r *workoutResolver) OrderNumber(ctx context.Context, obj *workout.Workout)
 func (r *workoutResolver) OccursOnDate(ctx context.Context, obj *workout.Workout) (*string, error) {
 	panic("not implemented")
 }
-func (r *workoutResolver) Categories(ctx context.Context, obj *workout.Workout, first *int, after uuid.UUID) (*generated.WorkoutCategoryConnection, error) {
+func (r *workoutResolver) Categories(ctx context.Context, obj *workout.Workout, first *int, after uuid.UUID) (*connections.WorkoutCategoryConnection, error) {
 	panic("not implemented")
 }
 
 type workoutCategoryResolver struct{ *Resolver }
 
-func (r *workoutCategoryResolver) ID(ctx context.Context, obj *workout.WorkoutCategory) (uuid.UUID, error) {
-	panic("not implemented")
-}
-func (r *workoutCategoryResolver) TrainerAccount(ctx context.Context, obj *workout.WorkoutCategory) (uuid.UUID, error) {
-	panic("not implemented")
-}
-func (r *workoutCategoryResolver) WorkoutID(ctx context.Context, obj *workout.WorkoutCategory) (uuid.UUID, error) {
-	panic("not implemented")
-}
-func (r *workoutCategoryResolver) Workout(ctx context.Context, obj *workout.WorkoutCategory) (*workout.Workout, error) {
-	panic("not implemented")
-}
 func (r *workoutCategoryResolver) Exercises(ctx context.Context, obj *workout.WorkoutCategory, first *int, after uuid.UUID) (*generated.ExerciseConnection, error) {
 	panic("not implemented")
 }
 
-type workoutProgramResolver struct{ *Resolver }
-
-func (r *workoutProgramResolver) ID(ctx context.Context, obj *workout.WorkoutProgram) (uuid.UUID, error) {
-	panic("not implemented")
-}
-func (r *workoutProgramResolver) TrainerAccount(ctx context.Context, obj *workout.WorkoutProgram) (uuid.UUID, error) {
-	panic("not implemented")
-}
-func (r *workoutProgramResolver) Workouts(ctx context.Context, obj *workout.WorkoutProgram, first *int, after uuid.UUID) (*generated.WorkoutConnection, error) {
+func (r *workoutCategoryResolver) Tags(ctx context.Context, obj *workout.WorkoutCategory) ([]*tag.Tag, error) {
 	panic("not implemented")
 }

@@ -1,10 +1,12 @@
 type Workout {
     id: ID!
-    trainerAccount: ID!
-    name: String
 
-    orderNumber: Int!
-    occursOnDate: String
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+    name: String!
+    description: String!
 
     # Connections
     categories(first: Int, after: ID!): WorkoutCategoryConnection!

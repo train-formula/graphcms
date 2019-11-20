@@ -15,10 +15,33 @@ type CreateTag struct {
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 }
 
+type CreateWorkoutCategory struct {
+	TrainerOrganizationID uuid.UUID            `json:"trainerOrganizationID"`
+	Name                  string               `json:"name"`
+	Description           string               `json:"description"`
+	Type                  workout.CategoryType `json:"type"`
+	RoundNumeral          *int                 `json:"roundNumeral"`
+	RoundText             *string              `json:"roundText"`
+	RoundUnitID           *uuid.UUID           `json:"roundUnitID"`
+	DurationSeconds       *int                 `json:"durationSeconds"`
+	Tags                  []uuid.UUID          `json:"tags"`
+}
+
 type CreateWorkoutProgram struct {
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	Name                  string    `json:"name"`
 	Description           *string   `json:"description"`
+}
+
+type EditWorkoutCategory struct {
+	ID              uuid.UUID                    `json:"id"`
+	Name            *string                      `json:"name"`
+	Description     *string                      `json:"description"`
+	Type            *workout.CategoryType        `json:"type"`
+	RoundNumeral    *models.NullableIntEditor    `json:"roundNumeral"`
+	RoundText       *models.NullableStringEditor `json:"roundText"`
+	RoundUnitID     *models.NullableIDEditor     `json:"roundUnitID"`
+	DurationSeconds *models.NullableIntEditor    `json:"durationSeconds"`
 }
 
 type ExerciseConnection struct {
@@ -28,23 +51,12 @@ type ExerciseConnection struct {
 }
 
 type ExerciseEdge struct {
-	Cursor uuid.UUID         `json:"cursor"`
+	Cursor string            `json:"cursor"`
 	Node   *workout.Exercise `json:"node"`
 }
 
 type TagFacet struct {
 	Tags []*tag.Tag `json:"tags"`
-}
-
-type WorkoutCategoryConnection struct {
-	TotalCount int                    `json:"totalCount"`
-	Edges      []*WorkoutCategoryEdge `json:"edges"`
-	PageInfo   *models.PageInfo       `json:"pageInfo"`
-}
-
-type WorkoutCategoryEdge struct {
-	Cursor uuid.UUID                `json:"cursor"`
-	Node   *workout.WorkoutCategory `json:"node"`
 }
 
 type WorkoutConnection struct {

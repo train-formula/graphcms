@@ -9,15 +9,15 @@ import (
 )
 
 type WorkoutProgram struct {
-	tableName             struct{}  `sql:"workout.program"`
-	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"createdAt"`
-	UpdatedAt             time.Time `json:"updatedAt"`
-	Name                  string    `json:"name"`
-	Description           string    `json:"description" pg:",use_zero"`
-	Public                bool
-	Price                 string
-	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
+	tableName                struct{}   `sql:"workout.program"`
+	ID                       uuid.UUID  `json:"id"`
+	CreatedAt                time.Time  `json:"createdAt"`
+	UpdatedAt                time.Time  `json:"updatedAt"`
+	TrainerOrganizationID    uuid.UUID  `json:"trainerOrganizationID"`
+	Name                     string     `json:"name"`
+	Description              string     `json:"description" pg:",use_zero"`
+	ExactStartDate           *time.Time `json:"exactStartDate"`
+	StartsWhenCustomerStarts bool       `json:"startsWhenCustomerStarts"`
 }
 
 func (w WorkoutProgram) TableName() string {

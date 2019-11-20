@@ -1,0 +1,22 @@
+
+extend type Query {
+
+    availableUnits: [Unit!]
+}
+
+
+type Unit {
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    name: String!
+    nameMedium: String!
+    nameShort: String!
+
+    representsTime: Boolean!
+    representsWeight: Boolean!
+    representsCounter: Boolean!
+
+}

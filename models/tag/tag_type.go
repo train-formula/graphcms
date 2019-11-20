@@ -12,6 +12,7 @@ type TagType uint8
 const (
 	UnknownTagType TagType = iota
 	WorkoutProgramTagType
+	WorkoutCategoryTagType
 	ExerciseTagType
 )
 
@@ -20,6 +21,8 @@ func (t TagType) String() string {
 	switch t {
 	case WorkoutProgramTagType:
 		return "WORKOUT_PROGRAM"
+	case WorkoutCategoryTagType:
+		return "WORKOUT_CATEGORY"
 	case ExerciseTagType:
 		return "EXERCISE"
 	}
@@ -30,8 +33,10 @@ func (t TagType) String() string {
 func ParseTagType(s string) TagType {
 
 	switch strings.ToUpper(strings.TrimSpace(s)) {
-	case ExerciseTagType.String():
+	case WorkoutProgramTagType.String():
 		return WorkoutProgramTagType
+	case WorkoutCategoryTagType.String():
+		return WorkoutCategoryTagType
 	case ExerciseTagType.String():
 		return ExerciseTagType
 

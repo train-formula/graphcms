@@ -3,7 +3,8 @@ CREATE SCHEMA workout;
 CREATE SCHEMA tag;
 
 CREATE TYPE public.media_type AS ENUM ('PHOTO','VIDEO');
-CREATE TYPE tag.tag_type AS ENUM ('WORKOUT_PROGRAM');
+CREATE TYPE tag.tag_type AS ENUM ('WORKOUT_PROGRAM', 'WORKOUT_CATEGORY');
+CREATE TYPE workout.category_type AS ENUM ('GENERAL', 'ROUND', 'TIMED_ROUND');
 
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
 RETURNS TRIGGER AS $$
@@ -56,15 +57,15 @@ CREATE TABLE "tag"."tagged" (
   "id" uuid NOT NULL,
   "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
   "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-  "tag_uuid" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
+  "tag_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
   "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
   "tag_type" tag.tag_type NOT NULL,
-  "tagged_uuid" uuid NOT NULL,
+  "tagged_id" uuid NOT NULL,
   PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX tagged_tag_uuid_tagged_uuid_tag_on_idx ON tag.tagged(tag_uuid uuid_ops, tagged_uuid uuid_ops, tag_on enum_ops);
-CREATE INDEX tagged_tagged_uuid_tag_on_idx ON tag.tagged(tagged_uuid uuid_ops, tag_on enum_ops);
+CREATE UNIQUE INDEX tagged_tag_id_tagged_id_tag_type_idx ON tag.tagged(tag_id uuid_ops, tagged_id uuid_ops, tag_type enum_ops);
+CREATE INDEX tagged_tagged_id_tag_type_idx ON tag.tagged(tagged_id uuid_ops, tag_type enum_ops);
 
 CREATE TRIGGER set_timestamp
 BEFORE UPDATE ON tag.tagged
@@ -73,19 +74,22 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 
 --- Exercise Unit
 
-CREATE TABLE "workout"."rep_unit" (
+CREATE TABLE "workout"."unit" (
     "id" uuid NOT NULL,
     "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "name" varchar(25) NOT NULL,
     "name_medium" varchar(10) NOT NULL,
     "name_short" varchar(5) NOT NULL,
+    "represents_time" boolean NOT NULL,
+    "represents_weight" boolean NOT NULL,
+    "represents_counter" boolean NOT NULL,
     PRIMARY KEY ("id")
 );
 
 
 CREATE TRIGGER set_timestamp
-BEFORE UPDATE ON workout.rep_unit
+BEFORE UPDATE ON workout.unit
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
@@ -98,8 +102,8 @@ CREATE TABLE "workout"."program" (
     "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
     "name" varchar(100) NOT NULL,
     "description" TEXT NOT NULL,
-    "public" boolean DEFAULT TRUE NOT NULL,
-    "price" decimal(15,6) NOT NULL,
+    "exact_start_date" timestamp without time zone,
+    "starts_when_customer_starts" boolean NOT NULL,
     PRIMARY KEY ("id")
 );
 
@@ -116,10 +120,9 @@ CREATE TABLE "workout"."workout" (
     "id" uuid NOT NULL,
     "created_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
-    "program_id" uuid NOT NULL REFERENCES workout.program(id) DEFERRABLE INITIALLY DEFERRED,
+    "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
     "name" VARCHAR(100) NOT NULL,
     "description" TEXT NOT NULL,
-    "number" INT NOT NULL,
     PRIMARY KEY ("id")
 );
 
@@ -138,6 +141,11 @@ CREATE TABLE "workout"."category" (
     "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
     "name" VARCHAR(100) NOT NULL,
     "description" TEXT NOT NULL,
+    "type" workout.category_type NOT NULL,
+    "round_numeral" int,
+    "round_text" varchar(50),
+    "round_unit_id" uuid REFERENCES workout.unit(id) DEFERRABLE INITIALLY DEFERRED,
+    "duration_seconds" int,
     PRIMARY KEY ("id")
 );
 
@@ -172,16 +180,16 @@ CREATE TABLE "workout"."exercise" (
     "updated_at" timestamp without time zone NOT NULL DEFAULT NOW(),
     "trainer_organization_id" uuid NOT NULL REFERENCES trainer.organization(id) DEFERRABLE INITIALLY DEFERRED,
     "name" varchar(50) NOT NULL,
-    "rep_numeral" int NOT NULL,
-    "rep_text" varchar(50) NOT NULL,
-    "rep_unit" uuid REFERENCES workout.rep_unit(id) DEFERRABLE INITIALLY DEFERRED,
-    "rep_modifier_numeral" int NOT NULL,
-    "rep_modifier_text" varchar(50) NOT NULL,
-    "rep_modifier_unit" uuid REFERENCES workout.rep_unit(id) DEFERRABLE INITIALLY DEFERRED,
-    "set_numeral" int NOT NULL,
-    "set_text" varchar(50) NOT NULL,
-    "set_unit" uuid REFERENCES workout.rep_unit(id) DEFERRABLE INITIALLY DEFERRED,
-    "duration_seconds" int NOT NULL,
+    "rep_numeral" int,
+    "rep_text" varchar(50),
+    "rep_unit" uuid REFERENCES workout.unit(id) DEFERRABLE INITIALLY DEFERRED,
+    "rep_modifier_numeral" int,
+    "rep_modifier_text" varchar(50),
+    "rep_modifier_unit" uuid REFERENCES workout.unit(id) DEFERRABLE INITIALLY DEFERRED,
+    "set_numeral" int,
+    "set_text" varchar(50),
+    "set_unit" uuid REFERENCES workout.unit(id) DEFERRABLE INITIALLY DEFERRED,
+    "duration_seconds" int,
     PRIMARY KEY ("id")
 );
 

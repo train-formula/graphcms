@@ -9,6 +9,10 @@ import (
 
 type ValidatorFunc func() *gqlerror.Error
 
+func EmptyValidatorFunc() *gqlerror.Error {
+	return nil
+}
+
 func ValidationChain(ctx context.Context, funcs ...ValidatorFunc) bool {
 
 	ok := true

@@ -12,11 +12,27 @@ type PageInfo {
     hasNextPage: Boolean!
 }
 
-type Unit {
-    id: ID!
-    unit: String
-    indicatesTime: Boolean
-}
 
 # RFC 3339 datetime string
 scalar Time
+
+# Allows editing of strings that can be null
+# If the value in this type is null, then the outer value will be set to null
+# However, if the outer value is null (meaning this whole data structure is omitted), nothing will change
+input NullableStringEditor {
+    value: String
+}
+
+# Allows editing of IDs that can be null
+# If the value in this type is null, then the outer value will be set to null
+# However, if the outer value is null (meaning this whole data structure is omitted), nothing will change
+input NullableIDEditor {
+    value: ID
+}
+
+# Allows editing of ints that can be null
+# If the value in this type is null, then the outer value will be set to null
+# However, if the outer value is null (meaning this whole data structure is omitted), nothing will change
+input NullableIntEditor {
+    value: Int
+}

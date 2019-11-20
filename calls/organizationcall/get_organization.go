@@ -1,4 +1,4 @@
-package trainercall
+package organizationcall
 
 import (
 	"context"

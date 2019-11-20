@@ -27,6 +27,9 @@ type WorkoutProgram {
     name: String!
     description: String
 
+    exactStartDate: Time
+    startsWhenCustomerStarts: Boolean!
+
     # Fetchers
     trainerOrganization: Organization
 

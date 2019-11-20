@@ -2,14 +2,18 @@
 extend type Query {
     tag(id: ID!): Tag
 
-    tagByTag(tag: String!, trainerOrganizationID: ID!): Tag
 
+    tagByTag(tag: String!, trainerOrganizationID: ID!): Tag
 
 }
 
 extend type Mutation {
     createTag(request: CreateTag!): Tag
 }
+
+########################
+###### TAG #############
+########################
 
 type Tag {
     id: ID!
@@ -20,6 +24,22 @@ type Tag {
     tag: String!
     trainerOrganizationID: ID!
 }
+
+type TagConnection {
+    totalCount: Int!
+    edges: [TagEdge!]
+    pageInfo: PageInfo!
+}
+
+type TagEdge {
+    cursor: String!
+    node: Tag!
+}
+
+
+########################
+###### CREATE TAG ######
+########################
 
 input CreateTag {
 

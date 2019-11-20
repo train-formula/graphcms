@@ -1,0 +1,97 @@
+
+extend type Mutation {
+
+    createWorkoutCategory(request: CreateWorkoutCategory!): WorkoutCategory
+
+    editWorkoutCategory(request: EditWorkoutCategory!): WorkoutCategory
+}
+
+########################
+### WORKOUT CATEGORY ###
+########################
+
+enum CategoryType {
+    GENERAL
+    ROUND
+    TIMED_ROUND
+}
+
+type WorkoutCategory {
+
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String!
+
+    type: CategoryType!
+
+    roundNumeral: Int
+    roundText: String
+    roundUnitID: ID
+    durationSeconds: Int
+
+    # Fetchers
+    tags: [Tag!]
+    trainerOrganization: Organization
+
+    # Connections
+    exercises(first: Int, after: ID!): ExerciseConnection!
+
+}
+
+type WorkoutCategoryConnection {
+    totalCount: Int!
+    edges: [WorkoutCategoryEdge!]
+    pageInfo: PageInfo!
+}
+
+type WorkoutCategoryEdge {
+    cursor: String!
+    node: WorkoutCategory!
+}
+
+###############################
+### CREATE WORKOUT CATEGORY ###
+###############################
+
+input CreateWorkoutCategory {
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String!
+
+    type: CategoryType!
+
+    roundNumeral: Int
+    roundText: String
+    roundUnitID: ID
+    durationSeconds: Int
+
+    tags: [ID!]
+
+}
+
+###############################
+### EDIT WORKOUT CATEGORY #####
+###############################
+input EditWorkoutCategory {
+
+    id: ID!
+
+    name: String
+    description: String
+
+    type: CategoryType
+
+    roundNumeral: NullableIntEditor
+    roundText: NullableStringEditor
+    roundUnitID: NullableIDEditor
+    durationSeconds: NullableIntEditor
+
+}

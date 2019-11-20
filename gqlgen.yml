@@ -20,7 +20,6 @@ autobind:
   - github.com/train-formula/graphcms/models/workout
   - github.com/train-formula/graphcms/models/trainer
   - github.com/train-formula/graphcms/models/tag
-
 models:
   ID:
     model:
@@ -28,3 +27,9 @@ models:
   WorkoutProgramEdge:
     model:
       - github.com/train-formula/graphcms/models/workout.WorkoutProgram
+  TagEdge:
+    model:
+      - github.com/train-formula/graphcms/models/tag.Tag
+  WorkoutCategoryEdge:
+    model:
+      - github.com/train-formula/graphcms/models/workout.WorkoutCategory

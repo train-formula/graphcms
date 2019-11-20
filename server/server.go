@@ -42,7 +42,7 @@ func main() {
 	})
 	defer db.Close()
 
-	migrator, err := migrate.New("file://./schema/postgres",
+	migrator, err := migrate.New("file://../schema/postgres",
 		fmt.Sprintf("postgres://%s:%s@%s:%s/graphcms?sslmode=disable&x-migrations-table=graphcms_migrations",
 			config.PGUsername, config.PGPassword, config.PGHost, config.PGPort))
 	if err != nil {

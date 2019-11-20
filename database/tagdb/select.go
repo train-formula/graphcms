@@ -25,6 +25,13 @@ func (t TagByTag) Stable() TagByTag {
 	}
 }
 
+// Request struct to retrieve tags by the type of object they are attached to, the object UUID + the trainer organization UUID
+// Grouped together for easy batching
+type TagsByObject struct {
+	ObjectUUID uuid.UUID
+	ObjectType tag.TagType
+}
+
 // Retrieves an individual tag by its ID
 func GetTag(ctx context.Context, conn database.Conn, id uuid.UUID) (tag.Tag, error) {
 
@@ -94,4 +101,43 @@ func GetTagsByTag(ctx context.Context, conn database.Conn, byTag []TagByTag) ([]
 	_, err := conn.QueryContext(ctx, &result, query, params...)
 
 	return result, err
+}
+
+// Retrieves tags by the object's they are attached to
+func GetTagsByObject(ctx context.Context, conn database.Conn, byObject []TagsByObject) (map[TagsByObject][]*tag.Tag, error) {
+
+	if len(byObject) <= 0 {
+		return nil, nil
+	}
+
+	var results []*tag.TaggedTagJoin
+
+	query := "SELECT " + (tag.TaggedTagJoin{}).SelectColumns("t", "tg") + " FROM " + database.TableName(tag.Tagged{}) + " tg " +
+		" INNER JOIN " + database.TableName(tag.Tag{}) + " t ON tg.tag_uuid = t.id WHERE "
+
+	var params []interface{}
+
+	for _, bo := range byObject {
+		query += "(tg.tagged_id = ? AND tag_type = ?)"
+		params = append(params, bo.ObjectUUID, bo.ObjectType)
+	}
+
+	_, err := conn.QueryContext(ctx, &results, query, params...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	final := make(map[TagsByObject][]*tag.Tag)
+
+	for _, result := range results {
+		key := TagsByObject{
+			ObjectUUID: result.TaggedTaggedID,
+			ObjectType: result.TaggedTagType,
+		}
+
+		final[key] = append(final[key], result.Tag())
+	}
+
+	return final, nil
 }

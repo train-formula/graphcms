@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
-	"github.com/train-formula/graphcms/calls/trainercall"
+	"github.com/train-formula/graphcms/calls/organizationcall"
 
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/trainer"
@@ -25,7 +25,7 @@ type Resolver struct {
 
 func (r *Resolver) TrainerOrganization(ctx context.Context, obj *workout.WorkoutProgram) (*trainer.Organization, error) {
 
-	g := trainercall.GetOrganization{
+	g := organizationcall.GetOrganization{
 		ID: obj.TrainerOrganizationID,
 		DB: r.db,
 	}

@@ -1,10 +1,18 @@
 extend type Query {
     organization(id: ID!): Organization
+
+    organizationAvailableTags(id: ID!, first: Int!, after: String): TagConnection
+
+    organizationWorkoutCategories(id: ID!, first: Int!, after: String): WorkoutCategoryConnection
 }
 
 type Organization {
     id: ID!
 
+    createdAt: Time!
+    updatedAt: Time!
+
     name: String!
     description: String
+
 }

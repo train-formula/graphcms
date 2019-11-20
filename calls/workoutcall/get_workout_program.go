@@ -13,8 +13,15 @@ import (
 )
 
 type GetWorkoutProgram struct {
-	ID uuid.UUID
-	DB *pg.DB
+	ID     uuid.UUID
+	DB     *pg.DB
+	Logger *zap.Logger
+}
+
+func (g GetWorkoutProgram) logger() *zap.Logger {
+
+	return g.Logger.Named("GetWorkoutProgram")
+
 }
 
 func (g GetWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -30,7 +37,7 @@ func (g GetWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram, e
 	if err == pg.ErrNoRows {
 		return nil, gqlerror.Errorf("Unknown workout program ID")
 	} else if err != nil {
-		zap.L().Error("Failed to retrieve workout program", zap.Error(err))
+		g.logger().Error("Failed to retrieve workout program", zap.Error(err))
 		return nil, gqlerror.Errorf("Failed to retrieve workout program")
 	}
 

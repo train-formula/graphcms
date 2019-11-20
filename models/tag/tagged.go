@@ -3,7 +3,7 @@ package tag
 import (
 	"time"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 )
 
 type Tagged struct {
@@ -12,9 +12,9 @@ type Tagged struct {
 	ID                    uuid.UUID
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
-	TagUUID               uuid.UUID
+	TagID                 uuid.UUID
 	TrainerOrganizationID uuid.UUID
-	TaggedUUID            uuid.UUID
+	TaggedID              uuid.UUID
 	TagType               TagType `sql:"type:tag.tag_type"`
 }
 

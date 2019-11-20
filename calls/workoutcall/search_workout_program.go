@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
-	"github.com/onsi/gomega/format"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
@@ -19,6 +18,13 @@ type SearchWorkoutProgram struct {
 	First   int
 	After   cursor.Cursor
 	DB      *pg.DB
+	Logger  *zap.Logger
+}
+
+func (s SearchWorkoutProgram) logger() *zap.Logger {
+
+	return s.Logger.Named("SearchWorkoutProgram")
+
 }
 
 func (s SearchWorkoutProgram) genQuery(count bool) (string, []interface{}) {
@@ -40,7 +46,7 @@ func (s SearchWorkoutProgram) genQuery(count bool) (string, []interface{}) {
 func (s SearchWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckPageSize(s.First, 1, 100),
+		validation.DefaultCheckPageSize(s.First),
 	}
 }
 
@@ -50,9 +56,9 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 
 	query, params := s.genQuery(false)
 
-	query, params, err := database.BasicCursorfyQuery(query, "", s.After, workout.WorkoutProgram{}, s.First, params...)
+	query, params, err := database.BasicCursorPaginationQuery(query, "", s.After, workout.WorkoutProgram{}, s.First, params...)
 	if err != nil {
-		zap.L().Error("Failed to cursorfy", zap.Error(err))
+		s.logger().Error("Failed to generate pagination query", zap.Error(err))
 
 		return nil, err
 	}
@@ -60,7 +66,7 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 	_, err = s.DB.QueryContext(ctx, &programs, query, params...)
 
 	if err != nil {
-		zap.L().Error("Failed to search", zap.Error(err))
+		s.logger().Error("Failed to search", zap.Error(err))
 
 		return nil, err
 	}
@@ -68,7 +74,7 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 	return &generated.WorkoutProgramSearchResults{
 		TagFacet: nil,
 		Results: &connections.WorkoutProgramConnection{
-			ResolveTotalCount: func(ctx format.Ctx) (int, error) {
+			ResolveTotalCount: func(ctx context.Context) (int, error) {
 				query, params := s.genQuery(true)
 
 				var count int

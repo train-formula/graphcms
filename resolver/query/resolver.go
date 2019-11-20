@@ -1,13 +1,18 @@
 package query
 
-import "github.com/go-pg/pg/v9"
+import (
+	"github.com/go-pg/pg/v9"
+	"go.uber.org/zap"
+)
 
 type QueryResolver struct {
-	db *pg.DB
+	db     *pg.DB
+	logger *zap.Logger
 }
 
-func NewQueryResolver(db *pg.DB) *QueryResolver {
+func NewQueryResolver(db *pg.DB, logger *zap.Logger) *QueryResolver {
 	return &QueryResolver{
-		db: db,
+		db:     db,
+		logger: logger.Named("QueryResolver"),
 	}
 }
