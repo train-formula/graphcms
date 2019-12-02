@@ -22,7 +22,7 @@ phases:
       - echo Logging in to Amazon ECR...
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
       - echo Replacing APP_VERSION...
-      - sed -i 's/APP_VERSION/$CODEBUILD_RESOLVED_SOURCE_VERSION/' helm/graphcms/Chart.yaml
+      - sed -i "s/APP_VERSION/$CODEBUILD_RESOLVED_SOURCE_VERSION/" helm/graphcms/Chart.yaml
       - cat helm/graphcms/Chart.yaml
   build:
     commands:
