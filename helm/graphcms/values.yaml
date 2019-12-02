@@ -1,0 +1,19 @@
+environment: dev
+dockerImage: 513854777862.dkr.ecr.us-west-2.amazonaws.com/graphcms
+dockerImageVersion: ''
+
+pullPolicy: IfNotPresent
+
+minReplicas: 1
+maxReplicas: 1
+
+# The deployment pod must be ready in <= this number of seconds
+# Passed directly to deployment
+minReadySeconds: 30
+
+# GraphQL port
+graphqlPort: 8080
+
+# Health port / path
+healthPath: /health
+healthPort: 10010

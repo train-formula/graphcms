@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "deploymentName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ (include "commonLabels" .) | indent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - graphcms.formula.haus
+      secretName: graphcms-tls
+  rules:
+    - host: graphcms.formula.haus
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: {{ template "deploymentName" . }}
+              servicePort: 80

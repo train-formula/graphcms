@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "deploymentName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ (include "commonLabels" .) | indent 4 }}
+spec:
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: {{ template "progressDeadlineSeconds" . }}
+  minReadySeconds: {{ .Values.minReadySeconds }}
+  selector:
+    matchLabels:
+{{ (include "commonLabels" .) | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ (include "commonLabels" .) | indent 8 }}
+      annotations:
+        # Including App Version as an annotation triggers redeploy of each pod
+        # after a 'helm upgrade' even if the image tag is the same. This is
+        # important in cases where we use image tags like 'staging'
+        appVersion: {{ .Chart.AppVersion | quote }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.dockerImage }}:{{ .Values.dockerImageVersion }}
+          imagePullPolicy: {{ .Values.pullPolicy }}
+          env:
+            - name: OCTOBER_PORT
+              value: "{{ .Values.healthPort }}"
+
+            - name: OCTOBER_GRAPHQL_PORT
+              value: "{{ .Values.graphqlPort }}"
+
+            - name: OCTOBER_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "configMapName" . }}
+                  key: 'OCTOBER_MODE'
+
+          ports:
+            - name: october
+              containerPort: {{ .Values.healthPort }}
+            - name: graphql
+              containerPort: {{ .Values.graphqlPort }}
+
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: {{ .Values.healthPath }}
+              port: {{ .Values.healthPort }}
+              scheme: HTTP
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: {{ .Values.healthPath }}
+              port: {{ .Values.healthPort }}
+              scheme: HTTP
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
