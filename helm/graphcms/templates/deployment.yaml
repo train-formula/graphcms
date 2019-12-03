@@ -37,8 +37,44 @@ spec:
             - name: OCTOBER_MODE
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "configMapName" . }}
+                  name: {{ template "deploymentName" . }}
                   key: 'OCTOBER_MODE'
+
+            - name: PG_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "deploymentName" . }}
+                  key: 'PG_HOST'
+
+            - name: PG_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "deploymentName" . }}
+                  key: 'PG_USERNAME'
+
+            - name: PG_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "deploymentName" . }}
+                  key: 'PG_DATABASE'
+
+            - name: PG_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "deploymentName" . }}
+                  key: 'PG_PORT'
+
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "deploymentName" . }}
+                  key: 'PG_PASSWORD'
+
+            - name: PG_APPLICATION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "deploymentName" . }}
+                  key: 'PG_APPLICATION'
 
           ports:
             - name: october

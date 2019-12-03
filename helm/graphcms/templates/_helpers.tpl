@@ -7,16 +7,6 @@
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-
-{{- define "configMapName" -}}
-{{ printf "%s" (include "deploymentName" .) }}
-{{- end -}}
-
-{{- define "secretMapName" -}}
-{{ printf "%s" (include "deploymentName" .) }}
-{{- end -}}
-
-
 {{/*
 	Creates a sane progressDeadlineSeconds default based on our minReadySeconds value
 

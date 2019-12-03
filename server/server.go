@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/go-pg/pg/v9"
-	"github.com/golang-migrate/migrate/v4"
 	"github.com/train-formula/graphcms"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/october"
 	"go.uber.org/zap"
 
+	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
@@ -64,10 +64,6 @@ func main() {
 		DB: db,
 	}}))
 
-	err = ginServer.Start()
-
-	if err != nil {
-		panic(err)
-	}
+	octoberServer.Start(ginServer, october.DefaultGracefulShutdownSignals...)
 
 }

@@ -2,7 +2,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: {{ template "configMapName" . }}
+  name: {{ template "deploymentName" . }}
   namespace: {{ .Release.Namespace }}
   labels:
 {{ (include "commonLabels" .) | indent 4 }}
