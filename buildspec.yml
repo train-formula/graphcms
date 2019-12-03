@@ -35,7 +35,8 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - cd ./helm/graphcms
       - echo Loading secrets
-      - cd ./helm/graphcms && ./load_secrets.sh
+      - ./load_secrets.sh
       - echo Deploying helm
-      - helm upgrade --set dockerImageVersion=$CODEBUILD_RESOLVED_SOURCE_VERSION --install graphcms ./helm/graphcms
+      - helm upgrade --set dockerImageVersion=$CODEBUILD_RESOLVED_SOURCE_VERSION --install graphcms ./
