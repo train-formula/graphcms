@@ -21,16 +21,15 @@ phases:
       - echo Replacing APP_VERSION...
       - sed -i "s/APP_VERSION/$CODEBUILD_RESOLVED_SOURCE_VERSION/" helm/graphcms/Chart.yaml
       - export KUBECONFIG=$HOME/.kube/config
-      - cat helm/graphcms/Chart.yaml
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t $IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION .
-      - docker tag $IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - docker build -t graphcms:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+      - docker tag graphcms:$CODEBUILD_RESOLVED_SOURCE_VERSION 513854777862.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/graphcms:$CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - docker push 513854777862.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/graphcms:$CODEBUILD_RESOLVED_SOURCE_VERSION
   post_build:
     commands:
       - cd ./helm/graphcms
@@ -44,9 +43,5 @@ phases:
       - export AWS_EXPIRATION=$(echo ${CREDENTIALS} | jq -r '.Credentials.Expiration')
       - mkdir ~/.kube/
       - aws eks update-kubeconfig --name Formula-Staging
-      - cat ~/.kube/config
-      - aws sts get-caller-identity
-      - aws --region us-west-2 eks get-token --cluster-name Formula-Staging
-      - kubectl get po
       - echo Deploying helm
       - helm upgrade --set dockerImageVersion=$CODEBUILD_RESOLVED_SOURCE_VERSION --install graphcms ./
