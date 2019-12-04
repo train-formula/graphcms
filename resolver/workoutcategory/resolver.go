@@ -5,6 +5,8 @@ import (
 
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
+	"github.com/train-formula/graphcms/calls/tagcall"
+	"github.com/train-formula/graphcms/database/tagdb"
 
 	"github.com/train-formula/graphcms/calls/organizationcall"
 	"github.com/train-formula/graphcms/generated"
@@ -43,5 +45,18 @@ func (r *Resolver) Exercises(ctx context.Context, obj *workout.WorkoutCategory, 
 }
 
 func (r *Resolver) Tags(ctx context.Context, obj *workout.WorkoutCategory) ([]*tag.Tag, error) {
-	panic("not implemented")
+
+	g := tagcall.GetObjectTags{
+		Request: tagdb.TagsByObject{
+			ObjectUUID: obj.ID,
+			ObjectType: tag.WorkoutCategoryTagType,
+		},
+		DB: r.db,
+	}
+
+	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
+		return g.Call(ctx)
+	}
+
+	return nil, nil
 }

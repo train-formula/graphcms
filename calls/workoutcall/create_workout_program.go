@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
+	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/database/trainerdb"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
@@ -32,15 +33,6 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 		return nil, err
 	}
 
-	_, err = trainerdb.GetOrganization(ctx, c.DB, c.Request.TrainerOrganizationID)
-
-	if err != nil {
-		if err == pg.ErrNoRows {
-			return nil, gqlerror.Errorf("Organization does not exist")
-		}
-		return nil, err
-	}
-
 	var description string
 	if c.Request.Description != nil {
 		description = *c.Request.Description
@@ -48,13 +40,48 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 		description = ""
 	}
 
-	new := workout.WorkoutProgram{
-		ID: newUuid,
+	var finalProgram *workout.WorkoutProgram
 
-		Name:                  c.Request.Name,
-		Description:           description,
-		TrainerOrganizationID: c.Request.TrainerOrganizationID,
+	err = c.DB.RunInTransaction(func(t *pg.Tx) error {
+		_, err := trainerdb.GetOrganization(ctx, c.DB, c.Request.TrainerOrganizationID)
+
+		if err != nil {
+			if err == pg.ErrNoRows {
+				return gqlerror.Errorf("Organization does not exist")
+			}
+			return err
+		}
+
+		err = validation.TagsAllExistForTrainer(ctx, t, c.Request.TrainerOrganizationID, c.Request.Tags)
+		if err != nil {
+			return err
+		}
+
+		new := workout.WorkoutProgram{
+			ID: newUuid,
+
+			Name:                  c.Request.Name,
+			Description:           description,
+			TrainerOrganizationID: c.Request.TrainerOrganizationID,
+		}
+
+		finalProgram, err = workoutdb.InsertWorkoutProgram(ctx, c.DB, new)
+
+		for _, tagUUID := range c.Request.Tags {
+
+			_, err := tagdb.TagWorkoutProgram(ctx, t, tagUUID, c.Request.TrainerOrganizationID, finalProgram.ID)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	return workoutdb.InsertWorkoutProgram(ctx, c.DB, new)
+	return finalProgram, nil
 }

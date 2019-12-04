@@ -55,14 +55,14 @@ func (g GetOrganizationAvailableTags) Call(ctx context.Context) (*connections.Ta
 
 	query, params := g.genQuery(false)
 
-	query, params, err := database.BasicCursorPaginationQuery(query, "", g.After, tag.Tag{}, g.First, params...)
+	/*query, params, err := database.BasicCursorPaginationQuery(query, "", g.After, tag.Tag{}, g.First, params...)
 	if err != nil {
 		g.logger().Error("Failed to generate pagination query", zap.Error(err))
 
 		return nil, err
-	}
+	}*/
 
-	_, err = g.DB.QueryContext(ctx, &tags, query, params...)
+	_, err := g.DB.QueryContext(ctx, &tags, query, params...)
 
 	if err != nil {
 		g.logger().Error("Failed to organization tags", zap.Error(err))

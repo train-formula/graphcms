@@ -6,6 +6,7 @@ import (
 	"github.com/train-formula/graphcms/dataloader/organizationid"
 	"github.com/train-formula/graphcms/dataloader/tagbytag"
 	"github.com/train-formula/graphcms/dataloader/tagid"
+	"github.com/train-formula/graphcms/dataloader/tagsbyobject"
 )
 
 func RegisterLoaders(db *pg.DB) gin.HandlerFunc {
@@ -14,6 +15,7 @@ func RegisterLoaders(db *pg.DB) gin.HandlerFunc {
 		organizationid.AddContextLoader(c, db)
 		tagid.AddContextLoader(c, db)
 		tagbytag.AddContextLoader(c, db)
+		tagsbyobject.AddContextLoader(c, db)
 
 		c.Request = c.Request.WithContext(c)
 

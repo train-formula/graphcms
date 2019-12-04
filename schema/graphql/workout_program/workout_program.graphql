@@ -1,5 +1,4 @@
 extend type Query {
-
     workoutProgram(id: ID!): WorkoutProgram
 }
 
@@ -32,6 +31,7 @@ type WorkoutProgram {
 
     # Fetchers
     trainerOrganization: Organization
+    tags: [Tag!]
 
     # Connections
     workouts(first: Int, after: ID!): WorkoutConnection!
@@ -50,6 +50,9 @@ type WorkoutProgramEdge {
     node: WorkoutProgram!
 }
 
+###############################
+### CREATE WORKOUT PROGRAM ####
+###############################
 
 input CreateWorkoutProgram {
     trainerOrganizationID: ID!
@@ -57,4 +60,6 @@ input CreateWorkoutProgram {
     name: String!
 
     description: String
+
+    tags: [ID!]
 }

@@ -3,7 +3,6 @@ extend type Query {
 
     organizationAvailableTags(id: ID!, first: Int!, after: String): TagConnection
 
-    organizationWorkoutCategories(id: ID!, first: Int!, after: String): WorkoutCategoryConnection
 }
 
 type Organization {

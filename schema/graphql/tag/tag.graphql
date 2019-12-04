@@ -1,10 +1,9 @@
 
 extend type Query {
+
     tag(id: ID!): Tag
 
-
     tagByTag(tag: String!, trainerOrganizationID: ID!): Tag
-
 }
 
 extend type Mutation {

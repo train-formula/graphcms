@@ -1,0 +1,18 @@
+extend type Query {
+
+    workoutCategorySearch(request: WorkoutCategorySearchRequest!, first: Int!, after: String): WorkoutCategorySearchResults
+}
+
+
+input WorkoutCategorySearchRequest {
+    trainerOrganizationID: ID!
+    tagUUIDs: [ID!]
+}
+
+
+type WorkoutCategorySearchResults {
+
+    tag_facet: TagFacet
+
+    results: WorkoutCategoryConnection!
+}

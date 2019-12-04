@@ -1,4 +1,8 @@
 
+extend type Query {
+    workoutCategory(id: ID!): WorkoutCategory
+}
+
 extend type Mutation {
 
     createWorkoutCategory(request: CreateWorkoutCategory!): WorkoutCategory

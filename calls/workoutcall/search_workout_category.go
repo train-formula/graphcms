@@ -8,26 +8,27 @@ import (
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/connections"
+	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"go.uber.org/zap"
 )
 
-type SearchWorkoutProgram struct {
-	Request generated.WorkoutProgramSearchRequest
+type SearchWorkoutCategory struct {
+	Request generated.WorkoutCategorySearchRequest
 	First   int
 	After   cursor.Cursor
 	DB      *pg.DB
 	Logger  *zap.Logger
 }
 
-func (s SearchWorkoutProgram) logger() *zap.Logger {
+func (s SearchWorkoutCategory) logger() *zap.Logger {
 
-	return s.Logger.Named("SearchWorkoutProgram")
+	return s.Logger.Named("SearchWorkoutCategory")
 
 }
 
-func (s SearchWorkoutProgram) genQuery(count bool) (string, []interface{}) {
+func (s SearchWorkoutCategory) genQuery(count bool) (string, []interface{}) {
 
 	var query string
 
@@ -37,22 +38,40 @@ func (s SearchWorkoutProgram) genQuery(count bool) (string, []interface{}) {
 		query += "SELECT *"
 	}
 
-	query += ` FROM ` + database.TableName(workout.WorkoutProgram{}) + `
-							WHERE trainer_organization_id = ?`
+	var params []interface{}
 
-	return query, []interface{}{s.Request.TrainerOrganizationID}
+	if len(s.Request.TagUUIDs) > 0 {
+		query += ` FROM ` + database.TableName(workout.WorkoutCategory{}) + ` wc ` +
+			` INNER JOIN ` + database.TableName(tag.Tagged{}) + ` t ` +
+			` ON wc.id = t.tagged_id WHERE wc.trainer_organization_id = ? AND `
+
+		params = []interface{}{s.Request.TrainerOrganizationID}
+
+		for _, tagUUID := range s.Request.TagUUIDs {
+			params = append(params, tagUUID)
+		}
+
+	} else {
+		query += ` FROM ` + database.TableName(workout.WorkoutCategory{}) + `
+								WHERE trainer_organization_id = ?`
+
+		params = []interface{}{s.Request.TrainerOrganizationID}
+	}
+
+	return query, params
+
 }
 
-func (s SearchWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
+func (s SearchWorkoutCategory) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
 		validation.DefaultCheckPageSize(s.First),
 	}
 }
 
-func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgramSearchResults, error) {
+func (s SearchWorkoutCategory) Call(ctx context.Context) (*generated.WorkoutCategorySearchResults, error) {
 
-	var programs []*workout.WorkoutProgram
+	var programs []*workout.WorkoutCategory
 
 	query, params := s.genQuery(false)
 
@@ -71,9 +90,9 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 		return nil, err
 	}
 
-	return &generated.WorkoutProgramSearchResults{
+	return &generated.WorkoutCategorySearchResults{
 		TagFacet: nil,
-		Results: &connections.WorkoutProgramConnection{
+		Results: &connections.WorkoutCategoryConnection{
 			ResolveTotalCount: func(ctx context.Context) (int, error) {
 				query, params := s.genQuery(true)
 

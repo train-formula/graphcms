@@ -24,14 +24,18 @@ phases:
       - echo Replacing APP_VERSION...
       - sed -i "s/APP_VERSION/$CODEBUILD_RESOLVED_SOURCE_VERSION/" helm/graphcms/Chart.yaml
       - cat helm/graphcms/Chart.yaml
+      - kubectl get po
+      - cat ~/.kube/config
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
       - docker build -t $IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION .
       - docker tag $IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - kubectl get po
   post_build:
     commands:
+      - kubectl get po
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION

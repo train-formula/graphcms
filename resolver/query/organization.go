@@ -46,25 +46,3 @@ func (r *QueryResolver) OrganizationAvailableTags(ctx context.Context, id uuid.U
 
 	return nil, nil
 }
-
-func (r *QueryResolver) OrganizationWorkoutCategories(ctx context.Context, id uuid.UUID, first int, after *string) (*connections.WorkoutCategoryConnection, error) {
-
-	cursor, err := cursor.DeserializeCursor(after)
-	if err != nil {
-		return nil, err
-	}
-
-	g := organizationcall.GetWorkoutCategories{
-		TrainerOrganizationID: id,
-		First:                 first,
-		After:                 cursor,
-		DB:                    r.db,
-		Logger:                r.logger,
-	}
-
-	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
-		return g.Call(ctx)
-	}
-
-	return nil, nil
-}

@@ -28,9 +28,10 @@ type CreateWorkoutCategory struct {
 }
 
 type CreateWorkoutProgram struct {
-	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
-	Name                  string    `json:"name"`
-	Description           *string   `json:"description"`
+	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
+	Name                  string      `json:"name"`
+	Description           *string     `json:"description"`
+	Tags                  []uuid.UUID `json:"tags"`
 }
 
 type EditWorkoutCategory struct {
@@ -57,6 +58,16 @@ type ExerciseEdge struct {
 
 type TagFacet struct {
 	Tags []*tag.Tag `json:"tags"`
+}
+
+type WorkoutCategorySearchRequest struct {
+	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
+	TagUUIDs              []uuid.UUID `json:"tagUUIDs"`
+}
+
+type WorkoutCategorySearchResults struct {
+	TagFacet *TagFacet                              `json:"tag_facet"`
+	Results  *connections.WorkoutCategoryConnection `json:"results"`
 }
 
 type WorkoutConnection struct {

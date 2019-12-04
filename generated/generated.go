@@ -109,15 +109,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AvailableUnits                func(childComplexity int) int
-		Health                        func(childComplexity int) int
-		Organization                  func(childComplexity int, id uuid.UUID) int
-		OrganizationAvailableTags     func(childComplexity int, id uuid.UUID, first int, after *string) int
-		OrganizationWorkoutCategories func(childComplexity int, id uuid.UUID, first int, after *string) int
-		Tag                           func(childComplexity int, id uuid.UUID) int
-		TagByTag                      func(childComplexity int, tag string, trainerOrganizationID uuid.UUID) int
-		WorkoutProgram                func(childComplexity int, id uuid.UUID) int
-		WorkoutProgramSearch          func(childComplexity int, request WorkoutProgramSearchRequest, first int, after *string) int
+		AvailableUnits            func(childComplexity int) int
+		Health                    func(childComplexity int) int
+		Organization              func(childComplexity int, id uuid.UUID) int
+		OrganizationAvailableTags func(childComplexity int, id uuid.UUID, first int, after *string) int
+		Tag                       func(childComplexity int, id uuid.UUID) int
+		TagByTag                  func(childComplexity int, tag string, trainerOrganizationID uuid.UUID) int
+		WorkoutCategorySearch     func(childComplexity int, request WorkoutCategorySearchRequest, first int, after *string) int
+		WorkoutProgram            func(childComplexity int, id uuid.UUID) int
+		WorkoutProgramSearch      func(childComplexity int, request WorkoutProgramSearchRequest, first int, after *string) int
 	}
 
 	Tag struct {
@@ -193,6 +193,11 @@ type ComplexityRoot struct {
 		Node   func(childComplexity int) int
 	}
 
+	WorkoutCategorySearchResults struct {
+		Results  func(childComplexity int) int
+		TagFacet func(childComplexity int) int
+	}
+
 	WorkoutConnection struct {
 		Edges      func(childComplexity int) int
 		PageInfo   func(childComplexity int) int
@@ -211,6 +216,7 @@ type ComplexityRoot struct {
 		ID                       func(childComplexity int) int
 		Name                     func(childComplexity int) int
 		StartsWhenCustomerStarts func(childComplexity int) int
+		Tags                     func(childComplexity int) int
 		TrainerOrganization      func(childComplexity int) int
 		TrainerOrganizationID    func(childComplexity int) int
 		UpdatedAt                func(childComplexity int) int
@@ -252,10 +258,10 @@ type QueryResolver interface {
 	Health(ctx context.Context) (string, error)
 	Organization(ctx context.Context, id uuid.UUID) (*trainer.Organization, error)
 	OrganizationAvailableTags(ctx context.Context, id uuid.UUID, first int, after *string) (*connections.TagConnection, error)
-	OrganizationWorkoutCategories(ctx context.Context, id uuid.UUID, first int, after *string) (*connections.WorkoutCategoryConnection, error)
 	Tag(ctx context.Context, id uuid.UUID) (*tag.Tag, error)
 	TagByTag(ctx context.Context, tag string, trainerOrganizationID uuid.UUID) (*tag.Tag, error)
 	AvailableUnits(ctx context.Context) ([]*workout.Unit, error)
+	WorkoutCategorySearch(ctx context.Context, request WorkoutCategorySearchRequest, first int, after *string) (*WorkoutCategorySearchResults, error)
 	WorkoutProgram(ctx context.Context, id uuid.UUID) (*workout.WorkoutProgram, error)
 	WorkoutProgramSearch(ctx context.Context, request WorkoutProgramSearchRequest, first int, after *string) (*WorkoutProgramSearchResults, error)
 }
@@ -279,6 +285,7 @@ type WorkoutCategoryConnectionResolver interface {
 }
 type WorkoutProgramResolver interface {
 	TrainerOrganization(ctx context.Context, obj *workout.WorkoutProgram) (*trainer.Organization, error)
+	Tags(ctx context.Context, obj *workout.WorkoutProgram) ([]*tag.Tag, error)
 	Workouts(ctx context.Context, obj *workout.WorkoutProgram, first *int, after uuid.UUID) (*WorkoutConnection, error)
 }
 type WorkoutProgramConnectionResolver interface {
@@ -598,18 +605,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.OrganizationAvailableTags(childComplexity, args["id"].(uuid.UUID), args["first"].(int), args["after"].(*string)), true
 
-	case "Query.organizationWorkoutCategories":
-		if e.complexity.Query.OrganizationWorkoutCategories == nil {
-			break
-		}
-
-		args, err := ec.field_Query_organizationWorkoutCategories_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.OrganizationWorkoutCategories(childComplexity, args["id"].(uuid.UUID), args["first"].(int), args["after"].(*string)), true
-
 	case "Query.tag":
 		if e.complexity.Query.Tag == nil {
 			break
@@ -633,6 +628,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.TagByTag(childComplexity, args["tag"].(string), args["trainerOrganizationID"].(uuid.UUID)), true
+
+	case "Query.workoutCategorySearch":
+		if e.complexity.Query.WorkoutCategorySearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_workoutCategorySearch_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.WorkoutCategorySearch(childComplexity, args["request"].(WorkoutCategorySearchRequest), args["first"].(int), args["after"].(*string)), true
 
 	case "Query.workoutProgram":
 		if e.complexity.Query.WorkoutProgram == nil {
@@ -990,6 +997,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WorkoutCategoryEdge.Node(childComplexity), true
 
+	case "WorkoutCategorySearchResults.results":
+		if e.complexity.WorkoutCategorySearchResults.Results == nil {
+			break
+		}
+
+		return e.complexity.WorkoutCategorySearchResults.Results(childComplexity), true
+
+	case "WorkoutCategorySearchResults.tag_facet":
+		if e.complexity.WorkoutCategorySearchResults.TagFacet == nil {
+			break
+		}
+
+		return e.complexity.WorkoutCategorySearchResults.TagFacet(childComplexity), true
+
 	case "WorkoutConnection.edges":
 		if e.complexity.WorkoutConnection.Edges == nil {
 			break
@@ -1066,6 +1087,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.WorkoutProgram.StartsWhenCustomerStarts(childComplexity), true
+
+	case "WorkoutProgram.tags":
+		if e.complexity.WorkoutProgram.Tags == nil {
+			break
+		}
+
+		return e.complexity.WorkoutProgram.Tags(childComplexity), true
 
 	case "WorkoutProgram.trainerOrganization":
 		if e.complexity.WorkoutProgram.TrainerOrganization == nil {
@@ -1263,7 +1291,6 @@ type ExerciseEdge {
 
     organizationAvailableTags(id: ID!, first: Int!, after: String): TagConnection
 
-    organizationWorkoutCategories(id: ID!, first: Int!, after: String): WorkoutCategoryConnection
 }
 
 type Organization {
@@ -1324,11 +1351,10 @@ type TagFacet {
 `},
 	&ast.Source{Name: "schema/graphql/tag/tag.graphql", Input: `
 extend type Query {
+
     tag(id: ID!): Tag
 
-
     tagByTag(tag: String!, trainerOrganizationID: ID!): Tag
-
 }
 
 extend type Mutation {
@@ -1513,6 +1539,24 @@ input EditWorkoutCategory {
     durationSeconds: NullableIntEditor
 
 }`},
+	&ast.Source{Name: "schema/graphql/workout_category/workout_category_search.graphql", Input: `extend type Query {
+
+    workoutCategorySearch(request: WorkoutCategorySearchRequest!, first: Int!, after: String): WorkoutCategorySearchResults
+}
+
+
+input WorkoutCategorySearchRequest {
+    trainerOrganizationID: ID!
+    tagUUIDs: [ID!]
+}
+
+
+type WorkoutCategorySearchResults {
+
+    tag_facet: TagFacet
+
+    results: WorkoutCategoryConnection!
+}`},
 	&ast.Source{Name: "schema/graphql/workout_program/workout_program.graphql", Input: `extend type Query {
 
     workoutProgram(id: ID!): WorkoutProgram
@@ -1547,6 +1591,7 @@ type WorkoutProgram {
 
     # Fetchers
     trainerOrganization: Organization
+    tags: [Tag!]
 
     # Connections
     workouts(first: Int, after: ID!): WorkoutConnection!
@@ -1572,6 +1617,8 @@ input CreateWorkoutProgram {
     name: String!
 
     description: String
+
+    tags: [ID!]
 }`},
 	&ast.Source{Name: "schema/graphql/workout_program/workout_program_search.graphql", Input: `extend type Query {
 
@@ -1697,36 +1744,6 @@ func (ec *executionContext) field_Query_organizationAvailableTags_args(ctx conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_organizationWorkoutCategories_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 uuid.UUID
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 int
-	if tmp, ok := rawArgs["first"]; ok {
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["first"] = arg1
-	var arg2 *string
-	if tmp, ok := rawArgs["after"]; ok {
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["after"] = arg2
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_organization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1774,6 +1791,36 @@ func (ec *executionContext) field_Query_tag_args(ctx context.Context, rawArgs ma
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_workoutCategorySearch_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 WorkoutCategorySearchRequest
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNWorkoutCategorySearchRequest2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutCategorySearchRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["first"]; ok {
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg2
 	return args, nil
 }
 
@@ -2559,7 +2606,7 @@ func (ec *executionContext) _ExerciseConnection_edges(ctx context.Context, field
 	res := resTmp.([]*ExerciseEdge)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOExerciseEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐExerciseEdge(ctx, field.Selections, res)
+	return ec.marshalOExerciseEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐExerciseEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ExerciseConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ExerciseConnection) (ret graphql.Marshaler) {
@@ -3286,47 +3333,6 @@ func (ec *executionContext) _Query_organizationAvailableTags(ctx context.Context
 	return ec.marshalOTagConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐTagConnection(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_organizationWorkoutCategories(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_organizationWorkoutCategories_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().OrganizationWorkoutCategories(rctx, args["id"].(uuid.UUID), args["first"].(int), args["after"].(*string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*connections.WorkoutCategoryConnection)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOWorkoutCategoryConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐWorkoutCategoryConnection(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -3440,7 +3446,48 @@ func (ec *executionContext) _Query_availableUnits(ctx context.Context, field gra
 	res := resTmp.([]*workout.Unit)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOUnit2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnit(ctx, field.Selections, res)
+	return ec.marshalOUnit2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnitᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_workoutCategorySearch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_workoutCategorySearch_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().WorkoutCategorySearch(rctx, args["request"].(WorkoutCategorySearchRequest), args["first"].(int), args["after"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*WorkoutCategorySearchResults)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOWorkoutCategorySearchResults2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutCategorySearchResults(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_workoutProgram(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3853,7 +3900,7 @@ func (ec *executionContext) _TagConnection_edges(ctx context.Context, field grap
 	res := resTmp.([]*tag.Tag)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOTagEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx, field.Selections, res)
+	return ec.marshalOTagEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TagConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.TagConnection) (ret graphql.Marshaler) {
@@ -3998,7 +4045,7 @@ func (ec *executionContext) _TagFacet_tags(ctx context.Context, field graphql.Co
 	res := resTmp.([]*tag.Tag)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx, field.Selections, res)
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Unit_id(ctx context.Context, field graphql.CollectedField, obj *workout.Unit) (ret graphql.Marshaler) {
@@ -5026,7 +5073,7 @@ func (ec *executionContext) _WorkoutCategory_tags(ctx context.Context, field gra
 	res := resTmp.([]*tag.Tag)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx, field.Selections, res)
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutCategory_trainerOrganization(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutCategory) (ret graphql.Marshaler) {
@@ -5175,7 +5222,7 @@ func (ec *executionContext) _WorkoutCategoryConnection_edges(ctx context.Context
 	res := resTmp.([]*workout.WorkoutCategory)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategory(ctx, field.Selections, res)
+	return ec.marshalOWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutCategoryConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.WorkoutCategoryConnection) (ret graphql.Marshaler) {
@@ -5289,6 +5336,77 @@ func (ec *executionContext) _WorkoutCategoryEdge_node(ctx context.Context, field
 	return ec.marshalNWorkoutCategory2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategory(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _WorkoutCategorySearchResults_tag_facet(ctx context.Context, field graphql.CollectedField, obj *WorkoutCategorySearchResults) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutCategorySearchResults",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TagFacet, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*TagFacet)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTagFacet2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐTagFacet(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkoutCategorySearchResults_results(ctx context.Context, field graphql.CollectedField, obj *WorkoutCategorySearchResults) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutCategorySearchResults",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Results, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*connections.WorkoutCategoryConnection)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNWorkoutCategoryConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐWorkoutCategoryConnection(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _WorkoutConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *WorkoutConnection) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5357,7 +5475,7 @@ func (ec *executionContext) _WorkoutConnection_edges(ctx context.Context, field 
 	res := resTmp.([]*WorkoutEdge)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOWorkoutEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdge(ctx, field.Selections, res)
+	return ec.marshalOWorkoutEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *WorkoutConnection) (ret graphql.Marshaler) {
@@ -5795,6 +5913,40 @@ func (ec *executionContext) _WorkoutProgram_trainerOrganization(ctx context.Cont
 	return ec.marshalOOrganization2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtrainerᚐOrganization(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _WorkoutProgram_tags(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutProgram) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutProgram",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.WorkoutProgram().Tags(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*tag.Tag)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _WorkoutProgram_workouts(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutProgram) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5907,7 +6059,7 @@ func (ec *executionContext) _WorkoutProgramConnection_edges(ctx context.Context,
 	res := resTmp.([]*workout.WorkoutProgram)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx, field.Selections, res)
+	return ec.marshalOWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgramᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutProgramConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.WorkoutProgramConnection) (ret graphql.Marshaler) {
@@ -6197,7 +6349,7 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 	res := resTmp.([]string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__DirectiveLocation2ᚕstring(ctx, field.Selections, res)
+	return ec.marshalN__DirectiveLocation2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -6234,7 +6386,7 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 	res := resTmp.([]introspection.InputValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, field.Selections, res)
+	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
@@ -6484,7 +6636,7 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 	res := resTmp.([]introspection.InputValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, field.Selections, res)
+	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
@@ -6771,7 +6923,7 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 	res := resTmp.([]introspection.Type)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+	return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
@@ -6913,7 +7065,7 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 	res := resTmp.([]introspection.Directive)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, field.Selections, res)
+	return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -7059,7 +7211,7 @@ func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.Co
 	res := resTmp.([]introspection.Field)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, field.Selections, res)
+	return ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -7093,7 +7245,7 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 	res := resTmp.([]introspection.Type)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -7127,7 +7279,7 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 	res := resTmp.([]introspection.Type)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -7168,7 +7320,7 @@ func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphq
 	res := resTmp.([]introspection.EnumValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, field.Selections, res)
+	return ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -7202,7 +7354,7 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 	res := resTmp.([]introspection.InputValue)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, field.Selections, res)
+	return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
@@ -7323,7 +7475,7 @@ func (ec *executionContext) unmarshalInputCreateWorkoutCategory(ctx context.Cont
 			}
 		case "tags":
 			var err error
-			it.Tags, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			it.Tags, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7354,6 +7506,12 @@ func (ec *executionContext) unmarshalInputCreateWorkoutProgram(ctx context.Conte
 		case "description":
 			var err error
 			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tags":
+			var err error
+			it.Tags, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7477,6 +7635,30 @@ func (ec *executionContext) unmarshalInputNullableStringEditor(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputWorkoutCategorySearchRequest(ctx context.Context, obj interface{}) (WorkoutCategorySearchRequest, error) {
+	var it WorkoutCategorySearchRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "trainerOrganizationID":
+			var err error
+			it.TrainerOrganizationID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tagUUIDs":
+			var err error
+			it.TagUUIDs, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputWorkoutProgramSearchRequest(ctx context.Context, obj interface{}) (WorkoutProgramSearchRequest, error) {
 	var it WorkoutProgramSearchRequest
 	var asMap = obj.(map[string]interface{})
@@ -7491,7 +7673,7 @@ func (ec *executionContext) unmarshalInputWorkoutProgramSearchRequest(ctx contex
 			}
 		case "tagUUIDs":
 			var err error
-			it.TagUUIDs, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			it.TagUUIDs, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7860,17 +8042,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_organizationAvailableTags(ctx, field)
 				return res
 			})
-		case "organizationWorkoutCategories":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_organizationWorkoutCategories(ctx, field)
-				return res
-			})
 		case "tag":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -7902,6 +8073,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_availableUnits(ctx, field)
+				return res
+			})
+		case "workoutCategorySearch":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_workoutCategorySearch(ctx, field)
 				return res
 			})
 		case "workoutProgram":
@@ -8414,6 +8596,35 @@ func (ec *executionContext) _WorkoutCategoryEdge(ctx context.Context, sel ast.Se
 	return out
 }
 
+var workoutCategorySearchResultsImplementors = []string{"WorkoutCategorySearchResults"}
+
+func (ec *executionContext) _WorkoutCategorySearchResults(ctx context.Context, sel ast.SelectionSet, obj *WorkoutCategorySearchResults) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, workoutCategorySearchResultsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WorkoutCategorySearchResults")
+		case "tag_facet":
+			out.Values[i] = ec._WorkoutCategorySearchResults_tag_facet(ctx, field, obj)
+		case "results":
+			out.Values[i] = ec._WorkoutCategorySearchResults_results(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var workoutConnectionImplementors = []string{"WorkoutConnection"}
 
 func (ec *executionContext) _WorkoutConnection(ctx context.Context, sel ast.SelectionSet, obj *WorkoutConnection) graphql.Marshaler {
@@ -8534,6 +8745,17 @@ func (ec *executionContext) _WorkoutProgram(ctx context.Context, sel ast.Selecti
 					}
 				}()
 				res = ec._WorkoutProgram_trainerOrganization(ctx, field, obj)
+				return res
+			})
+		case "tags":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._WorkoutProgram_tags(ctx, field, obj)
 				return res
 			})
 		case "workouts":
@@ -9168,6 +9390,10 @@ func (ec *executionContext) marshalNWorkoutCategoryEdge2ᚖgithubᚗcomᚋtrain�
 	return ec._WorkoutCategoryEdge(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNWorkoutCategorySearchRequest2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutCategorySearchRequest(ctx context.Context, v interface{}) (WorkoutCategorySearchRequest, error) {
+	return ec.unmarshalInputWorkoutCategorySearchRequest(ctx, v)
+}
+
 func (ec *executionContext) marshalNWorkoutConnection2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutConnection(ctx context.Context, sel ast.SelectionSet, v WorkoutConnection) graphql.Marshaler {
 	return ec._WorkoutConnection(ctx, sel, &v)
 }
@@ -9246,7 +9472,7 @@ func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlge
 	return ec.___Directive(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
+func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9297,7 +9523,7 @@ func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Conte
 	return res
 }
 
-func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstring(ctx context.Context, v interface{}) ([]string, error) {
+func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -9317,7 +9543,7 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstring(ctx context.
 	return res, nil
 }
 
-func (ec *executionContext) marshalN__DirectiveLocation2ᚕstring(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9366,7 +9592,7 @@ func (ec *executionContext) marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlg
 	return ec.___InputValue(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9407,7 +9633,7 @@ func (ec *executionContext) marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 	return ec.___Type(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9515,7 +9741,7 @@ func (ec *executionContext) marshalOCategoryType2ᚖgithubᚗcomᚋtrainᚑformu
 	return v
 }
 
-func (ec *executionContext) marshalOExerciseEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐExerciseEdge(ctx context.Context, sel ast.SelectionSet, v []*ExerciseEdge) graphql.Marshaler {
+func (ec *executionContext) marshalOExerciseEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐExerciseEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*ExerciseEdge) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9563,7 +9789,7 @@ func (ec *executionContext) marshalOID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx co
 	return models.MarshalUUID(v)
 }
 
-func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx context.Context, v interface{}) ([]uuid.UUID, error) {
+func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx context.Context, v interface{}) ([]uuid.UUID, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -9583,7 +9809,7 @@ func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUID(c
 	return res, nil
 }
 
-func (ec *executionContext) marshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v []uuid.UUID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []uuid.UUID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9730,7 +9956,7 @@ func (ec *executionContext) marshalOTag2githubᚗcomᚋtrainᚑformulaᚋgraphcm
 	return ec._Tag(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx context.Context, sel ast.SelectionSet, v []*tag.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*tag.Tag) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9788,7 +10014,7 @@ func (ec *executionContext) marshalOTagConnection2ᚖgithubᚗcomᚋtrainᚑform
 	return ec._TagConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOTagEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx context.Context, sel ast.SelectionSet, v []*tag.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTagEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*tag.Tag) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9862,7 +10088,7 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return ec.marshalOTime2timeᚐTime(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOUnit2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnit(ctx context.Context, sel ast.SelectionSet, v []*workout.Unit) graphql.Marshaler {
+func (ec *executionContext) marshalOUnit2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnitᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.Unit) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9913,18 +10139,7 @@ func (ec *executionContext) marshalOWorkoutCategory2ᚖgithubᚗcomᚋtrainᚑfo
 	return ec._WorkoutCategory(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOWorkoutCategoryConnection2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐWorkoutCategoryConnection(ctx context.Context, sel ast.SelectionSet, v connections.WorkoutCategoryConnection) graphql.Marshaler {
-	return ec._WorkoutCategoryConnection(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOWorkoutCategoryConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐWorkoutCategoryConnection(ctx context.Context, sel ast.SelectionSet, v *connections.WorkoutCategoryConnection) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._WorkoutCategoryConnection(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategory(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutCategory) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutCategory) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9964,7 +10179,18 @@ func (ec *executionContext) marshalOWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtra
 	return ret
 }
 
-func (ec *executionContext) marshalOWorkoutEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdge(ctx context.Context, sel ast.SelectionSet, v []*WorkoutEdge) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkoutCategorySearchResults2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutCategorySearchResults(ctx context.Context, sel ast.SelectionSet, v WorkoutCategorySearchResults) graphql.Marshaler {
+	return ec._WorkoutCategorySearchResults(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOWorkoutCategorySearchResults2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutCategorySearchResults(ctx context.Context, sel ast.SelectionSet, v *WorkoutCategorySearchResults) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._WorkoutCategorySearchResults(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOWorkoutEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*WorkoutEdge) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10015,7 +10241,7 @@ func (ec *executionContext) marshalOWorkoutProgram2ᚖgithubᚗcomᚋtrainᚑfor
 	return ec._WorkoutProgram(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutProgram) graphql.Marshaler {
+func (ec *executionContext) marshalOWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgramᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutProgram) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10066,7 +10292,7 @@ func (ec *executionContext) marshalOWorkoutProgramSearchResults2ᚖgithubᚗcom�
 	return ec._WorkoutProgramSearchResults(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
+func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10106,7 +10332,7 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 	return ret
 }
 
-func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx context.Context, sel ast.SelectionSet, v []introspection.Field) graphql.Marshaler {
+func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Field) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10146,7 +10372,7 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 	return ret
 }
 
-func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
+func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10201,7 +10427,7 @@ func (ec *executionContext) marshalO__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 	return ec.___Type(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
+func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
