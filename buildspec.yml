@@ -24,7 +24,6 @@ phases:
       - echo Replacing APP_VERSION...
       - sed -i "s/APP_VERSION/$CODEBUILD_RESOLVED_SOURCE_VERSION/" helm/graphcms/Chart.yaml
       - cat helm/graphcms/Chart.yaml
-      - kubectl get po
       - cat ~/.kube/config
   build:
     commands:
