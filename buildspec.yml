@@ -25,6 +25,8 @@ phases:
       - sed -i "s/APP_VERSION/$CODEBUILD_RESOLVED_SOURCE_VERSION/" helm/graphcms/Chart.yaml
       - cat helm/graphcms/Chart.yaml
       - cat ~/.kube/config
+      - aws sts get-caller-identity
+      - aws --region us-west-2 eks --cluster-name Formula-Staging
   build:
     commands:
       - echo Build started on `date`
