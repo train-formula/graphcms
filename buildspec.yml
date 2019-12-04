@@ -4,7 +4,7 @@ phases:
     runtime-versions:
       docker: 18
     commands:
-      - apt install -y python3
+      - apt install -y jq python3
       - curl -o aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.4.0/aws-iam-authenticator_0.4.0_linux_amd64
       - chmod +x ./aws-iam-authenticator
       - mkdir -p ~/bin && cp ./aws-iam-authenticator ~/bin/aws-iam-authenticator && export PATH=~/bin:$PATH
@@ -16,34 +16,37 @@ phases:
       - mv ./linux-amd64/helm /usr/local/bin/helm
   pre_build:
     commands:
-      - echo Generating kubeconfig
-      - mkdir ~/.kube/
-      - export KUBECONFIG=$HOME/.kube/config
-      - aws eks update-kubeconfig --name Formula-Staging
       - echo Logging in to Amazon ECR...
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
       - echo Replacing APP_VERSION...
       - sed -i "s/APP_VERSION/$CODEBUILD_RESOLVED_SOURCE_VERSION/" helm/graphcms/Chart.yaml
+      - export KUBECONFIG=$HOME/.kube/config
       - cat helm/graphcms/Chart.yaml
-      - cat ~/.kube/config
-      -
-      - aws sts get-caller-identity
-      - aws --region us-west-2 eks get-token --cluster-name Formula-Staging
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
       - docker build -t $IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION .
       - docker tag $IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - kubectl get po
-  post_build:
-    commands:
-      - kubectl get po
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+  post_build:
+    commands:
       - cd ./helm/graphcms
       - echo Loading secrets
       - ./load_secrets.sh
+      - echo Generating kubeconfig
+      - CREDENTIALS=$(aws sts assume-role --role-arn arn:aws:iam::513854777862:role/Formula-Staging-CodeBuildDeployer --role-session-name codebuild-kubectl --duration-seconds 900)
+      - export AWS_ACCESS_KEY_ID="$(echo ${CREDENTIALS} | jq -r '.Credentials.AccessKeyId')"
+      - export AWS_SECRET_ACCESS_KEY="$(echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey')"
+      - export AWS_SESSION_TOKEN="$(echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken')"
+      - export AWS_EXPIRATION=$(echo ${CREDENTIALS} | jq -r '.Credentials.Expiration')
+      - mkdir ~/.kube/
+      - aws eks update-kubeconfig --name Formula-Staging
+      - cat ~/.kube/config
+      - aws sts get-caller-identity
+      - aws --region us-west-2 eks get-token --cluster-name Formula-Staging
+      - kubectl get po
       - echo Deploying helm
       - helm upgrade --set dockerImageVersion=$CODEBUILD_RESOLVED_SOURCE_VERSION --install graphcms ./
