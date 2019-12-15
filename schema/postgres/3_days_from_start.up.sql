@@ -9,10 +9,6 @@ ALTER TABLE "workout"."workout"
   ADD COLUMN "workout_program_id" uuid NOT NULL,
   ADD FOREIGN KEY ("workout_program_id") REFERENCES "workout"."program"("id") DEFERRABLE INITIALLY DEFERRED;
 
-
-ALTER TYPE tag.tag_type ADD VALUE 'WORKOUT';
-ALTER TYPE tag.tag_type ADD VALUE 'EXERCISE';
-
 CREATE INDEX "workout_category_workout_id_order_idx" ON "workout"."workout_category"("workout_id","order");
 
 
@@ -26,6 +22,4 @@ ALTER TABLE "workout"."prescription"
   DROP COLUMN "set_numeral",
   DROP COLUMN "set_text",
   DROP COLUMN "set_unit_id";
-
-ALTER TABLE "workout"."prescription" ADD COLUMN "prescription_category" varchar(50) NOT NULL;
 
