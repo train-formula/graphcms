@@ -1,36 +1,22 @@
 
-
 type Exercise {
+
     id: ID!
 
-    trainerAccount: ID!
-    clientAccount: ID!
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
 
     name: String!
-    categoryID: ID!
 
     exerciseText: String!
 
-    hasReps: Boolean!
-    hasSets: Boolean!
-
-    repNumeral: Int
-    repText: String
-
-    repModifierNumeral: Int
-    repModifierText: String
-
-    setNumeral: Int
-    setText: String
-
-    duration: Int
+    prescriptionID: ID!
 
     # Fetchers
-    category: WorkoutCategory
-
-    #repUnit: Unit
-    #repModifierUnit: Unit
-    #setUnit: Unit
+    # category: WorkoutCategory
+    prescription: Prescription
 
 }
 

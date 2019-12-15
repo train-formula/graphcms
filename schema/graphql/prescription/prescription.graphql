@@ -1,0 +1,52 @@
+
+extend type Query {
+    prescription(id: ID!): Prescription
+}
+
+
+type Prescription {
+
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+
+    name: String!
+
+    hasReps: Boolean!
+    hasRepModifier: Boolean!
+    hasSets: Boolean!
+
+    repNumeral: Int
+    repText: String
+    repUnitID: ID
+
+    repModifierNumeral: Int
+    repModifierText: String
+    repModifierUnitID: ID
+
+    setNumeral: Int
+    setText: String
+    setUnitID: ID
+
+    duration: Int
+
+    # Fetchers
+    repUnit: Unit
+    repModifierUnit: Unit
+    setUnit: Unit
+
+}
+
+type PrescriptionConnection {
+    totalCount: Int!
+    edges: [PrescriptionEdge!]
+    pageInfo: PageInfo!
+}
+
+type PrescriptionEdge {
+    cursor: String!
+    node: Prescription!
+}

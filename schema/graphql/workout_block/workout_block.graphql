@@ -1,0 +1,33 @@
+
+########################
+### WORKOUT CATEGORY ###
+########################
+
+enum BlockType {
+    GENERAL
+    ROUND
+    TIMED_ROUND
+}
+
+type WorkoutBlock {
+
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+    workoutCategoryID: ID!
+
+    type: BlockType!
+
+    roundNumeral: Int
+    roundText: String
+    roundUnitID: ID
+    durationSeconds: Int
+
+    # Fetchers
+    trainerOrganization: Organization
+    workoutCategory: WorkoutCategory
+
+}

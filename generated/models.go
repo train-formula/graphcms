@@ -16,15 +16,10 @@ type CreateTag struct {
 }
 
 type CreateWorkoutCategory struct {
-	TrainerOrganizationID uuid.UUID            `json:"trainerOrganizationID"`
-	Name                  string               `json:"name"`
-	Description           string               `json:"description"`
-	Type                  workout.CategoryType `json:"type"`
-	RoundNumeral          *int                 `json:"roundNumeral"`
-	RoundText             *string              `json:"roundText"`
-	RoundUnitID           *uuid.UUID           `json:"roundUnitID"`
-	DurationSeconds       *int                 `json:"durationSeconds"`
-	Tags                  []uuid.UUID          `json:"tags"`
+	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
+	Name                  string      `json:"name"`
+	Description           string      `json:"description"`
+	Tags                  []uuid.UUID `json:"tags"`
 }
 
 type CreateWorkoutProgram struct {
@@ -35,14 +30,9 @@ type CreateWorkoutProgram struct {
 }
 
 type EditWorkoutCategory struct {
-	ID              uuid.UUID                    `json:"id"`
-	Name            *string                      `json:"name"`
-	Description     *string                      `json:"description"`
-	Type            *workout.CategoryType        `json:"type"`
-	RoundNumeral    *models.NullableIntEditor    `json:"roundNumeral"`
-	RoundText       *models.NullableStringEditor `json:"roundText"`
-	RoundUnitID     *models.NullableIDEditor     `json:"roundUnitID"`
-	DurationSeconds *models.NullableIntEditor    `json:"durationSeconds"`
+	ID          uuid.UUID `json:"id"`
+	Name        *string   `json:"name"`
+	Description *string   `json:"description"`
 }
 
 type ExerciseConnection struct {
@@ -54,6 +44,12 @@ type ExerciseConnection struct {
 type ExerciseEdge struct {
 	Cursor string            `json:"cursor"`
 	Node   *workout.Exercise `json:"node"`
+}
+
+type PrescriptionConnection struct {
+	TotalCount int                     `json:"totalCount"`
+	Edges      []*workout.Prescription `json:"edges"`
+	PageInfo   *models.PageInfo        `json:"pageInfo"`
 }
 
 type TagFacet struct {

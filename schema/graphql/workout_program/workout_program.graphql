@@ -2,11 +2,6 @@ extend type Query {
     workoutProgram(id: ID!): WorkoutProgram
 }
 
-
-extend type Mutation {
-    createWorkoutProgram(request: CreateWorkoutProgram!): WorkoutProgram
-}
-
 enum WorkoutProgramType {
     RELATIVE
     STATIC
@@ -48,18 +43,4 @@ type WorkoutProgramConnection {
 type WorkoutProgramEdge {
     cursor: String!
     node: WorkoutProgram!
-}
-
-###############################
-### CREATE WORKOUT PROGRAM ####
-###############################
-
-input CreateWorkoutProgram {
-    trainerOrganizationID: ID!
-
-    name: String!
-
-    description: String
-
-    tags: [ID!]
 }

@@ -10,48 +10,48 @@ import (
 	"github.com/go-pg/pg/v9/types"
 )
 
-type CategoryType uint8
+type BlockType uint8
 
 const (
-	UnknownCategoryType CategoryType = iota
-	GeneralCategoryType
-	RoundCategoryType
-	TimedRoundCategoryType
+	UnknownBlockType BlockType = iota
+	GeneralBlockType
+	RoundBlockType
+	TimedRoundBlockType
 )
 
-func (t CategoryType) String() string {
+func (t BlockType) String() string {
 
 	switch t {
-	case GeneralCategoryType:
+	case GeneralBlockType:
 		return "GENERAL"
-	case RoundCategoryType:
+	case RoundBlockType:
 		return "ROUND"
-	case TimedRoundCategoryType:
+	case TimedRoundBlockType:
 		return "TIMED_ROUND"
 	}
 
 	return "UNKNOWN"
 }
 
-func ParseCategoryType(s string) CategoryType {
+func ParseBlockType(s string) BlockType {
 
 	switch strings.ToUpper(strings.TrimSpace(s)) {
-	case GeneralCategoryType.String():
-		return GeneralCategoryType
-	case RoundCategoryType.String():
-		return RoundCategoryType
-	case TimedRoundCategoryType.String():
-		return TimedRoundCategoryType
+	case GeneralBlockType.String():
+		return GeneralBlockType
+	case RoundBlockType.String():
+		return RoundBlockType
+	case TimedRoundBlockType.String():
+		return TimedRoundBlockType
 
 	}
 
-	return UnknownCategoryType
+	return UnknownBlockType
 }
 
-var _ types.ValueAppender = (*CategoryType)(nil)
-var _ types.ValueScanner = (*CategoryType)(nil)
+var _ types.ValueAppender = (*BlockType)(nil)
+var _ types.ValueScanner = (*BlockType)(nil)
 
-func (t *CategoryType) AppendValue(b []byte, flags int) ([]byte, error) {
+func (t *BlockType) AppendValue(b []byte, flags int) ([]byte, error) {
 
 	if flags == 1 {
 		b = append(b, '\'')
@@ -64,7 +64,7 @@ func (t *CategoryType) AppendValue(b []byte, flags int) ([]byte, error) {
 	return b, nil
 }
 
-func (t *CategoryType) ScanValue(rd types.Reader, n int) error {
+func (t *BlockType) ScanValue(rd types.Reader, n int) error {
 	if n <= 0 {
 		return nil
 	}
@@ -74,10 +74,10 @@ func (t *CategoryType) ScanValue(rd types.Reader, n int) error {
 		return err
 	}
 
-	parsed := ParseCategoryType(string(tmp))
+	parsed := ParseBlockType(string(tmp))
 
-	if parsed == UnknownCategoryType {
-		return errors.New("Unknown category type")
+	if parsed == UnknownBlockType {
+		return errors.New("Unknown block type")
 	}
 
 	*t = parsed
@@ -85,19 +85,19 @@ func (t *CategoryType) ScanValue(rd types.Reader, n int) error {
 	return nil
 }
 
-func (e *CategoryType) UnmarshalGQL(v interface{}) error {
+func (e *BlockType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = ParseCategoryType(str)
-	if *e == UnknownCategoryType {
-		return fmt.Errorf("%s is not a valid CategoryType", str)
+	*e = ParseBlockType(str)
+	if *e == UnknownBlockType {
+		return fmt.Errorf("%s is not a valid BlockType", str)
 	}
 	return nil
 }
 
-func (e CategoryType) MarshalGQL(w io.Writer) {
+func (e BlockType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

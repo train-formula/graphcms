@@ -8,7 +8,6 @@ import (
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
-	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -28,13 +27,13 @@ func (c EditWorkoutCategory) Validate(ctx context.Context) []validation.Validato
 
 	return []validation.ValidatorFunc{
 		validation.CheckStringNilOrIsNotEmpty(c.Request.Name, "Name must not be empty"),
-		func() *gqlerror.Error {
-			if c.Request.Type != nil && *c.Request.Type == workout.UnknownCategoryType {
+		/*func() *gqlerror.Error {
+			if c.Request.Type != nil && *c.Request.Type == workout.UnknownBlockType {
 				return gqlerror.Errorf("Unknown category type")
 			}
 
 			return nil
-		},
+		},*/
 	}
 }
 
@@ -54,7 +53,7 @@ func (c EditWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory
 		category.Description = *c.Request.Description
 	}
 
-	if c.Request.Type != nil {
+	/*if c.Request.Type != nil {
 		category.Type = *c.Request.Type
 	}
 
@@ -75,11 +74,11 @@ func (c EditWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory
 	}
 
 	// Do final validation of category after edits here
-	if category.Type == workout.GeneralCategoryType {
+	if category.Type == workout.GeneralBlockType {
 		if category.RoundNumeral != nil || category.RoundText != nil || category.RoundUnitID != nil || category.DurationSeconds != nil {
 			return nil, gqlerror.Errorf("General workout categories may not specify round or duration data")
 		}
-	} else if category.Type == workout.RoundCategoryType {
+	} else if category.Type == workout.RoundBlockType {
 		if category.RoundNumeral == nil || category.RoundUnitID == nil {
 			return nil, gqlerror.Errorf("Round workout categories must specify round numeral and unit")
 		}
@@ -87,7 +86,7 @@ func (c EditWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory
 		if category.DurationSeconds != nil {
 			return nil, gqlerror.Errorf("Round workout categories may not specify duration, use TimedRound")
 		}
-	} else if category.Type == workout.TimedRoundCategoryType {
+	} else if category.Type == workout.TimedRoundBlockType {
 		if c.Request.RoundNumeral == nil || c.Request.RoundUnitID == nil {
 			return nil, gqlerror.Errorf("Timed round workout categories must specify round numeral and unit")
 		}
@@ -95,7 +94,7 @@ func (c EditWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory
 		if category.DurationSeconds == nil {
 			return nil, gqlerror.Errorf("Timed round workout categories must specify duration")
 		}
-	}
+	}*/
 
 	return workoutdb.UpdateWorkoutCategory(ctx, c.DB, category)
 

@@ -1,0 +1,18 @@
+
+extend type Mutation {
+    createWorkoutProgram(request: CreateWorkoutProgram!): WorkoutProgram
+}
+
+
+###############################
+### CREATE WORKOUT PROGRAM ####
+###############################
+input CreateWorkoutProgram {
+    trainerOrganizationID: ID!
+
+    name: String!
+
+    description: String
+
+    tags: [ID!]
+}

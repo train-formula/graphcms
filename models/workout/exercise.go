@@ -1,21 +1,18 @@
 package workout
 
+import (
+	"time"
+
+	"github.com/gofrs/uuid"
+)
+
 type Exercise struct {
-	ID                 string           `json:"id"`
-	Name               string           `json:"name"`
-	CategoryID         string           `json:"categoryID"`
-	ExerciseText       string           `json:"exerciseText"`
-	HasReps            bool             `json:"hasReps"`
-	HasSets            bool             `json:"hasSets"`
-	RepNumeral         *int             `json:"repNumeral"`
-	RepText            *string          `json:"repText"`
-	RepModifierNumeral *int             `json:"repModifierNumeral"`
-	RepModifierText    *string          `json:"repModifierText"`
-	SetNumeral         *int             `json:"setNumeral"`
-	SetText            *string          `json:"setText"`
-	Duration           *int             `json:"duration"`
-	Category           *WorkoutCategory `json:"category"`
-	//RepUnit            *models.Unit     `json:"repUnit"`
-	//RepModifierUnit    *models.Unit     `json:"repModifierUnit"`
-	//SetUnit            *models.Unit     `json:"setUnit"`
+	tableName             struct{}  `sql:"workout.exercise"`
+	ID                    uuid.UUID `json:"id"`
+	CreatedAt             time.Time `json:"createdAt"`
+	UpdatedAt             time.Time `json:"updatedAt"`
+	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
+	Name                  string    `json:"name"`
+	ExerciseText          string    `json:"exerciseText"`
+	PrescriptionID        uuid.UUID `json:"prescriptionID"`
 }

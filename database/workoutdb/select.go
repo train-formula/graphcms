@@ -2,6 +2,7 @@ package workoutdb
 
 import (
 	"context"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
@@ -16,6 +17,31 @@ func GetAllUnits(ctx context.Context, conn database.Conn) ([]*workout.Unit, erro
 	query := "SELECT * FROM " + database.TableName(workout.Unit{})
 
 	_, err := conn.QueryContext(ctx, &result, query)
+
+	return result, err
+}
+
+// Retrieves individual workout unit's by their IDs
+func GetUnits(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Unit, error) {
+
+	if len(ids) <= 0 {
+		return nil, nil
+	}
+
+	var result []*workout.Unit
+
+	query := "SELECT * FROM " + database.TableName(workout.Unit{}) + " WHERE "
+
+	var params []interface{}
+
+	for _, id := range ids {
+		query += "id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ")
+
+	_, err := conn.QueryContext(ctx, &result, query, params...)
 
 	return result, err
 }
@@ -38,4 +64,114 @@ func GetWorkoutCategoryForUpdate(ctx context.Context, conn database.Conn, id uui
 	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
 
 	return result, err
+}
+
+// Retrieves individual workout categories by their IDs
+func GetWorkoutCategories(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.WorkoutCategory, error) {
+
+	if len(ids) <= 0 {
+		return nil, nil
+	}
+
+	var result []*workout.WorkoutCategory
+
+	query := "SELECT * FROM " + database.TableName(workout.WorkoutCategory{}) + " WHERE "
+
+	var params []interface{}
+
+	for _, id := range ids {
+		query += "id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ")
+
+	_, err := conn.QueryContext(ctx, &result, query, params...)
+
+	return result, err
+}
+
+// Retrieves individual prescription's by their IDs
+func GetPrescriptions(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Prescription, error) {
+
+	if len(ids) <= 0 {
+		return nil, nil
+	}
+
+	var result []*workout.Prescription
+
+	query := "SELECT * FROM " + database.TableName(workout.Prescription{}) + " WHERE "
+
+	var params []interface{}
+
+	for _, id := range ids {
+		query += "id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ")
+
+	_, err := conn.QueryContext(ctx, &result, query, params...)
+
+	return result, err
+}
+
+// Retrieves individual workout blocks's by their IDs
+func GetWorkoutBlocks(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.WorkoutBlock, error) {
+
+	if len(ids) <= 0 {
+		return nil, nil
+	}
+
+	var result []*workout.WorkoutBlock
+
+	query := "SELECT * FROM " + database.TableName(workout.WorkoutBlock{}) + " WHERE "
+
+	var params []interface{}
+
+	for _, id := range ids {
+		query += "id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ")
+
+	_, err := conn.QueryContext(ctx, &result, query, params...)
+
+	return result, err
+}
+
+// Retrieves workout blocks by workout category IDs
+func GetWorkoutCategoryBlocks(ctx context.Context, conn database.Conn, workoutCategoryIDs []uuid.UUID) (map[uuid.UUID][]*workout.WorkoutBlock, error) {
+
+	results := make(map[uuid.UUID][]*workout.WorkoutBlock)
+
+	if len(workoutCategoryIDs) <= 0 {
+		return results, nil
+	}
+
+	query := "SELECT * FROM " + database.TableName(workout.WorkoutBlock{}) + " WHERE "
+
+	var params []interface{}
+
+	var queryResults []*workout.WorkoutBlock
+
+	for _, id := range workoutCategoryIDs {
+		query += "workout_category_id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ")
+
+	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, queryResult := range queryResults {
+		results[queryResult.WorkoutCategoryID] = append(results[queryResult.WorkoutCategoryID], queryResult)
+	}
+
+	return results, err
 }

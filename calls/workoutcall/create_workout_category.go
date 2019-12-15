@@ -10,7 +10,6 @@ import (
 	"github.com/train-formula/graphcms/database/trainerdb"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
-	"github.com/train-formula/graphcms/models"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
@@ -25,15 +24,15 @@ func (c CreateWorkoutCategory) Validate(ctx context.Context) []validation.Valida
 
 	return []validation.ValidatorFunc{
 		validation.CheckStringIsNotEmpty(c.Request.Name, "Name must not be empty"),
-		func() *gqlerror.Error {
+		/*func() *gqlerror.Error {
 
-			if c.Request.Type == workout.UnknownCategoryType {
+			if c.Request.Type == workout.UnknownBlockType {
 				return gqlerror.Errorf("Must specify a valid category type")
-			} else if c.Request.Type == workout.GeneralCategoryType {
+			} else if c.Request.Type == workout.GeneralBlockType {
 				if c.Request.RoundNumeral != nil || c.Request.RoundText != nil || c.Request.RoundUnitID != nil || c.Request.DurationSeconds != nil {
 					return gqlerror.Errorf("General workout categories may not specify round or duration data")
 				}
-			} else if c.Request.Type == workout.RoundCategoryType {
+			} else if c.Request.Type == workout.RoundBlockType {
 				if c.Request.RoundNumeral == nil || c.Request.RoundUnitID == nil {
 					return gqlerror.Errorf("Round workout categories must specify round numeral and unit")
 				}
@@ -41,7 +40,7 @@ func (c CreateWorkoutCategory) Validate(ctx context.Context) []validation.Valida
 				if c.Request.DurationSeconds != nil {
 					return gqlerror.Errorf("Round workout categories may not specify duration, use TimedRound")
 				}
-			} else if c.Request.Type == workout.TimedRoundCategoryType {
+			} else if c.Request.Type == workout.TimedRoundBlockType {
 				if c.Request.RoundNumeral == nil || c.Request.RoundUnitID == nil {
 					return gqlerror.Errorf("Timed round workout categories must specify round numeral and unit")
 				}
@@ -53,7 +52,7 @@ func (c CreateWorkoutCategory) Validate(ctx context.Context) []validation.Valida
 
 			return nil
 
-		},
+		},*/
 	}
 }
 
@@ -86,13 +85,13 @@ func (c CreateWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCatego
 
 			TrainerOrganizationID: c.Request.TrainerOrganizationID,
 
-			Name:            c.Request.Name,
-			Description:     strings.TrimSpace(c.Request.Description),
-			Type:            c.Request.Type,
-			RoundNumeral:    models.PtrIntToInt32(c.Request.RoundNumeral),
-			RoundText:       c.Request.RoundText,
-			RoundUnitID:     c.Request.RoundUnitID,
-			DurationSeconds: models.PtrIntToInt32(c.Request.DurationSeconds),
+			Name:        c.Request.Name,
+			Description: strings.TrimSpace(c.Request.Description),
+			//Type:            c.Request.Type,
+			//RoundNumeral:    models.PtrIntToInt32(c.Request.RoundNumeral),
+			//RoundText:       c.Request.RoundText,
+			//RoundUnitID:     c.Request.RoundUnitID,
+			//DurationSeconds: models.PtrIntToInt32(c.Request.DurationSeconds),
 		}
 
 		finalCategory, err = workoutdb.InsertWorkoutCategory(ctx, c.DB, newCategory)

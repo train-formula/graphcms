@@ -33,3 +33,6 @@ models:
   WorkoutCategoryEdge:
     model:
       - github.com/train-formula/graphcms/models/workout.WorkoutCategory
+  PrescriptionEdge:
+    model:
+      - github.com/train-formula/graphcms/models/workout.Prescription

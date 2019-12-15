@@ -9,8 +9,11 @@ import (
 	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/train-formula/graphcms/resolver/exercise"
 	"github.com/train-formula/graphcms/resolver/mutation"
+	"github.com/train-formula/graphcms/resolver/prescription"
 	"github.com/train-formula/graphcms/resolver/query"
+	"github.com/train-formula/graphcms/resolver/workoutblock"
 	"github.com/train-formula/graphcms/resolver/workoutcategory"
 	"github.com/train-formula/graphcms/resolver/workoutprogram"
 	"go.uber.org/zap"
@@ -20,9 +23,9 @@ import (
 
 type Resolver struct{ DB *pg.DB }
 
-func (r *Resolver) Exercise() generated.ExerciseResolver {
+/*func (r *WorkoutCategoryResolver) Exercise() generated.ExerciseResolver {
 	return &exerciseResolver{r}
-}
+}*/
 func (r *Resolver) Mutation() generated.MutationResolver {
 	return mutation.NewMutationResolver(r.DB, zap.L())
 }
@@ -33,10 +36,18 @@ func (r *Resolver) Workout() generated.WorkoutResolver {
 	return &workoutResolver{r}
 }
 func (r *Resolver) WorkoutCategory() generated.WorkoutCategoryResolver {
-	return workoutcategory.NewResolver(r.DB)
+	return workoutcategory.NewWorkoutCategoryResolver(r.DB, zap.L())
 }
 func (r *Resolver) WorkoutProgram() generated.WorkoutProgramResolver {
 	return workoutprogram.NewResolver(r.DB)
+}
+
+func (r *Resolver) Prescription() generated.PrescriptionResolver {
+	return prescription.NewPrescriptionResolver(r.DB, zap.L())
+}
+
+func (r *Resolver) WorkoutBlock() generated.WorkoutBlockResolver {
+	return workoutblock.NewWorkoutBlockResolver(r.DB, zap.L())
 }
 
 func (r *Resolver) WorkoutProgramConnection() generated.WorkoutProgramConnectionResolver {
@@ -49,6 +60,10 @@ func (r *Resolver) TagConnection() generated.TagConnectionResolver {
 
 func (r *Resolver) WorkoutCategoryConnection() generated.WorkoutCategoryConnectionResolver {
 	return &connections.WorkoutCategoryConnection{}
+}
+
+func (r *Resolver) Exercise() generated.ExerciseResolver {
+	return exercise.NewExerciseResolver(r.DB, zap.L())
 }
 
 type exerciseResolver struct{ *Resolver }

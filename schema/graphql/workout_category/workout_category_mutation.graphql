@@ -1,0 +1,32 @@
+
+extend type Mutation {
+
+    createWorkoutCategory(request: CreateWorkoutCategory!): WorkoutCategory
+    editWorkoutCategory(request: EditWorkoutCategory!): WorkoutCategory
+}
+
+
+###############################
+### CREATE WORKOUT CATEGORY ###
+###############################
+input CreateWorkoutCategory {
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String!
+
+    tags: [ID!]
+}
+
+###############################
+### EDIT WORKOUT CATEGORY #####
+###############################
+input EditWorkoutCategory {
+
+    id: ID!
+
+    name: String
+    description: String
+
+}
