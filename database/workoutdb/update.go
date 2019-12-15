@@ -32,3 +32,16 @@ func UpdateWorkoutCategory(ctx context.Context, conn database.Conn, new workout.
 
 	return newModel, nil
 }
+
+// Update workout, replace all fields with new row
+func UpdateWorkout(ctx context.Context, conn database.Conn, new workout.Workout) (*workout.Workout, error) {
+
+	newModel := &new
+
+	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	if err != nil {
+		return nil, err
+	}
+
+	return newModel, nil
+}

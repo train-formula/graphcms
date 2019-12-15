@@ -18,6 +18,7 @@ type WorkoutProgram struct {
 	Description              string     `json:"description" pg:",use_zero"`
 	ExactStartDate           *time.Time `json:"exactStartDate"`
 	StartsWhenCustomerStarts bool       `json:"startsWhenCustomerStarts"`
+	NumberOfDays             *int       `json:"numberOfDays"`
 }
 
 func (w WorkoutProgram) TableName() string {

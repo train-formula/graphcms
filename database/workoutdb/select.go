@@ -175,3 +175,84 @@ func GetWorkoutCategoryBlocks(ctx context.Context, conn database.Conn, workoutCa
 
 	return results, err
 }
+
+// Retrieves a workout by its ID, and locks the row
+func GetWorkoutForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Workout, error) {
+
+	var result workout.Workout
+
+	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+
+	return result, err
+}
+
+// Retrieves individual workouts by their IDs
+func GetWorkouts(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Workout, error) {
+	if len(ids) <= 0 {
+		return nil, nil
+	}
+
+	var result []*workout.Workout
+
+	query := "SELECT * FROM " + database.TableName(workout.Workout{}) + " WHERE "
+
+	var params []interface{}
+
+	for _, id := range ids {
+		query += "id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ")
+
+	_, err := conn.QueryContext(ctx, &result, query, params...)
+
+	return result, err
+}
+
+// Retrieve a workout program by it's ID
+func GetWorkoutProgram(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutProgram, error) {
+	var result workout.WorkoutProgram
+
+	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+
+	return result, err
+}
+
+// Retrieves workout categories by workout IDs
+func GetWorkoutCategoriesByWorkout(ctx context.Context, conn database.Conn, workoutIDs []uuid.UUID) (map[uuid.UUID][]*workout.WorkoutCategory, error) {
+
+	results := make(map[uuid.UUID][]*workout.WorkoutCategory)
+
+	if len(workoutIDs) <= 0 {
+		return results, nil
+	}
+
+	query := "SELECT " + (workout.WorkoutWorkoutCategoryJoin{}).SelectColumns("wc", "wwc") + " FROM " + database.TableName(workout.WorkoutWorkoutCategory{}) + " wwc " +
+		"INNER JOIN " + database.TableName(workout.WorkoutCategory{}) + " wc " +
+		"ON wwc.category_id = wc.id" +
+		"WHERE "
+
+	var params []interface{}
+
+	var queryResults []*workout.WorkoutWorkoutCategoryJoin
+
+	for _, id := range workoutIDs {
+		query += "wwc.workout_id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ") + " ORDER BY wwc.order ASC"
+
+	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, queryResult := range queryResults {
+		results[queryResult.WorkoutWorkoutID] = append(results[queryResult.WorkoutCategoryID], queryResult.WorkoutCategory())
+	}
+
+	return results, err
+}

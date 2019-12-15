@@ -3,6 +3,8 @@
 package generated
 
 import (
+	"time"
+
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/models"
 	"github.com/train-formula/graphcms/models/connections"
@@ -15,6 +17,14 @@ type CreateTag struct {
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 }
 
+type CreateWorkout struct {
+	WorkoutProgramID uuid.UUID   `json:"workoutProgramID"`
+	Name             string      `json:"name"`
+	Description      string      `json:"description"`
+	DaysFromStart    int         `json:"daysFromStart"`
+	Tags             []uuid.UUID `json:"tags"`
+}
+
 type CreateWorkoutCategory struct {
 	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
 	Name                  string      `json:"name"`
@@ -23,10 +33,20 @@ type CreateWorkoutCategory struct {
 }
 
 type CreateWorkoutProgram struct {
-	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
-	Name                  string      `json:"name"`
-	Description           *string     `json:"description"`
-	Tags                  []uuid.UUID `json:"tags"`
+	TrainerOrganizationID    uuid.UUID   `json:"trainerOrganizationID"`
+	Name                     string      `json:"name"`
+	Description              *string     `json:"description"`
+	ExactStartDate           *time.Time  `json:"exactStartDate"`
+	StartsWhenCustomerStarts bool        `json:"startsWhenCustomerStarts"`
+	NumberOfDays             *int        `json:"numberOfDays"`
+	Tags                     []uuid.UUID `json:"tags"`
+}
+
+type EditWorkout struct {
+	ID            uuid.UUID `json:"id"`
+	Name          *string   `json:"name"`
+	Description   *string   `json:"description"`
+	DaysFromStart *int      `json:"daysFromStart"`
 }
 
 type EditWorkoutCategory struct {
@@ -35,21 +55,20 @@ type EditWorkoutCategory struct {
 	Description *string   `json:"description"`
 }
 
-type ExerciseConnection struct {
-	TotalCount int              `json:"totalCount"`
-	Edges      []*ExerciseEdge  `json:"edges"`
-	PageInfo   *models.PageInfo `json:"pageInfo"`
+type PrescriptionSet struct {
+	ID                 uuid.UUID  `json:"id"`
+	SetNumber          int        `json:"setNumber"`
+	RepNumeral         *int       `json:"repNumeral"`
+	RepText            *string    `json:"repText"`
+	RepUnitID          uuid.UUID  `json:"repUnitID"`
+	RepModifierNumeral *int       `json:"repModifierNumeral"`
+	RepModifierText    *string    `json:"repModifierText"`
+	RepModifierUnitID  *uuid.UUID `json:"repModifierUnitID"`
 }
 
-type ExerciseEdge struct {
-	Cursor string            `json:"cursor"`
-	Node   *workout.Exercise `json:"node"`
-}
-
-type PrescriptionConnection struct {
-	TotalCount int                     `json:"totalCount"`
-	Edges      []*workout.Prescription `json:"edges"`
-	PageInfo   *models.PageInfo        `json:"pageInfo"`
+type SetWorkoutWorkoutCategories struct {
+	WorkoutID          uuid.UUID   `json:"workoutID"`
+	WorkoutCategoryIDs []uuid.UUID `json:"workoutCategoryIDs"`
 }
 
 type TagFacet struct {

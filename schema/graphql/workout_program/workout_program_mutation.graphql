@@ -14,5 +14,23 @@ input CreateWorkoutProgram {
 
     description: String
 
+    # Optional, means the workout programs starts at this specific timestamp UTC
+    exactStartDate: Time
+    startsWhenCustomerStarts: Boolean!
+
+    # Optional, how many days are in workout
+    numberOfDays: Int
+
     tags: [ID!]
 }
+
+
+# Run createWorkoutProgram - Correct
+# Then run createWorkout PER DAY - Correct
+
+
+# Then run createCategory and/or attachCategory on each day - Make this a single call
+
+# Then run createBlock for each category
+# Then run createExercise and/or attachExercise on each block
+# Then run createPrescription and/or attachPrescription for each exercise

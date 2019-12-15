@@ -15,4 +15,5 @@ type Exercise struct {
 	Name                  string    `json:"name"`
 	ExerciseText          string    `json:"exerciseText"`
 	PrescriptionID        uuid.UUID `json:"prescriptionID"`
+	VideoURL              *string   `json:"videoURL"`
 }

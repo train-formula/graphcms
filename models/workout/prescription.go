@@ -15,6 +15,7 @@ type Prescription struct {
 	UpdatedAt             time.Time `json:"updatedAt"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	Name                  string    `json:"name"`
+	PrescriptionCategory  string    `json:"prescriptionCategory"`
 
 	RepNumeral *int       `json:"repNumeral"`
 	RepText    *string    `json:"repText"`

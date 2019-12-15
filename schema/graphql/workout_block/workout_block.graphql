@@ -1,12 +1,6 @@
 
-########################
-### WORKOUT CATEGORY ###
-########################
-
-enum BlockType {
-    GENERAL
-    ROUND
-    TIMED_ROUND
+extend type Query {
+    workoutBlock(id: ID!): WorkoutBlock
 }
 
 type WorkoutBlock {
@@ -19,15 +13,18 @@ type WorkoutBlock {
     trainerOrganizationID: ID!
     workoutCategoryID: ID!
 
-    type: BlockType!
-
     roundNumeral: Int
     roundText: String
     roundUnitID: ID
+
+    roundRestDuration: Int
+
+    numberOfRounds: Int
     durationSeconds: Int
 
     # Fetchers
     trainerOrganization: Organization
     workoutCategory: WorkoutCategory
+    # exercises: [Exercise!]
 
 }

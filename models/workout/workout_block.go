@@ -20,6 +20,8 @@ type WorkoutBlock struct {
 	RoundText             *string    `json:"roundText"`
 	RoundUnitID           *uuid.UUID `json:"roundUnitID"`
 	DurationSeconds       *int32     `json:"durationSeconds"`
+	RoundRestDuration     *int       `json:"roundRestDuration"`
+	NumberOfRounds        *int       `json:"numberOfRounds"`
 }
 
 func (w WorkoutBlock) TableName() string {

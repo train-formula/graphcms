@@ -53,8 +53,9 @@ func (r *WorkoutCategoryResolver) WorkoutBlocks(ctx context.Context, obj *workou
 	}
 
 	g := workoutcall.GetWorkoutCategoryBlocks{
-		ID: obj.ID,
-		DB: r.db,
+		Logger: r.logger,
+		ID:     obj.ID,
+		DB:     r.db,
 	}
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {

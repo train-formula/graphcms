@@ -4,6 +4,24 @@ extend type Query {
 }
 
 
+type PrescriptionSet {
+
+    id: ID!
+
+    setNumber: Int!
+
+    repNumeral: Int
+    repText: String
+    repUnitID: ID!
+
+    repModifierNumeral: Int
+    repModifierText: String
+    repModifierUnitID: ID
+
+    repUnit: Unit
+    repModifierUnit: Unit
+}
+
 type Prescription {
 
     id: ID!
@@ -14,39 +32,15 @@ type Prescription {
     trainerOrganizationID: ID!
 
     name: String!
+    prescriptionCategory: String!
+
+    # In seconds
+    duration: Int
 
     hasReps: Boolean!
     hasRepModifier: Boolean!
-    hasSets: Boolean!
-
-    repNumeral: Int
-    repText: String
-    repUnitID: ID
-
-    repModifierNumeral: Int
-    repModifierText: String
-    repModifierUnitID: ID
-
-    setNumeral: Int
-    setText: String
-    setUnitID: ID
-
-    duration: Int
 
     # Fetchers
-    repUnit: Unit
-    repModifierUnit: Unit
-    setUnit: Unit
+    # sets: [PrescriptionSet!]
 
-}
-
-type PrescriptionConnection {
-    totalCount: Int!
-    edges: [PrescriptionEdge!]
-    pageInfo: PageInfo!
-}
-
-type PrescriptionEdge {
-    cursor: String!
-    node: Prescription!
 }

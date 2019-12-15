@@ -35,6 +35,7 @@ func (g GetWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory,
 
 	loaded, err := loader.Load(g.ID)
 	if err != nil {
+		g.logger().Error("Failed to load workout category with dataloader", zap.Error(err))
 		return nil, err
 	}
 

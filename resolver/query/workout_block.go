@@ -9,25 +9,12 @@ import (
 	"github.com/train-formula/graphcms/validation"
 )
 
-func (r *QueryResolver) Workout(ctx context.Context, id uuid.UUID) (*workout.Workout, error) {
+func (r *QueryResolver) WorkoutBlock(ctx context.Context, id uuid.UUID) (*workout.WorkoutBlock, error) {
 
-	g := workoutcall.GetWorkout{
+	g := workoutcall.GetWorkoutBlock{
 		ID:     id,
 		DB:     r.db,
 		Logger: r.logger,
-	}
-
-	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
-		return g.Call(ctx)
-	}
-
-	return nil, nil
-}
-
-func (r *QueryResolver) AvailableUnits(ctx context.Context) ([]*workout.Unit, error) {
-
-	g := workoutcall.GetAvailableUnits{
-		DB: r.db,
 	}
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {

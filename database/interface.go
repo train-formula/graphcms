@@ -24,6 +24,8 @@ type Conn interface {
 	) (pg.Result, error)
 
 	ModelContext(c context.Context, model ...interface{}) *orm.Query
+
+	ExecContext(c context.Context, query interface{}, params ...interface{}) (orm.Result, error)
 }
 
 type TableModel interface {

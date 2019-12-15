@@ -94,7 +94,7 @@ func (c CreateWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCatego
 			//DurationSeconds: models.PtrIntToInt32(c.Request.DurationSeconds),
 		}
 
-		finalCategory, err = workoutdb.InsertWorkoutCategory(ctx, c.DB, newCategory)
+		finalCategory, err = workoutdb.InsertWorkoutCategory(ctx, t, newCategory)
 		if err != nil {
 			return err
 		}

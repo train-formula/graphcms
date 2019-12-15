@@ -1,3 +1,7 @@
+extend type Query {
+    workout(id: ID!): Workout
+}
+
 type Workout {
     id: ID!
 
@@ -5,11 +9,14 @@ type Workout {
     updatedAt: Time!
 
     trainerOrganizationID: ID!
+    workoutProgramID: ID!
     name: String!
     description: String!
+    
+    daysFromStart: Int!
 
-    # Connections
-    categories(first: Int, after: ID!): WorkoutCategoryConnection!
+    # Fetchers
+    categories: [WorkoutCategory!]
 }
 
 type WorkoutConnection {

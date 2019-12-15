@@ -14,20 +14,10 @@ type Exercise {
 
     prescriptionID: ID!
 
+    videoURL: String
+
     # Fetchers
-    # category: WorkoutCategory
     prescription: Prescription
+    tags: [Tag!]
 
-}
-
-
-type ExerciseConnection {
-    totalCount: Int!
-    edges: [ExerciseEdge!]
-    pageInfo: PageInfo!
-}
-
-type ExerciseEdge {
-    cursor: String!
-    node: Exercise!
 }

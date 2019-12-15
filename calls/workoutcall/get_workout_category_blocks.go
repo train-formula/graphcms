@@ -8,7 +8,6 @@ import (
 	"github.com/train-formula/graphcms/dataloader/workoutblocksbycategory"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
-	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -35,11 +34,8 @@ func (g GetWorkoutCategoryBlocks) Call(ctx context.Context) ([]*workout.WorkoutB
 
 	loaded, err := loader.Load(g.ID)
 	if err != nil {
+		g.logger().Error("Failed to load workout category blocks with dataloader", zap.Error(err))
 		return nil, err
-	}
-
-	if loaded == nil {
-		return nil, gqlerror.Errorf("Unknown workout category ID")
 	}
 
 	return loaded, nil

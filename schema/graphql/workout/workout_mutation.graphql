@@ -1,0 +1,49 @@
+extend type Mutation {
+
+    createWorkout(request: CreateWorkout!): Workout
+    editWorkout(request: EditWorkout!): Workout
+    deleteWorkout(request: ID!): ID
+
+    # Attaches a list of workout category IDs to a specified workout
+    # The order of the IDs will be the order in which the categories appear in the workout
+    setWorkoutWorkoutCategories(request: SetWorkoutWorkoutCategories!): Workout
+}
+
+
+
+###############################
+####### CREATE WORKOUT ########
+###############################
+input CreateWorkout {
+
+    workoutProgramID: ID!
+
+    name: String!
+    description: String!
+
+    daysFromStart: Int!
+
+    tags: [ID!]
+}
+
+###############################
+######## EDIT WORKOUT #########
+###############################
+input EditWorkout {
+
+    id: ID!
+
+    name: String
+    description: String
+
+    daysFromStart: Int
+
+}
+###################################
+# SET WORKOUT WORKOUT CATEGORIES ##
+###################################
+input SetWorkoutWorkoutCategories {
+    workoutID: ID!
+
+    workoutCategoryIDs: [ID!]
+}

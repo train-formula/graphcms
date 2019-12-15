@@ -43,7 +43,7 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 	var finalProgram *workout.WorkoutProgram
 
 	err = c.DB.RunInTransaction(func(t *pg.Tx) error {
-		_, err := trainerdb.GetOrganization(ctx, c.DB, c.Request.TrainerOrganizationID)
+		_, err := trainerdb.GetOrganization(ctx, t, c.Request.TrainerOrganizationID)
 
 		if err != nil {
 			if err == pg.ErrNoRows {
@@ -63,9 +63,13 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 			Name:                  c.Request.Name,
 			Description:           description,
 			TrainerOrganizationID: c.Request.TrainerOrganizationID,
+
+			ExactStartDate:           c.Request.ExactStartDate,
+			StartsWhenCustomerStarts: c.Request.StartsWhenCustomerStarts,
+			NumberOfDays:             c.Request.NumberOfDays,
 		}
 
-		finalProgram, err = workoutdb.InsertWorkoutProgram(ctx, c.DB, new)
+		finalProgram, err = workoutdb.InsertWorkoutProgram(ctx, t, new)
 
 		for _, tagUUID := range c.Request.Tags {
 

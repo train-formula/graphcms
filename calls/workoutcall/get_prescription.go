@@ -35,6 +35,7 @@ func (g GetPrescription) Call(ctx context.Context) (*workout.Prescription, error
 
 	loaded, err := loader.Load(g.ID)
 	if err != nil {
+		g.logger().Error("Failed to load prescription with dataloader", zap.Error(err))
 		return nil, err
 	}
 

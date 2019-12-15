@@ -50,3 +50,7 @@ func TagWorkoutProgram(ctx context.Context, conn database.Conn, tagID uuid.UUID,
 func TagWorkoutCategory(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutCategoryID uuid.UUID) (*tag.Tagged, error) {
 	return TagObject(ctx, conn, tagID, trainerOrganizationID, workoutCategoryID, tag.WorkoutCategoryTagType)
 }
+
+func TagWorkout(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutID uuid.UUID) (*tag.Tagged, error) {
+	return TagObject(ctx, conn, tagID, trainerOrganizationID, workoutID, tag.WorkoutTagType)
+}

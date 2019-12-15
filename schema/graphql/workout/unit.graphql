@@ -18,5 +18,6 @@ type Unit {
     representsTime: Boolean!
     representsWeight: Boolean!
     representsCounter: Boolean!
+    representsDistance: Boolean!
 
 }

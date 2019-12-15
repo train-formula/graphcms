@@ -21,8 +21,12 @@ type WorkoutProgram {
     name: String!
     description: String
 
+    # Optional, means the workout programs starts at this specific timestamp UTC
     exactStartDate: Time
     startsWhenCustomerStarts: Boolean!
+
+    # Optional, how many days are in workout
+    numberOfDays: Int
 
     # Fetchers
     trainerOrganization: Organization
