@@ -11,6 +11,7 @@ import (
 	"github.com/train-formula/graphcms/dataloader/unitid"
 	"github.com/train-formula/graphcms/dataloader/workoutblockid"
 	"github.com/train-formula/graphcms/dataloader/workoutblocksbycategory"
+	"github.com/train-formula/graphcms/dataloader/workoutcategoriesbyworkout"
 	"github.com/train-formula/graphcms/dataloader/workoutcategoryid"
 	"github.com/train-formula/graphcms/dataloader/workoutid"
 )
@@ -28,7 +29,7 @@ func RegisterLoaders(db *pg.DB) gin.HandlerFunc {
 		workoutblocksbycategory.AddContextLoader(c, db)
 		workoutid.AddContextLoader(c, db)
 		workoutblockid.AddContextLoader(c, db)
-		workoutblocksbycategory.AddContextLoader(c, db)
+		workoutcategoriesbyworkout.AddContextLoader(c, db)
 
 		c.Request = c.Request.WithContext(c)
 
