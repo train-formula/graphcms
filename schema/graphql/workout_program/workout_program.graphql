@@ -7,6 +7,12 @@ enum WorkoutProgramType {
     STATIC
 }
 
+enum ProgramLevel {
+    BEGINNER
+    INTERMEDIATE
+    ADVANCED
+}
+
 # An program that a client would subscribe to
 # Describes how workouts are distributed
 type WorkoutProgram {
@@ -20,6 +26,7 @@ type WorkoutProgram {
 
     name: String!
     description: String
+    #programLevel: ProgramLevel
 
     # Optional, means the workout programs starts at this specific timestamp UTC
     exactStartDate: Time

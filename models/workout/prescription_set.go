@@ -8,25 +8,32 @@ import (
 	"github.com/train-formula/graphcms/database/cursor"
 )
 
-type Prescription struct {
-	tableName             struct{}  `sql:"workout.prescription"`
+type PrescriptionSet struct {
+	tableName             struct{}  `sql:"workout.prescription_set"`
 	ID                    uuid.UUID `json:"id"`
 	CreatedAt             time.Time `json:"createdAt"`
 	UpdatedAt             time.Time `json:"updatedAt"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
-	Name                  string    `json:"name"`
-	PrescriptionCategory  string    `json:"prescriptionCategory"`
+	PrescriptionID        uuid.UUID `json:"prescriptionID"`
 
-	DurationSeconds *int `json:"durationSeconds"`
+	SetNumber int `json:"setNumber"`
+
+	RepNumeral *int       `json:"repNumeral"`
+	RepText    *string    `json:"repText"`
+	RepUnitID  *uuid.UUID `json:"repUnitID"`
+
+	RepModifierNumeral *int       `json:"repModifierNumeral"`
+	RepModifierText    *string    `json:"repModifierText"`
+	RepModifierUnitID  *uuid.UUID `json:"repModifierUnitID"`
 }
 
-func (p Prescription) TableName() string {
-	return "workout.prescription"
+func (p PrescriptionSet) TableName() string {
+	return "workout.prescription_set"
 }
 
 // Generate an SQL query with for cursor that paginates with columns from this table
 // Also provide the params to go with it
-func (p Prescription) CursorQuery(prefix string, c cursor.Cursor) (string, []interface{}, error) {
+func (p PrescriptionSet) CursorQuery(prefix string, c cursor.Cursor) (string, []interface{}, error) {
 
 	if conv, proper := c.(*cursor.TimeUUIDCursor); proper {
 
@@ -40,17 +47,17 @@ func (p Prescription) CursorQuery(prefix string, c cursor.Cursor) (string, []int
 }
 
 // Generated a database query for the particular row represented
-func (p *Prescription) DBCursor() cursor.Cursor {
+func (p *PrescriptionSet) DBCursor() cursor.Cursor {
 	return cursor.NewTimeUUIDCursor(p.CreatedAt, p.ID)
 }
 
 // Serializes the result of DBCursor
 // Necessary for gqlgen, allows us to avoid creating a seperate WorkoutCategoryEdge
-func (p *Prescription) Cursor() string {
+func (p *PrescriptionSet) Cursor() string {
 	return p.DBCursor().Serialize()
 }
 
 // Necessary for gqlgen, allows us to avoid creating a seperate WorkoutCategoryEdge
-func (p *Prescription) Node() *Prescription {
+func (p *PrescriptionSet) Node() *PrescriptionSet {
 	return p
 }

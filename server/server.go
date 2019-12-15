@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gin-contrib/cors"
 	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms"
 	"github.com/train-formula/graphcms/generated"
@@ -58,6 +59,7 @@ func main() {
 
 	ginServer.WithGinMiddleware(
 		RegisterLoaders(db),
+		cors.Default(),
 	)
 
 	ginServer.WithExecutableSchema(generated.NewExecutableSchema(generated.Config{Resolvers: &graphcms.Resolver{

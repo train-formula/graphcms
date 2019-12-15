@@ -8,6 +8,12 @@ type PrescriptionSet {
 
     id: ID!
 
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+    prescriptionID: ID!
+
     setNumber: Int!
 
     repNumeral: Int
@@ -18,8 +24,9 @@ type PrescriptionSet {
     repModifierText: String
     repModifierUnitID: ID
 
-    repUnit: Unit
-    repModifierUnit: Unit
+    # Fetchers
+    #repUnit: Unit
+    #repModifierUnit: Unit
 }
 
 type Prescription {
@@ -34,8 +41,7 @@ type Prescription {
     name: String!
     prescriptionCategory: String!
 
-    # In seconds
-    duration: Int
+    durationSeconds: Int
 
     hasReps: Boolean!
     hasRepModifier: Boolean!

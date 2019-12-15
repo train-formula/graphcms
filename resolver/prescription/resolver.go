@@ -4,10 +4,7 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
-	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/models/workout"
-	"github.com/train-formula/graphcms/validation"
-	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -24,14 +21,14 @@ func NewPrescriptionResolver(db *pg.DB, logger *zap.Logger) *PrescriptionResolve
 }
 
 func (r *PrescriptionResolver) HasReps(ctx context.Context, obj *workout.Prescription) (bool, error) {
-	return obj.RepNumeral != nil || obj.RepText != nil, nil
+	return true, nil
 }
 
 func (r *PrescriptionResolver) HasRepModifier(ctx context.Context, obj *workout.Prescription) (bool, error) {
-	return obj.RepModifierNumeral != nil || obj.RepModifierText != nil, nil
+	return true, nil
 }
 
-func (r *PrescriptionResolver) HasSets(ctx context.Context, obj *workout.Prescription) (bool, error) {
+/*func (r *PrescriptionResolver) HasSets(ctx context.Context, obj *workout.Prescription) (bool, error) {
 	return obj.SetNumeral != nil || obj.SetText != nil, nil
 }
 
@@ -102,4 +99,4 @@ func (r *PrescriptionResolver) SetUnit(ctx context.Context, obj *workout.Prescri
 
 	return nil, nil
 
-}
+}*/

@@ -3,6 +3,9 @@
 package generated
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -55,17 +58,6 @@ type EditWorkoutCategory struct {
 	Description *string   `json:"description"`
 }
 
-type PrescriptionSet struct {
-	ID                 uuid.UUID  `json:"id"`
-	SetNumber          int        `json:"setNumber"`
-	RepNumeral         *int       `json:"repNumeral"`
-	RepText            *string    `json:"repText"`
-	RepUnitID          uuid.UUID  `json:"repUnitID"`
-	RepModifierNumeral *int       `json:"repModifierNumeral"`
-	RepModifierText    *string    `json:"repModifierText"`
-	RepModifierUnitID  *uuid.UUID `json:"repModifierUnitID"`
-}
-
 type SetWorkoutWorkoutCategories struct {
 	WorkoutID          uuid.UUID   `json:"workoutID"`
 	WorkoutCategoryIDs []uuid.UUID `json:"workoutCategoryIDs"`
@@ -104,4 +96,47 @@ type WorkoutProgramSearchRequest struct {
 type WorkoutProgramSearchResults struct {
 	TagFacet *TagFacet                             `json:"tag_facet"`
 	Results  *connections.WorkoutProgramConnection `json:"results"`
+}
+
+type ProgramLevel string
+
+const (
+	ProgramLevelBeginner     ProgramLevel = "BEGINNER"
+	ProgramLevelIntermediate ProgramLevel = "INTERMEDIATE"
+	ProgramLevelAdvanced     ProgramLevel = "ADVANCED"
+)
+
+var AllProgramLevel = []ProgramLevel{
+	ProgramLevelBeginner,
+	ProgramLevelIntermediate,
+	ProgramLevelAdvanced,
+}
+
+func (e ProgramLevel) IsValid() bool {
+	switch e {
+	case ProgramLevelBeginner, ProgramLevelIntermediate, ProgramLevelAdvanced:
+		return true
+	}
+	return false
+}
+
+func (e ProgramLevel) String() string {
+	return string(e)
+}
+
+func (e *ProgramLevel) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ProgramLevel(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ProgramLevel", str)
+	}
+	return nil
+}
+
+func (e ProgramLevel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

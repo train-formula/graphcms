@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.10.2
 	github.com/agnivade/levenshtein v1.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/gin-contrib/cors v1.3.0 // indirect
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-pg/pg/v9 v9.0.0-beta.7
 	github.com/go-playground/universal-translator v0.17.0 // indirect
