@@ -58,6 +58,7 @@ func main() {
 	ginServer := octoberServer.MustGenerateGQLGenServerServerFromEnv()
 
 	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowCredentials = true
 	corsConfig.AllowOriginFunc = func(_ string) bool {
 		return true
 	}
