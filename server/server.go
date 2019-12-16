@@ -57,9 +57,14 @@ func main() {
 
 	ginServer := octoberServer.MustGenerateGQLGenServerServerFromEnv()
 
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOriginFunc = func(_ string) bool {
+		return true
+	}
+
 	ginServer.WithGinMiddleware(
 		RegisterLoaders(db),
-		cors.Default(),
+		cors.New(corsConfig),
 	)
 
 	ginServer.WithExecutableSchema(generated.NewExecutableSchema(generated.Config{Resolvers: &graphcms.Resolver{
