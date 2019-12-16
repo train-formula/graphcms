@@ -28,7 +28,7 @@ func (n *NullableIDEditor) ContainsValue() bool {
 // If the value in this type is null, then the outer value will be set to null
 // However, if the outer value is null (meaning this whole data structure is omitted), nothing will change
 type NullableIntEditor struct {
-	Value *int32 `json:"value"`
+	Value *int `json:"value"`
 }
 
 func (n *NullableIntEditor) ContainsValue() bool {

@@ -12,6 +12,7 @@ type WorkoutBlock {
 
     trainerOrganizationID: ID!
     workoutCategoryID: ID!
+    categoryOrder: Int!
 
     roundNumeral: Int
     roundText: String

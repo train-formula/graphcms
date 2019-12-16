@@ -15,11 +15,11 @@ type WorkoutBlock struct {
 	UpdatedAt             time.Time  `json:"updatedAt"`
 	TrainerOrganizationID uuid.UUID  `json:"trainerOrganizationID"`
 	WorkoutCategoryID     uuid.UUID  `json:"workoutCategoryID"`
-	Type                  BlockType  `json:"type"`
-	RoundNumeral          *int32     `json:"roundNumeral"`
+	CategoryOrder         int        `json:"categoryOrder"`
+	RoundNumeral          *int       `json:"roundNumeral"`
 	RoundText             *string    `json:"roundText"`
 	RoundUnitID           *uuid.UUID `json:"roundUnitID"`
-	DurationSeconds       *int32     `json:"durationSeconds"`
+	DurationSeconds       *int       `json:"durationSeconds"`
 	RoundRestDuration     *int       `json:"roundRestDuration"`
 	NumberOfRounds        *int       `json:"numberOfRounds"`
 }

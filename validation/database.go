@@ -3,9 +3,11 @@ package validation
 import (
 	"context"
 
+	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/tagdb"
+	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/vektah/gqlparser/gqlerror"
 )
 
@@ -35,4 +37,27 @@ func TagsAllExistForTrainer(ctx context.Context, conn database.Conn, trainerOrga
 	}
 
 	return nil
+}
+
+// Validates that a unid ID is either nil, or exists in the database
+func UnitIsNilOrExists(ctx context.Context, conn database.Conn, unitID *uuid.UUID) ValidatorFunc {
+
+	return func() *gqlerror.Error {
+		if unitID == nil {
+			return nil
+		}
+
+		searchID := *unitID
+		_, err := workoutdb.GetUnit(ctx, conn, searchID)
+
+		if err != nil {
+			if err == pg.ErrNoRows {
+				return gqlerror.Errorf("Unit ID %s does not exist", searchID)
+			}
+			return gqlerror.Errorf(err.Error())
+		}
+
+		return nil
+	}
+
 }

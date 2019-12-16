@@ -48,6 +48,19 @@ func InsertWorkout(ctx context.Context, conn database.Conn, new workout.Workout)
 	return newModel, nil
 }
 
+// Insert a new workout block
+func InsertWorkoutBlock(ctx context.Context, conn database.Conn, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
+
+	newModel := &new
+
+	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	if err != nil {
+		return nil, err
+	}
+
+	return newModel, nil
+}
+
 // Remove all workout categories from a workout, and set a new list
 // The order of the categories will be the order they appear in the list
 func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, workoutID uuid.UUID, workoutCategoryIDs []uuid.UUID) error {

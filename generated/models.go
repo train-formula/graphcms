@@ -28,6 +28,17 @@ type CreateWorkout struct {
 	Tags             []uuid.UUID `json:"tags"`
 }
 
+type CreateWorkoutBlock struct {
+	WorkoutCategoryID uuid.UUID  `json:"workoutCategoryID"`
+	CategoryOrder     int        `json:"categoryOrder"`
+	RoundNumeral      *int       `json:"roundNumeral"`
+	RoundText         *string    `json:"roundText"`
+	RoundUnitID       *uuid.UUID `json:"roundUnitID"`
+	RoundRestDuration *int       `json:"roundRestDuration"`
+	NumberOfRounds    *int       `json:"numberOfRounds"`
+	DurationSeconds   *int       `json:"durationSeconds"`
+}
+
 type CreateWorkoutCategory struct {
 	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
 	Name                  string      `json:"name"`
@@ -50,6 +61,17 @@ type EditWorkout struct {
 	Name          *string   `json:"name"`
 	Description   *string   `json:"description"`
 	DaysFromStart *int      `json:"daysFromStart"`
+}
+
+type EditWorkoutBlock struct {
+	ID                uuid.UUID                    `json:"id"`
+	CategoryOrder     *int                         `json:"categoryOrder"`
+	RoundNumeral      *models.NullableIntEditor    `json:"roundNumeral"`
+	RoundText         *models.NullableStringEditor `json:"roundText"`
+	RoundUnitID       *models.NullableIDEditor     `json:"roundUnitID"`
+	RoundRestDuration *models.NullableIntEditor    `json:"roundRestDuration"`
+	NumberOfRounds    *models.NullableIntEditor    `json:"numberOfRounds"`
+	DurationSeconds   *models.NullableIntEditor    `json:"durationSeconds"`
 }
 
 type EditWorkoutCategory struct {

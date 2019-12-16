@@ -27,13 +27,3 @@ func CheckStringMinimumLength(s string, minLength int, message string) Validator
 		return nil
 	}
 }
-
-func CheckIntGT(i int, gt int, message string) ValidatorFunc {
-	return func() *gqlerror.Error {
-		if i < gt {
-			return gqlerror.Errorf(message)
-		}
-
-		return nil
-	}
-}

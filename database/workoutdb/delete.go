@@ -31,3 +31,15 @@ func ClearWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, work
 
 	return nil
 }
+
+// Delete a workout block, and un-link all of the exercises associated
+func DeleteWorkoutBlock(ctx context.Context, conn database.Conn, workoutBlockID uuid.UUID) error {
+
+	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.WorkoutBlock{})+" WHERE id = ?", workoutBlockID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

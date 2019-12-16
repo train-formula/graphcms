@@ -47,6 +47,16 @@ func GetUnits(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*work
 }
 
 // Retrieves an workout category by its ID
+func GetUnit(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Unit, error) {
+
+	var result workout.Unit
+
+	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+
+	return result, err
+}
+
+// Retrieves an workout category by its ID
 func GetWorkoutCategory(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutCategory, error) {
 
 	var result workout.WorkoutCategory
@@ -174,6 +184,16 @@ func GetWorkoutCategoryBlocks(ctx context.Context, conn database.Conn, workoutCa
 	}
 
 	return results, err
+}
+
+// Retrieves a workout block by its ID, and locks the row
+func GetWorkoutBlockForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutBlock, error) {
+
+	var result workout.WorkoutBlock
+
+	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+
+	return result, err
 }
 
 // Retrieves a workout by its ID, and locks the row

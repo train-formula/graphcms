@@ -45,3 +45,16 @@ func UpdateWorkout(ctx context.Context, conn database.Conn, new workout.Workout)
 
 	return newModel, nil
 }
+
+// Update workout block, replace all fields with new row
+func UpdateWorkoutBlock(ctx context.Context, conn database.Conn, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
+
+	newModel := &new
+
+	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	if err != nil {
+		return nil, err
+	}
+
+	return newModel, nil
+}

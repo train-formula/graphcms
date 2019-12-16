@@ -74,10 +74,13 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateTag                   func(childComplexity int, request CreateTag) int
 		CreateWorkout               func(childComplexity int, request CreateWorkout) int
+		CreateWorkoutBlock          func(childComplexity int, request CreateWorkoutBlock) int
 		CreateWorkoutCategory       func(childComplexity int, request CreateWorkoutCategory) int
 		CreateWorkoutProgram        func(childComplexity int, request CreateWorkoutProgram) int
 		DeleteWorkout               func(childComplexity int, request uuid.UUID) int
+		DeleteWorkoutBlock          func(childComplexity int, request uuid.UUID) int
 		EditWorkout                 func(childComplexity int, request EditWorkout) int
+		EditWorkoutBlock            func(childComplexity int, request EditWorkoutBlock) int
 		EditWorkoutCategory         func(childComplexity int, request EditWorkoutCategory) int
 		Health                      func(childComplexity int) int
 		SetWorkoutWorkoutCategories func(childComplexity int, request SetWorkoutWorkoutCategories) int
@@ -189,6 +192,7 @@ type ComplexityRoot struct {
 	}
 
 	WorkoutBlock struct {
+		CategoryOrder         func(childComplexity int) int
 		CreatedAt             func(childComplexity int) int
 		DurationSeconds       func(childComplexity int) int
 		ID                    func(childComplexity int) int
@@ -286,6 +290,9 @@ type MutationResolver interface {
 	EditWorkout(ctx context.Context, request EditWorkout) (*workout.Workout, error)
 	DeleteWorkout(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
 	SetWorkoutWorkoutCategories(ctx context.Context, request SetWorkoutWorkoutCategories) (*workout.Workout, error)
+	CreateWorkoutBlock(ctx context.Context, request CreateWorkoutBlock) (*workout.WorkoutBlock, error)
+	EditWorkoutBlock(ctx context.Context, request EditWorkoutBlock) (*workout.WorkoutBlock, error)
+	DeleteWorkoutBlock(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
 	CreateWorkoutCategory(ctx context.Context, request CreateWorkoutCategory) (*workout.WorkoutCategory, error)
 	EditWorkoutCategory(ctx context.Context, request EditWorkoutCategory) (*workout.WorkoutCategory, error)
 	CreateWorkoutProgram(ctx context.Context, request CreateWorkoutProgram) (*workout.WorkoutProgram, error)
@@ -451,6 +458,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateWorkout(childComplexity, args["request"].(CreateWorkout)), true
 
+	case "Mutation.createWorkoutBlock":
+		if e.complexity.Mutation.CreateWorkoutBlock == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createWorkoutBlock_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateWorkoutBlock(childComplexity, args["request"].(CreateWorkoutBlock)), true
+
 	case "Mutation.createWorkoutCategory":
 		if e.complexity.Mutation.CreateWorkoutCategory == nil {
 			break
@@ -487,6 +506,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteWorkout(childComplexity, args["request"].(uuid.UUID)), true
 
+	case "Mutation.deleteWorkoutBlock":
+		if e.complexity.Mutation.DeleteWorkoutBlock == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteWorkoutBlock_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteWorkoutBlock(childComplexity, args["request"].(uuid.UUID)), true
+
 	case "Mutation.editWorkout":
 		if e.complexity.Mutation.EditWorkout == nil {
 			break
@@ -498,6 +529,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.EditWorkout(childComplexity, args["request"].(EditWorkout)), true
+
+	case "Mutation.editWorkoutBlock":
+		if e.complexity.Mutation.EditWorkoutBlock == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editWorkoutBlock_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditWorkoutBlock(childComplexity, args["request"].(EditWorkoutBlock)), true
 
 	case "Mutation.editWorkoutCategory":
 		if e.complexity.Mutation.EditWorkoutCategory == nil {
@@ -1088,6 +1131,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Workout.WorkoutProgramID(childComplexity), true
+
+	case "WorkoutBlock.categoryOrder":
+		if e.complexity.WorkoutBlock.CategoryOrder == nil {
+			break
+		}
+
+		return e.complexity.WorkoutBlock.CategoryOrder(childComplexity), true
 
 	case "WorkoutBlock.createdAt":
 		if e.complexity.WorkoutBlock.CreatedAt == nil {
@@ -1830,6 +1880,7 @@ type WorkoutBlock {
 
     trainerOrganizationID: ID!
     workoutCategoryID: ID!
+    categoryOrder: Int!
 
     roundNumeral: Int
     roundText: String
@@ -1846,6 +1897,53 @@ type WorkoutBlock {
     # exercises: [Exercise!]
 
 }`},
+	&ast.Source{Name: "schema/graphql/workout_block/workout_block_mutation.graphql", Input: `
+extend type Mutation {
+
+    createWorkoutBlock(request: CreateWorkoutBlock!): WorkoutBlock
+    editWorkoutBlock(request: EditWorkoutBlock!): WorkoutBlock
+    deleteWorkoutBlock(request: ID!): ID
+}
+
+
+###############################
+##### CREATE WORKOUT BLOCK ####
+###############################
+input CreateWorkoutBlock {
+
+    workoutCategoryID: ID!
+    categoryOrder: Int!
+
+    roundNumeral: Int
+    roundText: String
+    roundUnitID: ID
+
+    roundRestDuration: Int
+
+    numberOfRounds: Int
+    durationSeconds: Int
+}
+
+###############################
+##### EDIT WORKOUT BLOCK ######
+###############################
+input EditWorkoutBlock {
+
+    id: ID!
+
+    categoryOrder: Int
+
+    roundNumeral: NullableIntEditor
+    roundText: NullableStringEditor
+    roundUnitID: NullableIDEditor
+
+    roundRestDuration: NullableIntEditor
+
+    numberOfRounds: NullableIntEditor
+    durationSeconds: NullableIntEditor
+
+}
+`},
 	&ast.Source{Name: "schema/graphql/workout_category/workout_category.graphql", Input: `
 extend type Query {
     workoutCategory(id: ID!): WorkoutCategory
@@ -2064,6 +2162,20 @@ func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createWorkoutBlock_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 CreateWorkoutBlock
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNCreateWorkoutBlock2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateWorkoutBlock(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createWorkoutCategory_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2106,12 +2218,40 @@ func (ec *executionContext) field_Mutation_createWorkout_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteWorkoutBlock_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteWorkout_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 uuid.UUID
 	if tmp, ok := rawArgs["request"]; ok {
 		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editWorkoutBlock_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 EditWorkoutBlock
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNEditWorkoutBlock2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditWorkoutBlock(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3045,6 +3185,129 @@ func (ec *executionContext) _Mutation_setWorkoutWorkoutCategories(ctx context.Co
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOWorkout2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkout(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createWorkoutBlock(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createWorkoutBlock_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateWorkoutBlock(rctx, args["request"].(CreateWorkoutBlock))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.WorkoutBlock)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOWorkoutBlock2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutBlock(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_editWorkoutBlock(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_editWorkoutBlock_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditWorkoutBlock(rctx, args["request"].(EditWorkoutBlock))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.WorkoutBlock)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOWorkoutBlock2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutBlock(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteWorkoutBlock(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteWorkoutBlock_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteWorkoutBlock(rctx, args["request"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOID2ᚖgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createWorkoutCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6105,6 +6368,43 @@ func (ec *executionContext) _WorkoutBlock_workoutCategoryID(ctx context.Context,
 	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _WorkoutBlock_categoryOrder(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutBlock) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutBlock",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CategoryOrder, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _WorkoutBlock_roundNumeral(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutBlock) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -6133,10 +6433,10 @@ func (ec *executionContext) _WorkoutBlock_roundNumeral(ctx context.Context, fiel
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int32)
+	res := resTmp.(*int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOInt2ᚖint32(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutBlock_roundText(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutBlock) (ret graphql.Marshaler) {
@@ -6303,10 +6603,10 @@ func (ec *executionContext) _WorkoutBlock_durationSeconds(ctx context.Context, f
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int32)
+	res := resTmp.(*int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOInt2ᚖint32(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutBlock_trainerOrganization(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutBlock) (ret graphql.Marshaler) {
@@ -9042,6 +9342,66 @@ func (ec *executionContext) unmarshalInputCreateWorkout(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateWorkoutBlock(ctx context.Context, obj interface{}) (CreateWorkoutBlock, error) {
+	var it CreateWorkoutBlock
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "workoutCategoryID":
+			var err error
+			it.WorkoutCategoryID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "categoryOrder":
+			var err error
+			it.CategoryOrder, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "roundNumeral":
+			var err error
+			it.RoundNumeral, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "roundText":
+			var err error
+			it.RoundText, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "roundUnitID":
+			var err error
+			it.RoundUnitID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "roundRestDuration":
+			var err error
+			it.RoundRestDuration, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "numberOfRounds":
+			var err error
+			it.NumberOfRounds, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "durationSeconds":
+			var err error
+			it.DurationSeconds, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateWorkoutCategory(ctx context.Context, obj interface{}) (CreateWorkoutCategory, error) {
 	var it CreateWorkoutCategory
 	var asMap = obj.(map[string]interface{})
@@ -9168,6 +9528,66 @@ func (ec *executionContext) unmarshalInputEditWorkout(ctx context.Context, obj i
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditWorkoutBlock(ctx context.Context, obj interface{}) (EditWorkoutBlock, error) {
+	var it EditWorkoutBlock
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "categoryOrder":
+			var err error
+			it.CategoryOrder, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "roundNumeral":
+			var err error
+			it.RoundNumeral, err = ec.unmarshalONullableIntEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "roundText":
+			var err error
+			it.RoundText, err = ec.unmarshalONullableStringEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "roundUnitID":
+			var err error
+			it.RoundUnitID, err = ec.unmarshalONullableIDEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIDEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "roundRestDuration":
+			var err error
+			it.RoundRestDuration, err = ec.unmarshalONullableIntEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "numberOfRounds":
+			var err error
+			it.NumberOfRounds, err = ec.unmarshalONullableIntEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "durationSeconds":
+			var err error
+			it.DurationSeconds, err = ec.unmarshalONullableIntEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditWorkoutCategory(ctx context.Context, obj interface{}) (EditWorkoutCategory, error) {
 	var it EditWorkoutCategory
 	var asMap = obj.(map[string]interface{})
@@ -9224,7 +9644,7 @@ func (ec *executionContext) unmarshalInputNullableIntEditor(ctx context.Context,
 		switch k {
 		case "value":
 			var err error
-			it.Value, err = ec.unmarshalOInt2ᚖint32(ctx, v)
+			it.Value, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9443,6 +9863,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteWorkout(ctx, field)
 		case "setWorkoutWorkoutCategories":
 			out.Values[i] = ec._Mutation_setWorkoutWorkoutCategories(ctx, field)
+		case "createWorkoutBlock":
+			out.Values[i] = ec._Mutation_createWorkoutBlock(ctx, field)
+		case "editWorkoutBlock":
+			out.Values[i] = ec._Mutation_editWorkoutBlock(ctx, field)
+		case "deleteWorkoutBlock":
+			out.Values[i] = ec._Mutation_deleteWorkoutBlock(ctx, field)
 		case "createWorkoutCategory":
 			out.Values[i] = ec._Mutation_createWorkoutCategory(ctx, field)
 		case "editWorkoutCategory":
@@ -10199,6 +10625,11 @@ func (ec *executionContext) _WorkoutBlock(ctx context.Context, sel ast.Selection
 			}
 		case "workoutCategoryID":
 			out.Values[i] = ec._WorkoutBlock_workoutCategoryID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "categoryOrder":
+			out.Values[i] = ec._WorkoutBlock_categoryOrder(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -10985,6 +11416,10 @@ func (ec *executionContext) unmarshalNCreateWorkout2githubᚗcomᚋtrainᚑformu
 	return ec.unmarshalInputCreateWorkout(ctx, v)
 }
 
+func (ec *executionContext) unmarshalNCreateWorkoutBlock2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateWorkoutBlock(ctx context.Context, v interface{}) (CreateWorkoutBlock, error) {
+	return ec.unmarshalInputCreateWorkoutBlock(ctx, v)
+}
+
 func (ec *executionContext) unmarshalNCreateWorkoutCategory2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateWorkoutCategory(ctx context.Context, v interface{}) (CreateWorkoutCategory, error) {
 	return ec.unmarshalInputCreateWorkoutCategory(ctx, v)
 }
@@ -10995,6 +11430,10 @@ func (ec *executionContext) unmarshalNCreateWorkoutProgram2githubᚗcomᚋtrain�
 
 func (ec *executionContext) unmarshalNEditWorkout2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditWorkout(ctx context.Context, v interface{}) (EditWorkout, error) {
 	return ec.unmarshalInputEditWorkout(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNEditWorkoutBlock2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditWorkoutBlock(ctx context.Context, v interface{}) (EditWorkoutBlock, error) {
+	return ec.unmarshalInputEditWorkoutBlock(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNEditWorkoutCategory2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditWorkoutCategory(ctx context.Context, v interface{}) (EditWorkoutCategory, error) {
@@ -11595,14 +12034,6 @@ func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.Selecti
 	return graphql.MarshalInt(v)
 }
 
-func (ec *executionContext) unmarshalOInt2int32(ctx context.Context, v interface{}) (int32, error) {
-	return graphql.UnmarshalInt32(v)
-}
-
-func (ec *executionContext) marshalOInt2int32(ctx context.Context, sel ast.SelectionSet, v int32) graphql.Marshaler {
-	return graphql.MarshalInt32(v)
-}
-
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -11618,19 +12049,40 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return ec.marshalOInt2int(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v interface{}) (*int32, error) {
+func (ec *executionContext) unmarshalONullableIDEditor2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIDEditor(ctx context.Context, v interface{}) (models.NullableIDEditor, error) {
+	return ec.unmarshalInputNullableIDEditor(ctx, v)
+}
+
+func (ec *executionContext) unmarshalONullableIDEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIDEditor(ctx context.Context, v interface{}) (*models.NullableIDEditor, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOInt2int32(ctx, v)
+	res, err := ec.unmarshalONullableIDEditor2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIDEditor(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
+func (ec *executionContext) unmarshalONullableIntEditor2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx context.Context, v interface{}) (models.NullableIntEditor, error) {
+	return ec.unmarshalInputNullableIntEditor(ctx, v)
+}
+
+func (ec *executionContext) unmarshalONullableIntEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx context.Context, v interface{}) (*models.NullableIntEditor, error) {
 	if v == nil {
-		return graphql.Null
+		return nil, nil
 	}
-	return ec.marshalOInt2int32(ctx, sel, *v)
+	res, err := ec.unmarshalONullableIntEditor2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) unmarshalONullableStringEditor2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx context.Context, v interface{}) (models.NullableStringEditor, error) {
+	return ec.unmarshalInputNullableStringEditor(ctx, v)
+}
+
+func (ec *executionContext) unmarshalONullableStringEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx context.Context, v interface{}) (*models.NullableStringEditor, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalONullableStringEditor2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) marshalOOrganization2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtrainerᚐOrganization(ctx context.Context, sel ast.SelectionSet, v trainer.Organization) graphql.Marshaler {

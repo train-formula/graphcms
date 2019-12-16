@@ -1,0 +1,46 @@
+
+extend type Mutation {
+
+    createWorkoutBlock(request: CreateWorkoutBlock!): WorkoutBlock
+    editWorkoutBlock(request: EditWorkoutBlock!): WorkoutBlock
+    deleteWorkoutBlock(request: ID!): ID
+}
+
+
+###############################
+##### CREATE WORKOUT BLOCK ####
+###############################
+input CreateWorkoutBlock {
+
+    workoutCategoryID: ID!
+    categoryOrder: Int!
+
+    roundNumeral: Int
+    roundText: String
+    roundUnitID: ID
+
+    roundRestDuration: Int
+
+    numberOfRounds: Int
+    durationSeconds: Int
+}
+
+###############################
+##### EDIT WORKOUT BLOCK ######
+###############################
+input EditWorkoutBlock {
+
+    id: ID!
+
+    categoryOrder: Int
+
+    roundNumeral: NullableIntEditor
+    roundText: NullableStringEditor
+    roundUnitID: NullableIDEditor
+
+    roundRestDuration: NullableIntEditor
+
+    numberOfRounds: NullableIntEditor
+    durationSeconds: NullableIntEditor
+
+}
