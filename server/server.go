@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/go-pg/pg/v9"
+	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms"
+	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/october"
 	"go.uber.org/zap"
@@ -67,6 +70,18 @@ func main() {
 		RegisterLoaders(db),
 		cors.New(corsConfig),
 	)
+
+	toFind := uuid.Must(uuid.FromString("3f96a015-6977-412f-a65f-4d64709be785"))
+	ctgories, err := workoutdb.GetWorkoutCategoriesByWorkout(context.Background(), db, []uuid.UUID{toFind})
+	if err != nil {
+		panic(err)
+	}
+
+	for _, ct := range ctgories[toFind] {
+		fmt.Println(ct)
+	}
+
+	fmt.Println(ctgories)
 
 	ginServer.WithExecutableSchema(generated.NewExecutableSchema(generated.Config{Resolvers: &graphcms.Resolver{
 		DB: db,

@@ -15,6 +15,26 @@ import (
 	"github.com/train-formula/graphcms/models/workout"
 )
 
+type CreateBlockExercise struct {
+	ExerciseID     uuid.UUID `json:"exerciseID"`
+	PrescriptionID uuid.UUID `json:"prescriptionID"`
+}
+
+type CreateExercise struct {
+	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
+	Name                  string      `json:"name"`
+	Description           string      `json:"description"`
+	VideoURL              *string     `json:"videoURL"`
+	Tags                  []uuid.UUID `json:"tags"`
+}
+
+type CreatePrescription struct {
+	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
+	Name                  string    `json:"name"`
+	PrescriptionCategory  string    `json:"prescriptionCategory"`
+	DurationSeconds       *int      `json:"durationSeconds"`
+}
+
 type CreateTag struct {
 	Tag                   string    `json:"tag"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
@@ -56,6 +76,13 @@ type CreateWorkoutProgram struct {
 	Tags                     []uuid.UUID `json:"tags"`
 }
 
+type EditExercise struct {
+	ID          uuid.UUID                    `json:"id"`
+	Name        *string                      `json:"name"`
+	Description *string                      `json:"description"`
+	VideoURL    *models.NullableStringEditor `json:"videoURL"`
+}
+
 type EditWorkout struct {
 	ID            uuid.UUID `json:"id"`
 	Name          *string   `json:"name"`
@@ -78,6 +105,11 @@ type EditWorkoutCategory struct {
 	ID          uuid.UUID `json:"id"`
 	Name        *string   `json:"name"`
 	Description *string   `json:"description"`
+}
+
+type SetWorkoutBlockExercises struct {
+	WorkoutBlockID uuid.UUID              `json:"workoutBlockID"`
+	BlockExercises []*CreateBlockExercise `json:"blockExercises"`
 }
 
 type SetWorkoutWorkoutCategories struct {

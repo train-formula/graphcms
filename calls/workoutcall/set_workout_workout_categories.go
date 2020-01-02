@@ -12,16 +12,18 @@ import (
 	"go.uber.org/zap"
 )
 
+func NewSetWorkoutWorkoutCategories(request generated.SetWorkoutWorkoutCategories, logger *zap.Logger, db *pg.DB) *SetWorkoutWorkoutCategories {
+	return &SetWorkoutWorkoutCategories{
+		Request: request,
+		DB:      db,
+		Logger:  logger.Named("SetWorkoutWorkoutCategories"),
+	}
+}
+
 type SetWorkoutWorkoutCategories struct {
 	Request generated.SetWorkoutWorkoutCategories
 	DB      *pg.DB
 	Logger  *zap.Logger
-}
-
-func (c SetWorkoutWorkoutCategories) logger() *zap.Logger {
-
-	return c.Logger.Named("SetWorkoutWorkoutCategories")
-
 }
 
 func (c SetWorkoutWorkoutCategories) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -41,7 +43,7 @@ func (c SetWorkoutWorkoutCategories) Call(ctx context.Context) (*workout.Workout
 				return gqlerror.Errorf("Workout does not exist")
 			}
 
-			c.logger().Error("Error retrieving workout", zap.Error(err))
+			c.Logger.Error("Error retrieving workout", zap.Error(err))
 			return err
 		}
 

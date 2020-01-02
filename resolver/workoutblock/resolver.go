@@ -56,3 +56,18 @@ func (r *WorkoutBlockResolver) WorkoutCategory(ctx context.Context, obj *workout
 
 	return nil, nil
 }
+
+func (r *WorkoutBlockResolver) Exercises(ctx context.Context, obj *workout.WorkoutBlock) ([]*workout.BlockExercise, error) {
+	if obj == nil {
+		return nil, gqlerror.Errorf("Cannot locate exercises from nil workout block")
+	}
+
+	call := workoutcall.NewGetBlockExercises(obj.ID, r.logger, r.db)
+
+	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
+		return call.Call(ctx)
+	}
+
+	return nil, nil
+
+}

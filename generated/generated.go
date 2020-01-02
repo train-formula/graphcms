@@ -41,6 +41,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	BlockExercise() BlockExerciseResolver
 	Exercise() ExerciseResolver
 	Mutation() MutationResolver
 	Prescription() PrescriptionResolver
@@ -58,13 +59,23 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	BlockExercise struct {
+		BlockID        func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		Exercise       func(childComplexity int) int
+		ExerciseID     func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Order          func(childComplexity int) int
+		Prescription   func(childComplexity int) int
+		PrescriptionID func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
+	}
+
 	Exercise struct {
 		CreatedAt             func(childComplexity int) int
-		ExerciseText          func(childComplexity int) int
+		Description           func(childComplexity int) int
 		ID                    func(childComplexity int) int
 		Name                  func(childComplexity int) int
-		Prescription          func(childComplexity int) int
-		PrescriptionID        func(childComplexity int) int
 		Tags                  func(childComplexity int) int
 		TrainerOrganizationID func(childComplexity int) int
 		UpdatedAt             func(childComplexity int) int
@@ -72,17 +83,21 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		CreateExercise              func(childComplexity int, request CreateExercise) int
 		CreateTag                   func(childComplexity int, request CreateTag) int
 		CreateWorkout               func(childComplexity int, request CreateWorkout) int
 		CreateWorkoutBlock          func(childComplexity int, request CreateWorkoutBlock) int
 		CreateWorkoutCategory       func(childComplexity int, request CreateWorkoutCategory) int
 		CreateWorkoutProgram        func(childComplexity int, request CreateWorkoutProgram) int
+		DeleteExercise              func(childComplexity int, request uuid.UUID) int
 		DeleteWorkout               func(childComplexity int, request uuid.UUID) int
 		DeleteWorkoutBlock          func(childComplexity int, request uuid.UUID) int
+		EditExercise                func(childComplexity int, request EditExercise) int
 		EditWorkout                 func(childComplexity int, request EditWorkout) int
 		EditWorkoutBlock            func(childComplexity int, request EditWorkoutBlock) int
 		EditWorkoutCategory         func(childComplexity int, request EditWorkoutCategory) int
 		Health                      func(childComplexity int) int
+		SetWorkoutBlockExercises    func(childComplexity int, request SetWorkoutBlockExercises) int
 		SetWorkoutWorkoutCategories func(childComplexity int, request SetWorkoutWorkoutCategories) int
 	}
 
@@ -129,6 +144,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		AvailableUnits            func(childComplexity int) int
+		Exercise                  func(childComplexity int, id uuid.UUID) int
 		Health                    func(childComplexity int) int
 		Organization              func(childComplexity int, id uuid.UUID) int
 		OrganizationAvailableTags func(childComplexity int, id uuid.UUID, first int, after *string) int
@@ -195,6 +211,7 @@ type ComplexityRoot struct {
 		CategoryOrder         func(childComplexity int) int
 		CreatedAt             func(childComplexity int) int
 		DurationSeconds       func(childComplexity int) int
+		Exercises             func(childComplexity int) int
 		ID                    func(childComplexity int) int
 		NumberOfRounds        func(childComplexity int) int
 		RoundNumeral          func(childComplexity int) int
@@ -279,12 +296,18 @@ type ComplexityRoot struct {
 	}
 }
 
+type BlockExerciseResolver interface {
+	Exercise(ctx context.Context, obj *workout.BlockExercise) (*workout.Exercise, error)
+	Prescription(ctx context.Context, obj *workout.BlockExercise) (*workout.Prescription, error)
+}
 type ExerciseResolver interface {
-	Prescription(ctx context.Context, obj *workout.Exercise) (*workout.Prescription, error)
 	Tags(ctx context.Context, obj *workout.Exercise) ([]*tag.Tag, error)
 }
 type MutationResolver interface {
 	Health(ctx context.Context) (string, error)
+	CreateExercise(ctx context.Context, request CreateExercise) (*workout.Exercise, error)
+	EditExercise(ctx context.Context, request EditExercise) (*workout.Exercise, error)
+	DeleteExercise(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
 	CreateTag(ctx context.Context, request CreateTag) (*tag.Tag, error)
 	CreateWorkout(ctx context.Context, request CreateWorkout) (*workout.Workout, error)
 	EditWorkout(ctx context.Context, request EditWorkout) (*workout.Workout, error)
@@ -293,6 +316,7 @@ type MutationResolver interface {
 	CreateWorkoutBlock(ctx context.Context, request CreateWorkoutBlock) (*workout.WorkoutBlock, error)
 	EditWorkoutBlock(ctx context.Context, request EditWorkoutBlock) (*workout.WorkoutBlock, error)
 	DeleteWorkoutBlock(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
+	SetWorkoutBlockExercises(ctx context.Context, request SetWorkoutBlockExercises) (*workout.WorkoutBlock, error)
 	CreateWorkoutCategory(ctx context.Context, request CreateWorkoutCategory) (*workout.WorkoutCategory, error)
 	EditWorkoutCategory(ctx context.Context, request EditWorkoutCategory) (*workout.WorkoutCategory, error)
 	CreateWorkoutProgram(ctx context.Context, request CreateWorkoutProgram) (*workout.WorkoutProgram, error)
@@ -303,6 +327,7 @@ type PrescriptionResolver interface {
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (string, error)
+	Exercise(ctx context.Context, id uuid.UUID) (*workout.Exercise, error)
 	Organization(ctx context.Context, id uuid.UUID) (*trainer.Organization, error)
 	OrganizationAvailableTags(ctx context.Context, id uuid.UUID, first int, after *string) (*connections.TagConnection, error)
 	Prescription(ctx context.Context, id uuid.UUID) (*workout.Prescription, error)
@@ -327,6 +352,7 @@ type WorkoutResolver interface {
 type WorkoutBlockResolver interface {
 	TrainerOrganization(ctx context.Context, obj *workout.WorkoutBlock) (*trainer.Organization, error)
 	WorkoutCategory(ctx context.Context, obj *workout.WorkoutBlock) (*workout.WorkoutCategory, error)
+	Exercises(ctx context.Context, obj *workout.WorkoutBlock) ([]*workout.BlockExercise, error)
 }
 type WorkoutCategoryResolver interface {
 	Tags(ctx context.Context, obj *workout.WorkoutCategory) ([]*tag.Tag, error)
@@ -364,6 +390,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "BlockExercise.blockID":
+		if e.complexity.BlockExercise.BlockID == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.BlockID(childComplexity), true
+
+	case "BlockExercise.createdAt":
+		if e.complexity.BlockExercise.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.CreatedAt(childComplexity), true
+
+	case "BlockExercise.exercise":
+		if e.complexity.BlockExercise.Exercise == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.Exercise(childComplexity), true
+
+	case "BlockExercise.exerciseID":
+		if e.complexity.BlockExercise.ExerciseID == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.ExerciseID(childComplexity), true
+
+	case "BlockExercise.id":
+		if e.complexity.BlockExercise.ID == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.ID(childComplexity), true
+
+	case "BlockExercise.order":
+		if e.complexity.BlockExercise.Order == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.Order(childComplexity), true
+
+	case "BlockExercise.prescription":
+		if e.complexity.BlockExercise.Prescription == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.Prescription(childComplexity), true
+
+	case "BlockExercise.prescriptionID":
+		if e.complexity.BlockExercise.PrescriptionID == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.PrescriptionID(childComplexity), true
+
+	case "BlockExercise.updatedAt":
+		if e.complexity.BlockExercise.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.BlockExercise.UpdatedAt(childComplexity), true
+
 	case "Exercise.createdAt":
 		if e.complexity.Exercise.CreatedAt == nil {
 			break
@@ -371,12 +460,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Exercise.CreatedAt(childComplexity), true
 
-	case "Exercise.exerciseText":
-		if e.complexity.Exercise.ExerciseText == nil {
+	case "Exercise.description":
+		if e.complexity.Exercise.Description == nil {
 			break
 		}
 
-		return e.complexity.Exercise.ExerciseText(childComplexity), true
+		return e.complexity.Exercise.Description(childComplexity), true
 
 	case "Exercise.id":
 		if e.complexity.Exercise.ID == nil {
@@ -391,20 +480,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Exercise.Name(childComplexity), true
-
-	case "Exercise.prescription":
-		if e.complexity.Exercise.Prescription == nil {
-			break
-		}
-
-		return e.complexity.Exercise.Prescription(childComplexity), true
-
-	case "Exercise.prescriptionID":
-		if e.complexity.Exercise.PrescriptionID == nil {
-			break
-		}
-
-		return e.complexity.Exercise.PrescriptionID(childComplexity), true
 
 	case "Exercise.tags":
 		if e.complexity.Exercise.Tags == nil {
@@ -433,6 +508,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Exercise.VideoURL(childComplexity), true
+
+	case "Mutation.createExercise":
+		if e.complexity.Mutation.CreateExercise == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createExercise_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateExercise(childComplexity, args["request"].(CreateExercise)), true
 
 	case "Mutation.createTag":
 		if e.complexity.Mutation.CreateTag == nil {
@@ -494,6 +581,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateWorkoutProgram(childComplexity, args["request"].(CreateWorkoutProgram)), true
 
+	case "Mutation.deleteExercise":
+		if e.complexity.Mutation.DeleteExercise == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteExercise_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteExercise(childComplexity, args["request"].(uuid.UUID)), true
+
 	case "Mutation.deleteWorkout":
 		if e.complexity.Mutation.DeleteWorkout == nil {
 			break
@@ -517,6 +616,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteWorkoutBlock(childComplexity, args["request"].(uuid.UUID)), true
+
+	case "Mutation.editExercise":
+		if e.complexity.Mutation.EditExercise == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editExercise_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditExercise(childComplexity, args["request"].(EditExercise)), true
 
 	case "Mutation.editWorkout":
 		if e.complexity.Mutation.EditWorkout == nil {
@@ -560,6 +671,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.Health(childComplexity), true
+
+	case "Mutation.setWorkoutBlockExercises":
+		if e.complexity.Mutation.SetWorkoutBlockExercises == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setWorkoutBlockExercises_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetWorkoutBlockExercises(childComplexity, args["request"].(SetWorkoutBlockExercises)), true
 
 	case "Mutation.setWorkoutWorkoutCategories":
 		if e.complexity.Mutation.SetWorkoutWorkoutCategories == nil {
@@ -782,6 +905,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.AvailableUnits(childComplexity), true
+
+	case "Query.exercise":
+		if e.complexity.Query.Exercise == nil {
+			break
+		}
+
+		args, err := ec.field_Query_exercise_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Exercise(childComplexity, args["id"].(uuid.UUID)), true
 
 	case "Query.health":
 		if e.complexity.Query.Health == nil {
@@ -1152,6 +1287,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.WorkoutBlock.DurationSeconds(childComplexity), true
+
+	case "WorkoutBlock.exercises":
+		if e.complexity.WorkoutBlock.Exercises == nil {
+			break
+		}
+
+		return e.complexity.WorkoutBlock.Exercises(childComplexity), true
 
 	case "WorkoutBlock.id":
 		if e.complexity.WorkoutBlock.ID == nil {
@@ -1578,6 +1720,10 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "schema/graphql/exercise/exercise.graphql", Input: `
+extend type Query {
+    exercise(id: ID!): Exercise
+}
+
 type Exercise {
 
     id: ID!
@@ -1588,16 +1734,52 @@ type Exercise {
     trainerOrganizationID: ID!
 
     name: String!
-
-    exerciseText: String!
-
-    prescriptionID: ID!
+    description: String!
 
     videoURL: String
 
     # Fetchers
-    prescription: Prescription
     tags: [Tag!]
+
+}
+`},
+	&ast.Source{Name: "schema/graphql/exercise/exercise_mutation.graphql", Input: `
+extend type Mutation {
+
+    createExercise(request: CreateExercise!): Exercise
+    editExercise(request: EditExercise!): Exercise
+    # Before deletion exercises must be removed from all workout blocks individually
+    deleteExercise(request: ID!): ID
+}
+
+
+###############################
+####### CREATE EXERCISE #######
+###############################
+input CreateExercise {
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String!
+
+    videoURL: String
+
+    tags: [ID!]
+}
+
+
+###############################
+######## EDIT EXERCISE ########
+###############################
+input EditExercise {
+
+    id: ID!
+
+    name: String
+    description: String
+
+    videoURL: NullableStringEditor
 
 }
 `},
@@ -1670,6 +1852,26 @@ type Prescription {
     # sets: [PrescriptionSet!]
 
 }`},
+	&ast.Source{Name: "schema/graphql/prescription/prescription_mutation.graphql", Input: `
+#extend type Mutation {
+
+    # createPrescription(request: CreatePrescription!): Prescription
+#}
+
+
+###############################
+##### CREATE PRESCRIPTION #####
+###############################
+input CreatePrescription {
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    prescriptionCategory: String!
+
+    durationSeconds: Int
+}
+`},
 	&ast.Source{Name: "schema/graphql/root.graphql", Input: `type Query {
     health: String!
 }
@@ -1858,6 +2060,7 @@ input EditWorkout {
     daysFromStart: Int
 
 }
+
 ###################################
 # SET WORKOUT WORKOUT CATEGORIES ##
 ###################################
@@ -1869,6 +2072,23 @@ input SetWorkoutWorkoutCategories {
 	&ast.Source{Name: "schema/graphql/workout_block/workout_block.graphql", Input: `
 extend type Query {
     workoutBlock(id: ID!): WorkoutBlock
+}
+
+type BlockExercise {
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    blockID: ID!
+    exerciseID: ID!
+    prescriptionID: ID!
+
+    order: Int!
+
+    # Fetchers
+    exercise: Exercise
+    prescription: Prescription
 }
 
 type WorkoutBlock {
@@ -1894,7 +2114,7 @@ type WorkoutBlock {
     # Fetchers
     trainerOrganization: Organization
     workoutCategory: WorkoutCategory
-    # exercises: [Exercise!]
+    exercises: [BlockExercise!]
 
 }`},
 	&ast.Source{Name: "schema/graphql/workout_block/workout_block_mutation.graphql", Input: `
@@ -1903,6 +2123,11 @@ extend type Mutation {
     createWorkoutBlock(request: CreateWorkoutBlock!): WorkoutBlock
     editWorkoutBlock(request: EditWorkoutBlock!): WorkoutBlock
     deleteWorkoutBlock(request: ID!): ID
+
+    # Attaches a list of exercise + prescription IDs to a specified workout block
+    # This list creates a list of BlockExercises on the backend
+    # The order of the IDs will be the order in which the BlockExercises appear in the workout block
+    setWorkoutBlockExercises(request: SetWorkoutBlockExercises!): WorkoutBlock
 }
 
 
@@ -1943,7 +2168,20 @@ input EditWorkoutBlock {
     durationSeconds: NullableIntEditor
 
 }
-`},
+
+###################################
+### SET WORKOUT BLOCK EXERCISES ###
+###################################
+input SetWorkoutBlockExercises {
+    workoutBlockID: ID!
+
+    blockExercises: [CreateBlockExercise!]
+}
+
+input CreateBlockExercise {
+    exerciseID: ID!
+    prescriptionID: ID!
+}`},
 	&ast.Source{Name: "schema/graphql/workout_category/workout_category.graphql", Input: `
 extend type Query {
     workoutCategory(id: ID!): WorkoutCategory
@@ -2148,6 +2386,20 @@ type WorkoutProgramSearchResults {
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_createExercise_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 CreateExercise
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNCreateExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateExercise(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2218,6 +2470,20 @@ func (ec *executionContext) field_Mutation_createWorkout_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteExercise_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteWorkoutBlock_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2238,6 +2504,20 @@ func (ec *executionContext) field_Mutation_deleteWorkout_args(ctx context.Contex
 	var arg0 uuid.UUID
 	if tmp, ok := rawArgs["request"]; ok {
 		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editExercise_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 EditExercise
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNEditExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditExercise(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2288,6 +2568,20 @@ func (ec *executionContext) field_Mutation_editWorkout_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_setWorkoutBlockExercises_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 SetWorkoutBlockExercises
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNSetWorkoutBlockExercises2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐSetWorkoutBlockExercises(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_setWorkoutWorkoutCategories_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2313,6 +2607,20 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_exercise_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -2584,6 +2892,333 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _BlockExercise_id(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BlockExercise_createdAt(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BlockExercise_updatedAt(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BlockExercise_blockID(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BlockID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BlockExercise_exerciseID(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExerciseID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BlockExercise_prescriptionID(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrescriptionID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BlockExercise_order(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Order, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BlockExercise_exercise(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.BlockExercise().Exercise(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.Exercise)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BlockExercise_prescription(ctx context.Context, field graphql.CollectedField, obj *workout.BlockExercise) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "BlockExercise",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.BlockExercise().Prescription(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.Prescription)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPrescription2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Exercise_id(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -2769,7 +3404,7 @@ func (ec *executionContext) _Exercise_name(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Exercise_exerciseText(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
+func (ec *executionContext) _Exercise_description(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2788,7 +3423,7 @@ func (ec *executionContext) _Exercise_exerciseText(ctx context.Context, field gr
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ExerciseText, nil
+		return obj.Description, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2804,43 +3439,6 @@ func (ec *executionContext) _Exercise_exerciseText(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Exercise_prescriptionID(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Exercise",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PrescriptionID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(uuid.UUID)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Exercise_videoURL(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
@@ -2875,40 +3473,6 @@ func (ec *executionContext) _Exercise_videoURL(ctx context.Context, field graphq
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Exercise_prescription(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Exercise",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Exercise().Prescription(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*workout.Prescription)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOPrescription2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Exercise_tags(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
@@ -2980,6 +3544,129 @@ func (ec *executionContext) _Mutation_health(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createExercise(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createExercise_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateExercise(rctx, args["request"].(CreateExercise))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.Exercise)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_editExercise(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_editExercise_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditExercise(rctx, args["request"].(EditExercise))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.Exercise)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteExercise(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteExercise_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteExercise(rctx, args["request"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOID2ᚖgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3308,6 +3995,47 @@ func (ec *executionContext) _Mutation_deleteWorkoutBlock(ctx context.Context, fi
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOID2ᚖgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_setWorkoutBlockExercises(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setWorkoutBlockExercises_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetWorkoutBlockExercises(rctx, args["request"].(SetWorkoutBlockExercises))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.WorkoutBlock)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOWorkoutBlock2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutBlock(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createWorkoutCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4520,6 +5248,47 @@ func (ec *executionContext) _Query_health(ctx context.Context, field graphql.Col
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_exercise(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_exercise_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Exercise(rctx, args["id"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.Exercise)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_organization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6675,6 +7444,40 @@ func (ec *executionContext) _WorkoutBlock_workoutCategory(ctx context.Context, f
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOWorkoutCategory2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _WorkoutBlock_exercises(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutBlock) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutBlock",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.WorkoutBlock().Exercises(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*workout.BlockExercise)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOBlockExercise2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐBlockExerciseᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutCategory_id(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutCategory) (ret graphql.Marshaler) {
@@ -9276,6 +10079,108 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCreateBlockExercise(ctx context.Context, obj interface{}) (CreateBlockExercise, error) {
+	var it CreateBlockExercise
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "exerciseID":
+			var err error
+			it.ExerciseID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "prescriptionID":
+			var err error
+			it.PrescriptionID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateExercise(ctx context.Context, obj interface{}) (CreateExercise, error) {
+	var it CreateExercise
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "trainerOrganizationID":
+			var err error
+			it.TrainerOrganizationID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "videoURL":
+			var err error
+			it.VideoURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tags":
+			var err error
+			it.Tags, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreatePrescription(ctx context.Context, obj interface{}) (CreatePrescription, error) {
+	var it CreatePrescription
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "trainerOrganizationID":
+			var err error
+			it.TrainerOrganizationID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "prescriptionCategory":
+			var err error
+			it.PrescriptionCategory, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "durationSeconds":
+			var err error
+			it.DurationSeconds, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateTag(ctx context.Context, obj interface{}) (CreateTag, error) {
 	var it CreateTag
 	var asMap = obj.(map[string]interface{})
@@ -9492,6 +10397,42 @@ func (ec *executionContext) unmarshalInputCreateWorkoutProgram(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditExercise(ctx context.Context, obj interface{}) (EditExercise, error) {
+	var it EditExercise
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "videoURL":
+			var err error
+			it.VideoURL, err = ec.unmarshalONullableStringEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditWorkout(ctx context.Context, obj interface{}) (EditWorkout, error) {
 	var it EditWorkout
 	var asMap = obj.(map[string]interface{})
@@ -9672,6 +10613,30 @@ func (ec *executionContext) unmarshalInputNullableStringEditor(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSetWorkoutBlockExercises(ctx context.Context, obj interface{}) (SetWorkoutBlockExercises, error) {
+	var it SetWorkoutBlockExercises
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "workoutBlockID":
+			var err error
+			it.WorkoutBlockID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "blockExercises":
+			var err error
+			it.BlockExercises, err = ec.unmarshalOCreateBlockExercise2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateBlockExerciseᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSetWorkoutWorkoutCategories(ctx context.Context, obj interface{}) (SetWorkoutWorkoutCategories, error) {
 	var it SetWorkoutWorkoutCategories
 	var asMap = obj.(map[string]interface{})
@@ -9752,6 +10717,85 @@ func (ec *executionContext) unmarshalInputWorkoutProgramSearchRequest(ctx contex
 
 // region    **************************** object.gotpl ****************************
 
+var blockExerciseImplementors = []string{"BlockExercise"}
+
+func (ec *executionContext) _BlockExercise(ctx context.Context, sel ast.SelectionSet, obj *workout.BlockExercise) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, blockExerciseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BlockExercise")
+		case "id":
+			out.Values[i] = ec._BlockExercise_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "createdAt":
+			out.Values[i] = ec._BlockExercise_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._BlockExercise_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "blockID":
+			out.Values[i] = ec._BlockExercise_blockID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "exerciseID":
+			out.Values[i] = ec._BlockExercise_exerciseID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "prescriptionID":
+			out.Values[i] = ec._BlockExercise_prescriptionID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "order":
+			out.Values[i] = ec._BlockExercise_order(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "exercise":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BlockExercise_exercise(ctx, field, obj)
+				return res
+			})
+		case "prescription":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._BlockExercise_prescription(ctx, field, obj)
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var exerciseImplementors = []string{"Exercise"}
 
 func (ec *executionContext) _Exercise(ctx context.Context, sel ast.SelectionSet, obj *workout.Exercise) graphql.Marshaler {
@@ -9788,29 +10832,13 @@ func (ec *executionContext) _Exercise(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "exerciseText":
-			out.Values[i] = ec._Exercise_exerciseText(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "prescriptionID":
-			out.Values[i] = ec._Exercise_prescriptionID(ctx, field, obj)
+		case "description":
+			out.Values[i] = ec._Exercise_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "videoURL":
 			out.Values[i] = ec._Exercise_videoURL(ctx, field, obj)
-		case "prescription":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Exercise_prescription(ctx, field, obj)
-				return res
-			})
 		case "tags":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -9853,6 +10881,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createExercise":
+			out.Values[i] = ec._Mutation_createExercise(ctx, field)
+		case "editExercise":
+			out.Values[i] = ec._Mutation_editExercise(ctx, field)
+		case "deleteExercise":
+			out.Values[i] = ec._Mutation_deleteExercise(ctx, field)
 		case "createTag":
 			out.Values[i] = ec._Mutation_createTag(ctx, field)
 		case "createWorkout":
@@ -9869,6 +10903,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_editWorkoutBlock(ctx, field)
 		case "deleteWorkoutBlock":
 			out.Values[i] = ec._Mutation_deleteWorkoutBlock(ctx, field)
+		case "setWorkoutBlockExercises":
+			out.Values[i] = ec._Mutation_setWorkoutBlockExercises(ctx, field)
 		case "createWorkoutCategory":
 			out.Values[i] = ec._Mutation_createWorkoutCategory(ctx, field)
 		case "editWorkoutCategory":
@@ -10143,6 +11179,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			})
+		case "exercise":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_exercise(ctx, field)
 				return res
 			})
 		case "organization":
@@ -10665,6 +11712,17 @@ func (ec *executionContext) _WorkoutBlock(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._WorkoutBlock_workoutCategory(ctx, field, obj)
+				return res
+			})
+		case "exercises":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._WorkoutBlock_exercises(ctx, field, obj)
 				return res
 			})
 		default:
@@ -11394,6 +12452,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNBlockExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐBlockExercise(ctx context.Context, sel ast.SelectionSet, v workout.BlockExercise) graphql.Marshaler {
+	return ec._BlockExercise(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBlockExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐBlockExercise(ctx context.Context, sel ast.SelectionSet, v *workout.BlockExercise) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._BlockExercise(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)
 }
@@ -11406,6 +12478,22 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNCreateBlockExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateBlockExercise(ctx context.Context, v interface{}) (CreateBlockExercise, error) {
+	return ec.unmarshalInputCreateBlockExercise(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNCreateBlockExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateBlockExercise(ctx context.Context, v interface{}) (*CreateBlockExercise, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNCreateBlockExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateBlockExercise(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) unmarshalNCreateExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateExercise(ctx context.Context, v interface{}) (CreateExercise, error) {
+	return ec.unmarshalInputCreateExercise(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNCreateTag2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateTag(ctx context.Context, v interface{}) (CreateTag, error) {
@@ -11426,6 +12514,10 @@ func (ec *executionContext) unmarshalNCreateWorkoutCategory2githubᚗcomᚋtrain
 
 func (ec *executionContext) unmarshalNCreateWorkoutProgram2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateWorkoutProgram(ctx context.Context, v interface{}) (CreateWorkoutProgram, error) {
 	return ec.unmarshalInputCreateWorkoutProgram(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNEditExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditExercise(ctx context.Context, v interface{}) (EditExercise, error) {
+	return ec.unmarshalInputEditExercise(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNEditWorkout2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditWorkout(ctx context.Context, v interface{}) (EditWorkout, error) {
@@ -11498,6 +12590,10 @@ func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋtrainᚑformula�
 		return graphql.Null
 	}
 	return ec._PageInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSetWorkoutBlockExercises2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐSetWorkoutBlockExercises(ctx context.Context, v interface{}) (SetWorkoutBlockExercises, error) {
+	return ec.unmarshalInputSetWorkoutBlockExercises(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNSetWorkoutWorkoutCategories2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐSetWorkoutWorkoutCategories(ctx context.Context, v interface{}) (SetWorkoutWorkoutCategories, error) {
@@ -11948,6 +13044,46 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOBlockExercise2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐBlockExerciseᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.BlockExercise) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBlockExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐBlockExercise(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)
 }
@@ -11969,6 +13105,37 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOCreateBlockExercise2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateBlockExerciseᚄ(ctx context.Context, v interface{}) ([]*CreateBlockExercise, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*CreateBlockExercise, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNCreateBlockExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateBlockExercise(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx context.Context, sel ast.SelectionSet, v workout.Exercise) graphql.Marshaler {
+	return ec._Exercise(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOExercise2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx context.Context, sel ast.SelectionSet, v *workout.Exercise) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Exercise(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx context.Context, v interface{}) (uuid.UUID, error) {

@@ -35,10 +35,14 @@ func (t *WorkoutWorkoutCategoryJoin) WorkoutCategory() *WorkoutCategory {
 // Extract the columns to use in a SELECT statement
 func (t WorkoutWorkoutCategoryJoin) SelectColumns(workoutCategoryTablePrefix, workoutWorkoutCategoryID string) string {
 
-	valued := database.ReflectValue(WorkoutCategory{})
-
-	columns := database.StructColumns(valued, workoutCategoryTablePrefix)
-	columns = append(columns, database.PGPrefixedColumn("workout_id", workoutWorkoutCategoryID))
+	var columns []string
+	columns = append(columns, database.PGPrefixedColumn("id", workoutCategoryTablePrefix)+" AS workout_category_id")
+	columns = append(columns, database.PGPrefixedColumn("created_at", workoutCategoryTablePrefix)+" AS workout_category_created_at")
+	columns = append(columns, database.PGPrefixedColumn("updated_at", workoutCategoryTablePrefix)+" AS workout_category_updated_at")
+	columns = append(columns, database.PGPrefixedColumn("trainer_organization_id", workoutCategoryTablePrefix)+" AS workout_category_trainer_organization_id")
+	columns = append(columns, database.PGPrefixedColumn("name", workoutCategoryTablePrefix)+" AS workout_category_name")
+	columns = append(columns, database.PGPrefixedColumn("description", workoutCategoryTablePrefix)+" AS workout_category_description")
+	columns = append(columns, database.PGPrefixedColumn("workout_id", workoutWorkoutCategoryID)+" AS workout_workout_id")
 
 	return strings.Join(columns, ",")
 }

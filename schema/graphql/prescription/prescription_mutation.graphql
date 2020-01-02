@@ -1,0 +1,19 @@
+
+#extend type Mutation {
+
+    # createPrescription(request: CreatePrescription!): Prescription
+#}
+
+
+###############################
+##### CREATE PRESCRIPTION #####
+###############################
+input CreatePrescription {
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    prescriptionCategory: String!
+
+    durationSeconds: Int
+}

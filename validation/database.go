@@ -61,3 +61,22 @@ func UnitIsNilOrExists(ctx context.Context, conn database.Conn, unitID *uuid.UUI
 	}
 
 }
+
+// Validates that a organization ID is either nil, or exists in the database
+func OrganizationExists(ctx context.Context, conn database.Conn, organizationID uuid.UUID) ValidatorFunc {
+
+	return func() *gqlerror.Error {
+
+		_, err := workoutdb.GetUnit(ctx, conn, organizationID)
+
+		if err != nil {
+			if err == pg.ErrNoRows {
+				return gqlerror.Errorf("Organization ID %s does not exist", organizationID)
+			}
+			return gqlerror.Errorf(err.Error())
+		}
+
+		return nil
+	}
+
+}

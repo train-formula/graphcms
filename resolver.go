@@ -4,6 +4,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/connections"
+	"github.com/train-formula/graphcms/resolver/blockexercise"
 	"github.com/train-formula/graphcms/resolver/exercise"
 	"github.com/train-formula/graphcms/resolver/mutation"
 	"github.com/train-formula/graphcms/resolver/prescription"
@@ -60,4 +61,8 @@ func (r *Resolver) WorkoutCategoryConnection() generated.WorkoutCategoryConnecti
 
 func (r *Resolver) Exercise() generated.ExerciseResolver {
 	return exercise.NewExerciseResolver(r.DB, zap.L())
+}
+
+func (r *Resolver) BlockExercise() generated.BlockExerciseResolver {
+	return blockexercise.NewBlockExerciseResolver(r.DB, zap.L())
 }

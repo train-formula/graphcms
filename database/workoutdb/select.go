@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/workout"
@@ -250,7 +251,7 @@ func GetWorkoutCategoriesByWorkout(ctx context.Context, conn database.Conn, work
 
 	query := "SELECT " + (workout.WorkoutWorkoutCategoryJoin{}).SelectColumns("wc", "wwc") + " FROM " + database.TableName(workout.WorkoutWorkoutCategory{}) + " wwc " +
 		"INNER JOIN " + database.TableName(workout.WorkoutCategory{}) + " wc " +
-		"ON wwc.category_id = wc.id" +
+		"ON wwc.category_id = wc.id " +
 		"WHERE "
 
 	var params []interface{}
@@ -271,8 +272,98 @@ func GetWorkoutCategoriesByWorkout(ctx context.Context, conn database.Conn, work
 	}
 
 	for _, queryResult := range queryResults {
-		results[queryResult.WorkoutWorkoutID] = append(results[queryResult.WorkoutCategoryID], queryResult.WorkoutCategory())
+
+		results[queryResult.WorkoutWorkoutID] = append(results[queryResult.WorkoutWorkoutID], queryResult.WorkoutCategory())
 	}
 
 	return results, err
 }
+
+// Retrieves individual exercises by their IDs
+func GetExercises(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Exercise, error) {
+	if len(ids) <= 0 {
+		return nil, nil
+	}
+
+	var result []*workout.Exercise
+
+	query := "SELECT * FROM " + database.TableName(workout.Exercise{}) + " WHERE "
+
+	var params []interface{}
+
+	for _, id := range ids {
+		query += "id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ")
+
+	_, err := conn.QueryContext(ctx, &result, query, params...)
+
+	return result, err
+}
+
+// Retrieves an exercise by its ID, and locks the row
+func GetExerciseForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Exercise, error) {
+
+	var result workout.Exercise
+
+	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+
+	return result, err
+}
+
+// Check if an exercise is connected to any blocks
+func ExerciseConnectedToBlocks(ctx context.Context, conn database.Conn, id uuid.UUID) (bool, error) {
+
+	query := "SELECT COUNT(1) FROM " + database.TableName(workout.BlockExercise{}) + " WHERE exercise_id = ?"
+
+	var count int
+
+	_, err := conn.QueryContext(ctx, pg.Scan(&count), query, id)
+	if err != nil {
+
+		return false, err
+	}
+
+	return count > 0, nil
+
+}
+
+// Retrieves workout block exercise + prescription combinations by block ID
+func GetBlockExercisesByBlock(ctx context.Context, conn database.Conn, blockIDs []uuid.UUID) (map[uuid.UUID][]*workout.BlockExercise, error) {
+
+	results := make(map[uuid.UUID][]*workout.BlockExercise)
+
+	if len(blockIDs) <= 0 {
+		return results, nil
+	}
+
+	query := "SELECT * FROM " + database.TableName(workout.BlockExercise{}) + " WHERE "
+
+	var params []interface{}
+
+	var queryResults []*workout.BlockExercise
+
+	for _, id := range blockIDs {
+		query += "block_id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ") + " ORDER BY order ASC"
+
+	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, queryResult := range queryResults {
+
+		results[queryResult.BlockID] = append(results[queryResult.BlockID], queryResult)
+	}
+
+	return results, err
+}
+
+//BlockExercise

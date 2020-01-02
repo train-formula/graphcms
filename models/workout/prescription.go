@@ -45,12 +45,12 @@ func (p *Prescription) DBCursor() cursor.Cursor {
 }
 
 // Serializes the result of DBCursor
-// Necessary for gqlgen, allows us to avoid creating a seperate WorkoutCategoryEdge
+// Necessary for gqlgen, allows us to avoid creating a seperate PrescriptionEdge
 func (p *Prescription) Cursor() string {
 	return p.DBCursor().Serialize()
 }
 
-// Necessary for gqlgen, allows us to avoid creating a seperate WorkoutCategoryEdge
+// Necessary for gqlgen, allows us to avoid creating a seperate PrescriptionEdge
 func (p *Prescription) Node() *Prescription {
 	return p
 }

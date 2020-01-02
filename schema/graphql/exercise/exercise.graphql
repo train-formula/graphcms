@@ -1,4 +1,8 @@
 
+extend type Query {
+    exercise(id: ID!): Exercise
+}
+
 type Exercise {
 
     id: ID!
@@ -9,15 +13,11 @@ type Exercise {
     trainerOrganizationID: ID!
 
     name: String!
-
-    exerciseText: String!
-
-    prescriptionID: ID!
+    description: String!
 
     videoURL: String
 
     # Fetchers
-    prescription: Prescription
     tags: [Tag!]
 
 }

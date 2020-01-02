@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"unicode"
 
 	"github.com/iancoleman/strcase"
 	"github.com/train-formula/graphcms/database/cursor"
@@ -90,7 +91,9 @@ func StructColumns(v reflect.Value, prefix string) []string {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
-		results = append(results, PGPrefixedColumn(strcase.ToSnake(field.Name), prefix))
+		if unicode.IsUpper(rune(field.Name[0])) {
+			results = append(results, PGPrefixedColumn(strcase.ToSnake(field.Name), prefix))
+		}
 
 	}
 

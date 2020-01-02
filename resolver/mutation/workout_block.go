@@ -41,3 +41,14 @@ func (m *MutationResolver) DeleteWorkoutBlock(ctx context.Context, request uuid.
 
 	return nil, nil
 }
+
+func (m *MutationResolver) SetWorkoutBlockExercises(ctx context.Context, request generated.SetWorkoutBlockExercises) (*workout.WorkoutBlock, error) {
+
+	call := workoutcall.NewSetWorkoutBlockExercises(request, m.logger, m.db)
+
+	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
+		return call.Call(ctx)
+	}
+
+	return nil, nil
+}

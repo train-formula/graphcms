@@ -57,11 +57,7 @@ func (m *MutationResolver) DeleteWorkout(ctx context.Context, request uuid.UUID)
 
 func (m *MutationResolver) SetWorkoutWorkoutCategories(ctx context.Context, request generated.SetWorkoutWorkoutCategories) (*workout.Workout, error) {
 
-	call := workoutcall.SetWorkoutWorkoutCategories{
-		Logger:  m.logger,
-		Request: request,
-		DB:      m.db,
-	}
+	call := workoutcall.NewSetWorkoutWorkoutCategories(request, m.logger, m.db)
 
 	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
 		return call.Call(ctx)

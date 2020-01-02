@@ -39,6 +39,7 @@ input EditWorkout {
     daysFromStart: Int
 
 }
+
 ###################################
 # SET WORKOUT WORKOUT CATEGORIES ##
 ###################################

@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/tagcall"
-	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
@@ -24,25 +23,6 @@ func NewExerciseResolver(db *pg.DB, logger *zap.Logger) *ExerciseResolver {
 		db:     db,
 		logger: logger,
 	}
-}
-
-func (r *ExerciseResolver) Prescription(ctx context.Context, obj *workout.Exercise) (*workout.Prescription, error) {
-
-	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate prescription ID unit from nil exercise")
-	}
-
-	g := workoutcall.GetPrescription{
-		ID:     obj.PrescriptionID,
-		DB:     r.db,
-		Logger: r.logger,
-	}
-
-	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
-		return g.Call(ctx)
-	}
-
-	return nil, nil
 }
 
 func (r *ExerciseResolver) Tags(ctx context.Context, obj *workout.Exercise) ([]*tag.Tag, error) {

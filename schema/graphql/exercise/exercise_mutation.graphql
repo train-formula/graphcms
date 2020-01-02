@@ -1,0 +1,39 @@
+
+extend type Mutation {
+
+    createExercise(request: CreateExercise!): Exercise
+    editExercise(request: EditExercise!): Exercise
+    # Before deletion exercises must be removed from all workout blocks individually
+    deleteExercise(request: ID!): ID
+}
+
+
+###############################
+####### CREATE EXERCISE #######
+###############################
+input CreateExercise {
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String!
+
+    videoURL: String
+
+    tags: [ID!]
+}
+
+
+###############################
+######## EDIT EXERCISE ########
+###############################
+input EditExercise {
+
+    id: ID!
+
+    name: String
+    description: String
+
+    videoURL: NullableStringEditor
+
+}

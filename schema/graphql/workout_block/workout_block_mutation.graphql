@@ -4,6 +4,11 @@ extend type Mutation {
     createWorkoutBlock(request: CreateWorkoutBlock!): WorkoutBlock
     editWorkoutBlock(request: EditWorkoutBlock!): WorkoutBlock
     deleteWorkoutBlock(request: ID!): ID
+
+    # Attaches a list of exercise + prescription IDs to a specified workout block
+    # This list creates a list of BlockExercises on the backend
+    # The order of the IDs will be the order in which the BlockExercises appear in the workout block
+    setWorkoutBlockExercises(request: SetWorkoutBlockExercises!): WorkoutBlock
 }
 
 
@@ -43,4 +48,18 @@ input EditWorkoutBlock {
     numberOfRounds: NullableIntEditor
     durationSeconds: NullableIntEditor
 
+}
+
+###################################
+### SET WORKOUT BLOCK EXERCISES ###
+###################################
+input SetWorkoutBlockExercises {
+    workoutBlockID: ID!
+
+    blockExercises: [CreateBlockExercise!]
+}
+
+input CreateBlockExercise {
+    exerciseID: ID!
+    prescriptionID: ID!
 }

@@ -2,6 +2,7 @@ package workoutcall
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
@@ -10,36 +11,40 @@ import (
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"go.uber.org/zap"
 )
 
-type CreateWorkoutProgram struct {
-	Request generated.CreateWorkoutProgram
-	DB      *pg.DB
+func NewCreateExercise(request generated.CreateExercise, logger *zap.Logger, db *pg.DB) *CreateExercise {
+	return &CreateExercise{
+		Request: request,
+		DB:      db,
+		Logger:  logger.Named("CreateExercise"),
+	}
 }
 
-func (c CreateWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
+type CreateExercise struct {
+	Request generated.CreateExercise
+	DB      *pg.DB
+	Logger  *zap.Logger
+}
+
+func (c CreateExercise) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
 		validation.CheckStringIsNotEmpty(c.Request.Name, "Name must not be empty"),
+		validation.CheckStringNilOrIsURL(c.Request.VideoURL, "Invalid video URL"),
 		validation.OrganizationExists(ctx, c.DB, c.Request.TrainerOrganizationID),
 	}
 }
 
-func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram, error) {
+func (c CreateExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 
 	newUuid, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
 	}
 
-	var description string
-	if c.Request.Description != nil {
-		description = *c.Request.Description
-	} else {
-		description = ""
-	}
-
-	var finalProgram *workout.WorkoutProgram
+	var finalExercise *workout.Exercise
 
 	err = c.DB.RunInTransaction(func(t *pg.Tx) error {
 
@@ -48,23 +53,22 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 			return err
 		}
 
-		new := workout.WorkoutProgram{
+		new := workout.Exercise{
 			ID: newUuid,
 
-			Name:                  c.Request.Name,
-			Description:           description,
 			TrainerOrganizationID: c.Request.TrainerOrganizationID,
 
-			ExactStartDate:           c.Request.ExactStartDate,
-			StartsWhenCustomerStarts: c.Request.StartsWhenCustomerStarts,
-			NumberOfDays:             c.Request.NumberOfDays,
+			Name:        strings.TrimSpace(c.Request.Name),
+			Description: strings.TrimSpace(c.Request.Description),
+
+			VideoURL: c.Request.VideoURL,
 		}
 
-		finalProgram, err = workoutdb.InsertWorkoutProgram(ctx, t, new)
+		finalExercise, err = workoutdb.InsertExercise(ctx, t, new)
 
 		for _, tagUUID := range c.Request.Tags {
 
-			_, err := tagdb.TagWorkoutProgram(ctx, t, tagUUID, c.Request.TrainerOrganizationID, finalProgram.ID)
+			_, err := tagdb.TagWorkout(ctx, t, tagUUID, c.Request.TrainerOrganizationID, finalExercise.ID)
 			if err != nil {
 				return err
 			}
@@ -78,5 +82,5 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 		return nil, err
 	}
 
-	return finalProgram, nil
+	return finalExercise, nil
 }

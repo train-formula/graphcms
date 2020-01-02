@@ -3,6 +3,23 @@ extend type Query {
     workoutBlock(id: ID!): WorkoutBlock
 }
 
+type BlockExercise {
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    blockID: ID!
+    exerciseID: ID!
+    prescriptionID: ID!
+
+    order: Int!
+
+    # Fetchers
+    exercise: Exercise
+    prescription: Prescription
+}
+
 type WorkoutBlock {
 
     id: ID!
@@ -26,6 +43,6 @@ type WorkoutBlock {
     # Fetchers
     trainerOrganization: Organization
     workoutCategory: WorkoutCategory
-    # exercises: [Exercise!]
+    exercises: [BlockExercise!]
 
 }

@@ -9,12 +9,12 @@ import (
 	"github.com/train-formula/graphcms/validation"
 )
 
-func (r *QueryResolver) Prescription(ctx context.Context, id uuid.UUID) (*workout.Prescription, error) {
+func (r *QueryResolver) Exercise(ctx context.Context, id uuid.UUID) (*workout.Exercise, error) {
 
-	g := workoutcall.NewGetPrescription(id, r.logger, r.db)
+	call := workoutcall.NewGetExercise(id, r.logger, r.db)
 
-	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
-		return g.Call(ctx)
+	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
+		return call.Call(ctx)
 	}
 
 	return nil, nil

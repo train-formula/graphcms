@@ -12,16 +12,18 @@ import (
 	"go.uber.org/zap"
 )
 
+func NewGetPrescription(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetPrescription {
+	return &GetPrescription{
+		ID:     id,
+		DB:     db,
+		Logger: logger.Named("GetPrescription"),
+	}
+}
+
 type GetPrescription struct {
 	ID     uuid.UUID
 	DB     *pg.DB
 	Logger *zap.Logger
-}
-
-func (g GetPrescription) logger() *zap.Logger {
-
-	return g.Logger.Named("GetPrescription")
-
 }
 
 func (g GetPrescription) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -35,7 +37,7 @@ func (g GetPrescription) Call(ctx context.Context) (*workout.Prescription, error
 
 	loaded, err := loader.Load(g.ID)
 	if err != nil {
-		g.logger().Error("Failed to load prescription with dataloader", zap.Error(err))
+		g.Logger.Error("Failed to load prescription with dataloader", zap.Error(err))
 		return nil, err
 	}
 

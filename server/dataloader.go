@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-pg/pg/v9"
+	"github.com/train-formula/graphcms/dataloader/blockexercisesbyblock"
+	"github.com/train-formula/graphcms/dataloader/exerciseid"
 	"github.com/train-formula/graphcms/dataloader/organizationid"
 	"github.com/train-formula/graphcms/dataloader/prescriptionid"
 	"github.com/train-formula/graphcms/dataloader/tagbytag"
@@ -30,6 +32,8 @@ func RegisterLoaders(db *pg.DB) gin.HandlerFunc {
 		workoutid.AddContextLoader(c, db)
 		workoutblockid.AddContextLoader(c, db)
 		workoutcategoriesbyworkout.AddContextLoader(c, db)
+		exerciseid.AddContextLoader(c, db)
+		blockexercisesbyblock.AddContextLoader(c, db)
 
 		c.Request = c.Request.WithContext(c)
 
