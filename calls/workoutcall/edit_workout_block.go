@@ -6,6 +6,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
@@ -86,7 +87,8 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 				return gqlerror.Errorf("Workout block does not exist")
 			}
 
-			c.logger.Error("Error retrieving workout block", zap.Error(err))
+			c.logger.Error("Error retrieving workout block", zap.Error(err),
+				logging.UUID("workoutBlockID", c.request.ID))
 			return err
 		}
 
@@ -124,7 +126,8 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 
 		finalWorkoutBlock, err = workoutdb.UpdateWorkoutBlock(ctx, c.db, workoutBlock)
 		if err != nil {
-			c.logger.Error("Error updating workout block", zap.Error(err))
+			c.logger.Error("Error updating workout block", zap.Error(err),
+				logging.UUID("workoutBlockID", c.request.ID))
 			return err
 		}
 

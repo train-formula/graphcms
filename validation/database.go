@@ -30,10 +30,10 @@ func TagsAllExistForTrainer(ctx context.Context, conn database.Conn, trainerOrga
 	for _, id := range ids {
 		if foundTrainer, hasTag := mappedTagTrainers[id]; hasTag {
 			if foundTrainer != trainerOrganizationID {
-				return gqlerror.Errorf("Tag %s does not belong to the same trainer", id)
+				return gqlerror.Errorf("tag %s does not belong to the same trainer", id)
 			}
 		} else {
-			return gqlerror.Errorf("Tag %s does not exist", id)
+			return gqlerror.Errorf("tag %s does not exist", id)
 		}
 	}
 

@@ -20,7 +20,7 @@ type WorkoutWorkoutCategoryJoin struct {
 	WorkoutWorkoutID uuid.UUID
 }
 
-// Extract a Tag struct from this result
+// Extract a tag struct from this result
 func (t *WorkoutWorkoutCategoryJoin) WorkoutCategory() *WorkoutCategory {
 	return &WorkoutCategory{
 		ID:                    t.WorkoutCategoryID,

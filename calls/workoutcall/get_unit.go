@@ -6,6 +6,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/dataloader/unitid"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
@@ -38,7 +39,8 @@ func (g GetUnit) Call(ctx context.Context) (*workout.Unit, error) {
 
 	loaded, err := loader.Load(g.id)
 	if err != nil {
-		g.logger.Error("Failed to load unit with dataloader", zap.Error(err))
+		g.logger.Error("Failed to load unit with dataloader", zap.Error(err),
+			logging.UUID("unitID", g.id))
 		return nil, err
 	}
 

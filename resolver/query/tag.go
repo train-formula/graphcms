@@ -11,10 +11,7 @@ import (
 
 func (r *QueryResolver) Tag(ctx context.Context, id uuid.UUID) (*tag.Tag, error) {
 
-	g := tagcall.GetTag{
-		ID: id,
-		DB: r.db,
-	}
+	g := tagcall.NewGetTag(id, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)
@@ -26,11 +23,7 @@ func (r *QueryResolver) Tag(ctx context.Context, id uuid.UUID) (*tag.Tag, error)
 
 func (r *QueryResolver) TagByTag(ctx context.Context, tag string, trainerOrganizationID uuid.UUID) (*tag.Tag, error) {
 
-	g := tagcall.GetTagByTag{
-		Tag:                   tag,
-		TrainerOrganizationID: trainerOrganizationID,
-		DB:                    r.db,
-	}
+	g := tagcall.NewGetTagByTag(tag, trainerOrganizationID, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)
@@ -40,11 +33,11 @@ func (r *QueryResolver) TagByTag(ctx context.Context, tag string, trainerOrganiz
 
 }
 
-/*func (r *QueryResolver) Tag(ctx context.Context, id uuid.UUID) (*Tag, error) {
+/*func (r *QueryResolver) tag(ctx context.Context, id uuid.UUID) (*tag, error) {
 
 }*/
 
 /*
-Tag(ctx context.Context, id uuid.UUID) (*Tag, error)
-	TagByTag(ctx context.Context, tag string) (*Tag, error)
+tag(ctx context.Context, id uuid.UUID) (*tag, error)
+	TagByTag(ctx context.Context, tag string) (*tag, error)
 */

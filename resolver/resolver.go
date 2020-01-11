@@ -42,7 +42,7 @@ func (r *Resolver) WorkoutCategory() generated.WorkoutCategoryResolver {
 	return workoutcategory.NewWorkoutCategoryResolver(r.db, r.logger)
 }
 func (r *Resolver) WorkoutProgram() generated.WorkoutProgramResolver {
-	return workoutprogram.NewResolver(r.db)
+	return workoutprogram.NewWorkoutProgramResolver(r.db, r.logger)
 }
 
 func (r *Resolver) Prescription() generated.PrescriptionResolver {

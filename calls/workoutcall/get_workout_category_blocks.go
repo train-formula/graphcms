@@ -6,23 +6,24 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/dataloader/workoutblocksbycategory"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"go.uber.org/zap"
 )
 
-func NewGetWorkoutCategoryBlocks(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetWorkoutCategoryBlocks {
+func NewGetWorkoutCategoryBlocks(workoutCategoryID uuid.UUID, logger *zap.Logger, db *pg.DB) *GetWorkoutCategoryBlocks {
 	return &GetWorkoutCategoryBlocks{
-		id:     id,
-		db:     db,
-		logger: logger.Named("GetWorkoutCategoryBlocks"),
+		workoutCategoryID: workoutCategoryID,
+		db:                db,
+		logger:            logger.Named("GetWorkoutCategoryBlocks"),
 	}
 }
 
 type GetWorkoutCategoryBlocks struct {
-	id     uuid.UUID
-	db     *pg.DB
-	logger *zap.Logger
+	workoutCategoryID uuid.UUID
+	db                *pg.DB
+	logger            *zap.Logger
 }
 
 func (g GetWorkoutCategoryBlocks) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -34,9 +35,10 @@ func (g GetWorkoutCategoryBlocks) Call(ctx context.Context) ([]*workout.WorkoutB
 
 	loader := workoutblocksbycategory.GetContextLoader(ctx)
 
-	loaded, err := loader.Load(g.id)
+	loaded, err := loader.Load(g.workoutCategoryID)
 	if err != nil {
-		g.logger.Error("Failed to load workout category blocks with dataloader", zap.Error(err))
+		g.logger.Error("Failed to load workout category blocks with dataloader", zap.Error(err),
+			logging.UUID("workoutCategoryID", g.workoutCategoryID))
 		return nil, err
 	}
 

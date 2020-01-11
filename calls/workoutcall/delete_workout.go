@@ -6,6 +6,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/workoutdb"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
@@ -40,13 +41,15 @@ func (c DeleteWorkout) Call(ctx context.Context) (*uuid.UUID, error) {
 				return gqlerror.Errorf("Workout does not exist")
 			}
 
-			c.logger.Error("Error retrieving workout", zap.Error(err))
+			c.logger.Error("Error retrieving workout", zap.Error(err),
+				logging.UUID("workoutID", c.request))
 			return err
 		}
 
 		err = workoutdb.DeleteWorkout(ctx, t, c.request)
 		if err != nil {
-			c.logger.Error("Error deleting workout", zap.Error(err))
+			c.logger.Error("Error deleting workout", zap.Error(err),
+				logging.UUID("workoutID", c.request))
 			return err
 		}
 

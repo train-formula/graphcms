@@ -63,12 +63,12 @@ type tagsByObjectLoaderBatch struct {
 	done    chan struct{}
 }
 
-// Load a Tag by key, batching and caching will be applied automatically
+// Load a tag by key, batching and caching will be applied automatically
 func (l *TagsByObjectLoader) Load(key tagdb.TagsByObject) ([]*tag.Tag, error) {
 	return l.LoadThunk(key)()
 }
 
-// LoadThunk returns a function that when called will block waiting for a Tag.
+// LoadThunk returns a function that when called will block waiting for a tag.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
 func (l *TagsByObjectLoader) LoadThunk(key tagdb.TagsByObject) func() ([]*tag.Tag, error) {

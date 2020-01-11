@@ -1,4 +1,4 @@
-//go:generate go run github.com/vektah/dataloaden TagByTagLoader github.com/train-formula/graphcms/database/tagdb.TagByTag *github.com/train-formula/graphcms/models/tag.Tag
+//go:generate go run github.com/vektah/dataloaden TagByTagLoader github.com/train-formula/graphcms/database/tagdb.TagByTag *github.com/train-formula/graphcms/models/tag.tag
 
 package tagbytag
 

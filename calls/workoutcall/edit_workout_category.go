@@ -6,6 +6,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
@@ -45,7 +46,8 @@ func (c EditWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory
 				return gqlerror.Errorf("Workout category does not exist")
 			}
 
-			c.logger.Error("Error retrieving workout category", zap.Error(err))
+			c.logger.Error("Error retrieving workout category", zap.Error(err),
+				logging.UUID("workoutCategoryID", c.request.ID))
 			return err
 		}
 
@@ -59,7 +61,8 @@ func (c EditWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory
 
 		finalCategory, err = workoutdb.UpdateWorkoutCategory(ctx, t, category)
 		if err != nil {
-			c.logger.Error("Error updating workout category", zap.Error(err))
+			c.logger.Error("Error updating workout category", zap.Error(err),
+				logging.UUID("workoutCategoryID", c.request.ID))
 			return err
 		}
 

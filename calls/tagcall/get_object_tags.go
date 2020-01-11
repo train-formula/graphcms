@@ -6,31 +6,42 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/dataloader/tagsbyobject"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/validation"
-	"github.com/vektah/gqlparser/gqlerror"
+	"go.uber.org/zap"
 )
 
+func NewGetObjectTags(request tagdb.TagsByObject, logger *zap.Logger, db *pg.DB) *GetObjectTags {
+	return &GetObjectTags{
+		request: request,
+		db:      db,
+		logger:  logger.Named("GetObjectTags"),
+	}
+}
+
 type GetObjectTags struct {
-	Request tagdb.TagsByObject
-	DB      *pg.DB
+	request tagdb.TagsByObject
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (g GetObjectTags) Validate(ctx context.Context) []validation.ValidatorFunc {
 
-	return nil
+	return []validation.ValidatorFunc{
+		validation.CheckTagTypeKnown(g.request.ObjectType),
+	}
 }
 
 func (g GetObjectTags) Call(ctx context.Context) ([]*tag.Tag, error) {
 	loader := tagsbyobject.GetContextLoader(ctx)
 
-	loaded, err := loader.Load(g.Request)
+	loaded, err := loader.Load(g.request)
 	if err != nil {
+		g.logger.Error("Failed to load tags for object", zap.Error(err),
+			logging.UUID("objectUUID", g.request.ObjectUUID),
+			zap.String("objectType", g.request.ObjectType.String()))
 		return nil, err
-	}
-
-	if loaded == nil {
-		return nil, gqlerror.Errorf("Failed to load tags by object")
 	}
 
 	return loaded, nil

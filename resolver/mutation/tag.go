@@ -11,10 +11,7 @@ import (
 
 func (m *MutationResolver) CreateTag(ctx context.Context, request generated.CreateTag) (*tag.Tag, error) {
 
-	call := tagcall.CreateTag{
-		Request: request,
-		DB:      m.db,
-	}
+	call := tagcall.NewCreateTag(request, m.logger, m.db)
 
 	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
 		return call.Call(ctx)

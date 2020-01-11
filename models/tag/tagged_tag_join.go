@@ -19,7 +19,7 @@ type TaggedTagJoin struct {
 	TaggedTagType  TagType `sql:"type:tag.tag_type"`
 }
 
-// Extract a Tag struct from this result
+// Extract a tag struct from this result
 func (t *TaggedTagJoin) Tag() *Tag {
 	return &Tag{
 		ID:                    t.TagID,

@@ -66,13 +66,12 @@ func (r *WorkoutCategoryResolver) Tags(ctx context.Context, obj *workout.Workout
 		return nil, gqlerror.Errorf("Cannot locate tags from nil workout category")
 	}
 
-	g := tagcall.GetObjectTags{
-		Request: tagdb.TagsByObject{
-			ObjectUUID: obj.ID,
-			ObjectType: tag.WorkoutCategoryTagType,
-		},
-		DB: r.db,
+	request := tagdb.TagsByObject{
+		ObjectUUID: obj.ID,
+		ObjectType: tag.WorkoutCategoryTagType,
 	}
+
+	g := tagcall.NewGetObjectTags(request, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)

@@ -1,4 +1,4 @@
-//go:generate go run github.com/vektah/dataloaden TagIDLoader github.com/gofrs/uuid.UUID *github.com/train-formula/graphcms/models/tag.Tag
+//go:generate go run github.com/vektah/dataloaden TagIDLoader github.com/gofrs/uuid.UUID *github.com/train-formula/graphcms/models/tag.tag
 
 package tagid
 

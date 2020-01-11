@@ -6,6 +6,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/workoutdb"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
@@ -40,13 +41,15 @@ func (c DeleteExercise) Call(ctx context.Context) (*uuid.UUID, error) {
 				return gqlerror.Errorf("Exercise does not exist")
 			}
 
-			c.logger.Error("Error retrieving exercise", zap.Error(err))
+			c.logger.Error("Error retrieving exercise", zap.Error(err),
+				logging.UUID("exerciseID", c.request))
 			return err
 		}
 
 		connected, err := workoutdb.ExerciseConnectedToBlocks(ctx, t, c.request)
 		if err != nil {
-			c.logger.Error("Error checking if exercise is connected to blocks", zap.Error(err))
+			c.logger.Error("Error checking if exercise is connected to blocks", zap.Error(err),
+				logging.UUID("exerciseID", c.request))
 			return err
 		}
 
@@ -56,7 +59,8 @@ func (c DeleteExercise) Call(ctx context.Context) (*uuid.UUID, error) {
 
 		err = workoutdb.DeleteExercise(ctx, t, c.request)
 		if err != nil {
-			c.logger.Error("Error deleting exercise", zap.Error(err))
+			c.logger.Error("Error deleting exercise", zap.Error(err),
+				logging.UUID("exerciseID", c.request))
 			return err
 		}
 

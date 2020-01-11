@@ -30,13 +30,12 @@ func (r *ExerciseResolver) Tags(ctx context.Context, obj *workout.Exercise) ([]*
 		return nil, gqlerror.Errorf("Cannot locate tags from nil exercise")
 	}
 
-	g := tagcall.GetObjectTags{
-		Request: tagdb.TagsByObject{
-			ObjectUUID: obj.ID,
-			ObjectType: tag.ExerciseTagType,
-		},
-		DB: r.db,
+	request := tagdb.TagsByObject{
+		ObjectUUID: obj.ID,
+		ObjectType: tag.ExerciseTagType,
 	}
+
+	g := tagcall.NewGetObjectTags(request, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)
