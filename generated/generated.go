@@ -45,6 +45,7 @@ type ResolverRoot interface {
 	Exercise() ExerciseResolver
 	Mutation() MutationResolver
 	Prescription() PrescriptionResolver
+	PrescriptionSet() PrescriptionSetResolver
 	Query() QueryResolver
 	TagConnection() TagConnectionResolver
 	Workout() WorkoutResolver
@@ -123,6 +124,7 @@ type ComplexityRoot struct {
 		ID                    func(childComplexity int) int
 		Name                  func(childComplexity int) int
 		PrescriptionCategory  func(childComplexity int) int
+		Sets                  func(childComplexity int) int
 		TrainerOrganizationID func(childComplexity int) int
 		UpdatedAt             func(childComplexity int) int
 	}
@@ -133,9 +135,11 @@ type ComplexityRoot struct {
 		PrescriptionID        func(childComplexity int) int
 		RepModifierNumeral    func(childComplexity int) int
 		RepModifierText       func(childComplexity int) int
+		RepModifierUnit       func(childComplexity int) int
 		RepModifierUnitID     func(childComplexity int) int
 		RepNumeral            func(childComplexity int) int
 		RepText               func(childComplexity int) int
+		RepUnit               func(childComplexity int) int
 		RepUnitID             func(childComplexity int) int
 		SetNumber             func(childComplexity int) int
 		TrainerOrganizationID func(childComplexity int) int
@@ -324,6 +328,11 @@ type MutationResolver interface {
 type PrescriptionResolver interface {
 	HasReps(ctx context.Context, obj *workout.Prescription) (bool, error)
 	HasRepModifier(ctx context.Context, obj *workout.Prescription) (bool, error)
+	Sets(ctx context.Context, obj *workout.Prescription) ([]*workout.PrescriptionSet, error)
+}
+type PrescriptionSetResolver interface {
+	RepUnit(ctx context.Context, obj *workout.PrescriptionSet) (*workout.Unit, error)
+	RepModifierUnit(ctx context.Context, obj *workout.PrescriptionSet) (*workout.Unit, error)
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (string, error)
@@ -801,6 +810,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Prescription.PrescriptionCategory(childComplexity), true
 
+	case "Prescription.sets":
+		if e.complexity.Prescription.Sets == nil {
+			break
+		}
+
+		return e.complexity.Prescription.Sets(childComplexity), true
+
 	case "Prescription.trainerOrganizationID":
 		if e.complexity.Prescription.TrainerOrganizationID == nil {
 			break
@@ -850,6 +866,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PrescriptionSet.RepModifierText(childComplexity), true
 
+	case "PrescriptionSet.repModifierUnit":
+		if e.complexity.PrescriptionSet.RepModifierUnit == nil {
+			break
+		}
+
+		return e.complexity.PrescriptionSet.RepModifierUnit(childComplexity), true
+
 	case "PrescriptionSet.repModifierUnitID":
 		if e.complexity.PrescriptionSet.RepModifierUnitID == nil {
 			break
@@ -870,6 +893,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PrescriptionSet.RepText(childComplexity), true
+
+	case "PrescriptionSet.repUnit":
+		if e.complexity.PrescriptionSet.RepUnit == nil {
+			break
+		}
+
+		return e.complexity.PrescriptionSet.RepUnit(childComplexity), true
 
 	case "PrescriptionSet.repUnitID":
 		if e.complexity.PrescriptionSet.RepUnitID == nil {
@@ -1783,6 +1813,7 @@ input EditExercise {
 
 }
 `},
+	&ast.Source{Name: "schema/graphql/exercise/exercise_search.graphql", Input: ``},
 	&ast.Source{Name: "schema/graphql/organization/organization.graphql", Input: `extend type Query {
     organization(id: ID!): Organization
 
@@ -1827,8 +1858,8 @@ type PrescriptionSet {
     repModifierUnitID: ID
 
     # Fetchers
-    #repUnit: Unit
-    #repModifierUnit: Unit
+    repUnit: Unit
+    repModifierUnit: Unit
 }
 
 type Prescription {
@@ -1849,7 +1880,7 @@ type Prescription {
     hasRepModifier: Boolean!
 
     # Fetchers
-    # sets: [PrescriptionSet!]
+    sets: [PrescriptionSet!]
 
 }`},
 	&ast.Source{Name: "schema/graphql/prescription/prescription_mutation.graphql", Input: `
@@ -1871,6 +1902,8 @@ input CreatePrescription {
 
     durationSeconds: Int
 }
+
+
 `},
 	&ast.Source{Name: "schema/graphql/root.graphql", Input: `type Query {
     health: String!
@@ -4784,6 +4817,40 @@ func (ec *executionContext) _Prescription_hasRepModifier(ctx context.Context, fi
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Prescription_sets(ctx context.Context, field graphql.CollectedField, obj *workout.Prescription) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Prescription",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Prescription().Sets(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*workout.PrescriptionSet)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPrescriptionSet2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSetᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _PrescriptionSet_id(ctx context.Context, field graphql.CollectedField, obj *workout.PrescriptionSet) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5211,6 +5278,74 @@ func (ec *executionContext) _PrescriptionSet_repModifierUnitID(ctx context.Conte
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOID2ᚖgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PrescriptionSet_repUnit(ctx context.Context, field graphql.CollectedField, obj *workout.PrescriptionSet) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PrescriptionSet",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PrescriptionSet().RepUnit(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.Unit)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOUnit2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnit(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PrescriptionSet_repModifierUnit(ctx context.Context, field graphql.CollectedField, obj *workout.PrescriptionSet) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PrescriptionSet",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PrescriptionSet().RepModifierUnit(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.Unit)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOUnit2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnit(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_health(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -11074,6 +11209,17 @@ func (ec *executionContext) _Prescription(ctx context.Context, sel ast.Selection
 				}
 				return res
 			})
+		case "sets":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Prescription_sets(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11099,32 +11245,32 @@ func (ec *executionContext) _PrescriptionSet(ctx context.Context, sel ast.Select
 		case "id":
 			out.Values[i] = ec._PrescriptionSet_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "createdAt":
 			out.Values[i] = ec._PrescriptionSet_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "updatedAt":
 			out.Values[i] = ec._PrescriptionSet_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "trainerOrganizationID":
 			out.Values[i] = ec._PrescriptionSet_trainerOrganizationID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "prescriptionID":
 			out.Values[i] = ec._PrescriptionSet_prescriptionID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "setNumber":
 			out.Values[i] = ec._PrescriptionSet_setNumber(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "repNumeral":
 			out.Values[i] = ec._PrescriptionSet_repNumeral(ctx, field, obj)
@@ -11133,7 +11279,7 @@ func (ec *executionContext) _PrescriptionSet(ctx context.Context, sel ast.Select
 		case "repUnitID":
 			out.Values[i] = ec._PrescriptionSet_repUnitID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "repModifierNumeral":
 			out.Values[i] = ec._PrescriptionSet_repModifierNumeral(ctx, field, obj)
@@ -11141,6 +11287,28 @@ func (ec *executionContext) _PrescriptionSet(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._PrescriptionSet_repModifierText(ctx, field, obj)
 		case "repModifierUnitID":
 			out.Values[i] = ec._PrescriptionSet_repModifierUnitID(ctx, field, obj)
+		case "repUnit":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PrescriptionSet_repUnit(ctx, field, obj)
+				return res
+			})
+		case "repModifierUnit":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PrescriptionSet_repModifierUnit(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12592,6 +12760,20 @@ func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋtrainᚑformula�
 	return ec._PageInfo(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNPrescriptionSet2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSet(ctx context.Context, sel ast.SelectionSet, v workout.PrescriptionSet) graphql.Marshaler {
+	return ec._PrescriptionSet(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPrescriptionSet2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSet(ctx context.Context, sel ast.SelectionSet, v *workout.PrescriptionSet) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PrescriptionSet(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNSetWorkoutBlockExercises2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐSetWorkoutBlockExercises(ctx context.Context, v interface{}) (SetWorkoutBlockExercises, error) {
 	return ec.unmarshalInputSetWorkoutBlockExercises(ctx, v)
 }
@@ -13274,6 +13456,46 @@ func (ec *executionContext) marshalOPrescription2ᚖgithubᚗcomᚋtrainᚑformu
 	return ec._Prescription(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOPrescriptionSet2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSetᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.PrescriptionSet) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPrescriptionSet2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSet(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalString(v)
 }
@@ -13433,6 +13655,10 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return ec.marshalOTime2timeᚐTime(ctx, sel, *v)
 }
 
+func (ec *executionContext) marshalOUnit2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnit(ctx context.Context, sel ast.SelectionSet, v workout.Unit) graphql.Marshaler {
+	return ec._Unit(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalOUnit2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnitᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.Unit) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -13471,6 +13697,13 @@ func (ec *executionContext) marshalOUnit2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋ
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalOUnit2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnit(ctx context.Context, sel ast.SelectionSet, v *workout.Unit) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Unit(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOWorkout2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkout(ctx context.Context, sel ast.SelectionSet, v workout.Workout) graphql.Marshaler {

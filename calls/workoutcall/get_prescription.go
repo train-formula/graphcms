@@ -14,16 +14,16 @@ import (
 
 func NewGetPrescription(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetPrescription {
 	return &GetPrescription{
-		ID:     id,
-		DB:     db,
-		Logger: logger.Named("GetPrescription"),
+		id:     id,
+		db:     db,
+		logger: logger.Named("GetPrescription"),
 	}
 }
 
 type GetPrescription struct {
-	ID     uuid.UUID
-	DB     *pg.DB
-	Logger *zap.Logger
+	id     uuid.UUID
+	db     *pg.DB
+	logger *zap.Logger
 }
 
 func (g GetPrescription) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -35,9 +35,9 @@ func (g GetPrescription) Call(ctx context.Context) (*workout.Prescription, error
 
 	loader := prescriptionid.GetContextLoader(ctx)
 
-	loaded, err := loader.Load(g.ID)
+	loaded, err := loader.Load(g.id)
 	if err != nil {
-		g.Logger.Error("Failed to load prescription with dataloader", zap.Error(err))
+		g.logger.Error("Failed to load prescription with dataloader", zap.Error(err))
 		return nil, err
 	}
 

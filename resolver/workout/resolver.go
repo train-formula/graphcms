@@ -29,11 +29,7 @@ func (r *WorkoutResolver) Categories(ctx context.Context, obj *workout.Workout) 
 		return nil, gqlerror.Errorf("Cannot locate workout categories from nil workout")
 	}
 
-	g := workoutcall.GetWorkoutWorkoutCategories{
-		Logger: r.logger,
-		ID:     obj.ID,
-		DB:     r.db,
-	}
+	g := workoutcall.NewGetWorkoutWorkoutCategories(obj.ID, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)

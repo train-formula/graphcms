@@ -12,22 +12,24 @@ import (
 	"go.uber.org/zap"
 )
 
-type EditWorkoutCategory struct {
-	Request generated.EditWorkoutCategory
-	DB      *pg.DB
-	Logger  *zap.Logger
+func NewEditWorkoutCategory(request generated.EditWorkoutCategory, logger *zap.Logger, db *pg.DB) *EditWorkoutCategory {
+	return &EditWorkoutCategory{
+		request: request,
+		db:      db,
+		logger:  logger.Named("EditWorkoutCategory"),
+	}
 }
 
-func (c EditWorkoutCategory) logger() *zap.Logger {
-
-	return c.Logger.Named("EditWorkoutCategory")
-
+type EditWorkoutCategory struct {
+	request generated.EditWorkoutCategory
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c EditWorkoutCategory) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringNilOrIsNotEmpty(c.Request.Name, "Name must not be empty"),
+		validation.CheckStringNilOrIsNotEmpty(c.request.Name, "Name must not be empty"),
 	}
 }
 
@@ -35,29 +37,29 @@ func (c EditWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory
 
 	var finalCategory *workout.WorkoutCategory
 
-	err := c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		category, err := workoutdb.GetWorkoutCategoryForUpdate(ctx, t, c.Request.ID)
+		category, err := workoutdb.GetWorkoutCategoryForUpdate(ctx, t, c.request.ID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout category does not exist")
 			}
 
-			c.logger().Error("Error retrieving workout category", zap.Error(err))
+			c.logger.Error("Error retrieving workout category", zap.Error(err))
 			return err
 		}
 
-		if c.Request.Name != nil {
-			category.Name = *c.Request.Name
+		if c.request.Name != nil {
+			category.Name = *c.request.Name
 		}
 
-		if c.Request.Description != nil {
-			category.Description = *c.Request.Description
+		if c.request.Description != nil {
+			category.Description = *c.request.Description
 		}
 
 		finalCategory, err = workoutdb.UpdateWorkoutCategory(ctx, t, category)
 		if err != nil {
-			c.logger().Error("Error updating workout category", zap.Error(err))
+			c.logger.Error("Error updating workout category", zap.Error(err))
 			return err
 		}
 

@@ -240,6 +240,30 @@ func GetWorkoutProgram(ctx context.Context, conn database.Conn, id uuid.UUID) (w
 	return result, err
 }
 
+// Retrieves individual workout programs by their IDs
+func GetWorkoutPrograms(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.WorkoutProgram, error) {
+	if len(ids) <= 0 {
+		return nil, nil
+	}
+
+	var result []*workout.WorkoutProgram
+
+	query := "SELECT * FROM " + database.TableName(workout.WorkoutProgram{}) + " WHERE "
+
+	var params []interface{}
+
+	for _, id := range ids {
+		query += "id = ? OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ")
+
+	_, err := conn.QueryContext(ctx, &result, query, params...)
+
+	return result, err
+}
+
 // Retrieves workout categories by workout IDs
 func GetWorkoutCategoriesByWorkout(ctx context.Context, conn database.Conn, workoutIDs []uuid.UUID) (map[uuid.UUID][]*workout.WorkoutCategory, error) {
 
@@ -366,4 +390,38 @@ func GetBlockExercisesByBlock(ctx context.Context, conn database.Conn, blockIDs 
 	return results, err
 }
 
-//BlockExercise
+// Retrieves PrescriptionSet's by their Prescription.
+func GetPrescriptionSetsByPrescription(ctx context.Context, conn database.Conn, prescriptionIDs []uuid.UUID) (map[uuid.UUID][]*workout.PrescriptionSet, error) {
+
+	results := make(map[uuid.UUID][]*workout.PrescriptionSet)
+
+	if len(prescriptionIDs) <= 0 {
+		return results, nil
+	}
+
+	query := "SELECT * FROM " + database.TableName(workout.PrescriptionSet{}) + " WHERE "
+
+	var params []interface{}
+	var queryResults []*workout.PrescriptionSet
+
+	for _, id := range prescriptionIDs {
+		query += "prescription_id OR "
+		params = append(params, id)
+	}
+
+	query = strings.TrimSuffix(query, " OR ") + " ORDER BY order ASC"
+
+	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, queryResult := range queryResults {
+
+		results[queryResult.PrescriptionID] = append(results[queryResult.PrescriptionID], queryResult)
+	}
+
+	return results, err
+
+}

@@ -11,11 +11,7 @@ import (
 
 func (r *QueryResolver) WorkoutBlock(ctx context.Context, id uuid.UUID) (*workout.WorkoutBlock, error) {
 
-	g := workoutcall.GetWorkoutBlock{
-		ID:     id,
-		DB:     r.db,
-		Logger: r.logger,
-	}
+	g := workoutcall.NewGetWorkoutBlock(id, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)

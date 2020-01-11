@@ -5,23 +5,25 @@ import (
 
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
-	"github.com/train-formula/graphcms/database"
+	"github.com/train-formula/graphcms/dataloader/workoutprogramid"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
-type GetWorkoutProgram struct {
-	ID     uuid.UUID
-	DB     *pg.DB
-	Logger *zap.Logger
+func NewGetWorkoutProgram(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetWorkoutProgram {
+	return &GetWorkoutProgram{
+		id:     id,
+		db:     db,
+		logger: logger.Named("GetWorkoutProgram"),
+	}
 }
 
-func (g GetWorkoutProgram) logger() *zap.Logger {
-
-	return g.Logger.Named("GetWorkoutProgram")
-
+type GetWorkoutProgram struct {
+	id     uuid.UUID
+	db     *pg.DB
+	logger *zap.Logger
 }
 
 func (g GetWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -31,15 +33,17 @@ func (g GetWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorF
 
 func (g GetWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram, error) {
 
-	var result workout.WorkoutProgram
+	loader := workoutprogramid.GetContextLoader(ctx)
 
-	_, err := g.DB.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", g.ID)
-	if err == pg.ErrNoRows {
-		return nil, gqlerror.Errorf("Unknown workout program ID")
-	} else if err != nil {
-		g.logger().Error("Failed to retrieve workout program", zap.Error(err))
-		return nil, gqlerror.Errorf("Failed to retrieve workout program")
+	loaded, err := loader.Load(g.id)
+	if err != nil {
+		g.logger.Error("Failed to load workout program with dataloader", zap.Error(err))
+		return nil, err
 	}
 
-	return &result, nil
+	if loaded == nil {
+		return nil, gqlerror.Errorf("Unknown workout program ID")
+	}
+
+	return loaded, nil
 }

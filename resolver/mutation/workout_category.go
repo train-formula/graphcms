@@ -24,11 +24,7 @@ func (m *MutationResolver) CreateWorkoutCategory(ctx context.Context, request ge
 
 func (m *MutationResolver) EditWorkoutCategory(ctx context.Context, request generated.EditWorkoutCategory) (*workout.WorkoutCategory, error) {
 
-	call := workoutcall.EditWorkoutCategory{
-		Request: request,
-		DB:      m.db,
-		Logger:  m.logger,
-	}
+	call := workoutcall.NewEditWorkoutCategory(request, m.logger, m.db)
 
 	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
 		return call.Call(ctx)

@@ -14,16 +14,16 @@ import (
 func NewGetBlockExercises(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetBlockExercises {
 
 	return &GetBlockExercises{
-		ID:     id,
-		DB:     db,
-		Logger: logger.Named("GetBlockExercises"),
+		id:     id,
+		db:     db,
+		logger: logger.Named("GetBlockExercises"),
 	}
 }
 
 type GetBlockExercises struct {
-	ID     uuid.UUID
-	DB     *pg.DB
-	Logger *zap.Logger
+	id     uuid.UUID
+	db     *pg.DB
+	logger *zap.Logger
 }
 
 func (g GetBlockExercises) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -35,9 +35,9 @@ func (g GetBlockExercises) Call(ctx context.Context) ([]*workout.BlockExercise, 
 
 	loader := blockexercisesbyblock.GetContextLoader(ctx)
 
-	loaded, err := loader.Load(g.ID)
+	loaded, err := loader.Load(g.id)
 	if err != nil {
-		g.Logger.Error("Failed to load block exercises with dataloader", zap.Error(err))
+		g.logger.Error("Failed to load block exercises with dataloader", zap.Error(err))
 		return nil, err
 	}
 

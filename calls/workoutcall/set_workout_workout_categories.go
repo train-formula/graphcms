@@ -14,16 +14,16 @@ import (
 
 func NewSetWorkoutWorkoutCategories(request generated.SetWorkoutWorkoutCategories, logger *zap.Logger, db *pg.DB) *SetWorkoutWorkoutCategories {
 	return &SetWorkoutWorkoutCategories{
-		Request: request,
-		DB:      db,
-		Logger:  logger.Named("SetWorkoutWorkoutCategories"),
+		request: request,
+		db:      db,
+		logger:  logger.Named("SetWorkoutWorkoutCategories"),
 	}
 }
 
 type SetWorkoutWorkoutCategories struct {
-	Request generated.SetWorkoutWorkoutCategories
-	DB      *pg.DB
-	Logger  *zap.Logger
+	request generated.SetWorkoutWorkoutCategories
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c SetWorkoutWorkoutCategories) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -34,26 +34,39 @@ func (c SetWorkoutWorkoutCategories) Validate(ctx context.Context) []validation.
 func (c SetWorkoutWorkoutCategories) Call(ctx context.Context) (*workout.Workout, error) {
 
 	var finalWorkout *workout.Workout
-	err := c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
 		var err error
-		wrkout, err := workoutdb.GetWorkoutForUpdate(ctx, c.DB, c.Request.WorkoutID)
+		wrkout, err := workoutdb.GetWorkoutForUpdate(ctx, c.db, c.request.WorkoutID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout does not exist")
 			}
 
-			c.Logger.Error("Error retrieving workout", zap.Error(err))
+			c.logger.Error("Error retrieving workout", zap.Error(err))
 			return err
 		}
 
 		finalWorkout = &wrkout
 
-		if len(c.Request.WorkoutCategoryIDs) <= 0 {
-			return workoutdb.ClearWorkoutWorkoutCategories(ctx, t, wrkout.ID)
+		if len(c.request.WorkoutCategoryIDs) <= 0 {
+
+			err = workoutdb.ClearWorkoutWorkoutCategories(ctx, t, wrkout.ID)
+			if err != nil {
+				c.logger.Error("Failed to clear workout workout categories", zap.Error(err))
+				return err
+			}
+
+			return nil
 		}
 
-		return workoutdb.SetWorkoutWorkoutCategories(ctx, t, wrkout.ID, c.Request.WorkoutCategoryIDs)
+		err = workoutdb.SetWorkoutWorkoutCategories(ctx, t, wrkout.ID, c.request.WorkoutCategoryIDs)
+		if err != nil {
+			c.logger.Error("Failed to set workout workout categories", zap.Error(err))
+			return err
+		}
+
+		return nil
 
 	})
 

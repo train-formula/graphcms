@@ -9,15 +9,12 @@ import (
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"go.uber.org/zap"
 )
 
 func (r *QueryResolver) WorkoutProgram(ctx context.Context, id uuid.UUID) (*workout.WorkoutProgram, error) {
 
-	g := workoutcall.GetWorkoutProgram{
-		ID:     id,
-		DB:     r.db,
-		Logger: r.logger,
-	}
+	g := workoutcall.NewGetWorkoutProgram(id, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)
@@ -30,16 +27,11 @@ func (r *QueryResolver) WorkoutProgramSearch(ctx context.Context, request genera
 
 	cursor, err := cursor.DeserializeCursor(after)
 	if err != nil {
+		r.logger.Error("Failed to deserialize cursor", zap.Error(err))
 		return nil, err
 	}
 
-	s := workoutcall.SearchWorkoutProgram{
-		DB:      r.db,
-		First:   first,
-		After:   cursor,
-		Request: request,
-		Logger:  r.logger,
-	}
+	s := workoutcall.NewSearchWorkoutProgram(request, first, cursor, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, s.Validate(ctx)...) {
 

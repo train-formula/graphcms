@@ -11,16 +11,18 @@ import (
 	"go.uber.org/zap"
 )
 
-type DeleteWorkout struct {
-	Request uuid.UUID
-	DB      *pg.DB
-	Logger  *zap.Logger
+func NewDeleteWorkout(request uuid.UUID, logger *zap.Logger, db *pg.DB) *DeleteWorkout {
+	return &DeleteWorkout{
+		request: request,
+		db:      db,
+		logger:  logger.Named("DeleteWorkout"),
+	}
 }
 
-func (c DeleteWorkout) logger() *zap.Logger {
-
-	return c.Logger.Named("DeleteWorkout")
-
+type DeleteWorkout struct {
+	request uuid.UUID
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c DeleteWorkout) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -30,21 +32,21 @@ func (c DeleteWorkout) Validate(ctx context.Context) []validation.ValidatorFunc 
 
 func (c DeleteWorkout) Call(ctx context.Context) (*uuid.UUID, error) {
 
-	err := c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		_, err := workoutdb.GetWorkoutForUpdate(ctx, t, c.Request)
+		_, err := workoutdb.GetWorkoutForUpdate(ctx, t, c.request)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout does not exist")
 			}
 
-			c.logger().Error("Error retrieving workout", zap.Error(err))
+			c.logger.Error("Error retrieving workout", zap.Error(err))
 			return err
 		}
 
-		err = workoutdb.DeleteWorkout(ctx, t, c.Request)
+		err = workoutdb.DeleteWorkout(ctx, t, c.request)
 		if err != nil {
-			c.logger().Error("Error deleting workout", zap.Error(err))
+			c.logger.Error("Error deleting workout", zap.Error(err))
 			return err
 		}
 
@@ -55,6 +57,6 @@ func (c DeleteWorkout) Call(ctx context.Context) (*uuid.UUID, error) {
 		return nil, err
 	}
 
-	return &c.Request, nil
+	return &c.request, nil
 
 }

@@ -11,16 +11,18 @@ import (
 	"go.uber.org/zap"
 )
 
-type GetWorkoutCategoryBlocks struct {
-	ID     uuid.UUID
-	DB     *pg.DB
-	Logger *zap.Logger
+func NewGetWorkoutCategoryBlocks(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetWorkoutCategoryBlocks {
+	return &GetWorkoutCategoryBlocks{
+		id:     id,
+		db:     db,
+		logger: logger.Named("GetWorkoutCategoryBlocks"),
+	}
 }
 
-func (g GetWorkoutCategoryBlocks) logger() *zap.Logger {
-
-	return g.Logger.Named("GetWorkoutCategoryBlocks")
-
+type GetWorkoutCategoryBlocks struct {
+	id     uuid.UUID
+	db     *pg.DB
+	logger *zap.Logger
 }
 
 func (g GetWorkoutCategoryBlocks) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -32,9 +34,9 @@ func (g GetWorkoutCategoryBlocks) Call(ctx context.Context) ([]*workout.WorkoutB
 
 	loader := workoutblocksbycategory.GetContextLoader(ctx)
 
-	loaded, err := loader.Load(g.ID)
+	loaded, err := loader.Load(g.id)
 	if err != nil {
-		g.logger().Error("Failed to load workout category blocks with dataloader", zap.Error(err))
+		g.logger.Error("Failed to load workout category blocks with dataloader", zap.Error(err))
 		return nil, err
 	}
 

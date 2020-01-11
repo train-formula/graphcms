@@ -26,26 +26,26 @@ func (c CreateWorkoutCategory) Validate(ctx context.Context) []validation.Valida
 		validation.CheckStringIsNotEmpty(c.Request.Name, "Name must not be empty"),
 		/*func() *gqlerror.Error {
 
-			if c.Request.Type == workout.UnknownBlockType {
+			if c.request.Type == workout.UnknownBlockType {
 				return gqlerror.Errorf("Must specify a valid category type")
-			} else if c.Request.Type == workout.GeneralBlockType {
-				if c.Request.RoundNumeral != nil || c.Request.RoundText != nil || c.Request.RoundUnitID != nil || c.Request.DurationSeconds != nil {
+			} else if c.request.Type == workout.GeneralBlockType {
+				if c.request.RoundNumeral != nil || c.request.RoundText != nil || c.request.RoundUnitID != nil || c.request.DurationSeconds != nil {
 					return gqlerror.Errorf("General workout categories may not specify round or duration data")
 				}
-			} else if c.Request.Type == workout.RoundBlockType {
-				if c.Request.RoundNumeral == nil || c.Request.RoundUnitID == nil {
+			} else if c.request.Type == workout.RoundBlockType {
+				if c.request.RoundNumeral == nil || c.request.RoundUnitID == nil {
 					return gqlerror.Errorf("Round workout categories must specify round numeral and unit")
 				}
 
-				if c.Request.DurationSeconds != nil {
+				if c.request.DurationSeconds != nil {
 					return gqlerror.Errorf("Round workout categories may not specify duration, use TimedRound")
 				}
-			} else if c.Request.Type == workout.TimedRoundBlockType {
-				if c.Request.RoundNumeral == nil || c.Request.RoundUnitID == nil {
+			} else if c.request.Type == workout.TimedRoundBlockType {
+				if c.request.RoundNumeral == nil || c.request.RoundUnitID == nil {
 					return gqlerror.Errorf("Timed round workout categories must specify round numeral and unit")
 				}
 
-				if c.Request.DurationSeconds == nil {
+				if c.request.DurationSeconds == nil {
 					return gqlerror.Errorf("Timed round workout categories must specify duration")
 				}
 			}
@@ -87,11 +87,11 @@ func (c CreateWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCatego
 
 			Name:        c.Request.Name,
 			Description: strings.TrimSpace(c.Request.Description),
-			//Type:            c.Request.Type,
-			//RoundNumeral:    models.PtrIntToInt32(c.Request.RoundNumeral),
-			//RoundText:       c.Request.RoundText,
-			//RoundUnitID:     c.Request.RoundUnitID,
-			//DurationSeconds: models.PtrIntToInt32(c.Request.DurationSeconds),
+			//Type:            c.request.Type,
+			//RoundNumeral:    models.PtrIntToInt32(c.request.RoundNumeral),
+			//RoundText:       c.request.RoundText,
+			//RoundUnitID:     c.request.RoundUnitID,
+			//DurationSeconds: models.PtrIntToInt32(c.request.DurationSeconds),
 		}
 
 		finalCategory, err = workoutdb.InsertWorkoutCategory(ctx, t, newCategory)

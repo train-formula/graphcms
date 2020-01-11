@@ -11,10 +11,7 @@ import (
 
 func (m *MutationResolver) CreateWorkoutProgram(ctx context.Context, request generated.CreateWorkoutProgram) (*workout.WorkoutProgram, error) {
 
-	call := workoutcall.CreateWorkoutProgram{
-		Request: request,
-		DB:      m.db,
-	}
+	call := workoutcall.NewCreateWorkoutProgram(request, m.logger, m.db)
 
 	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
 		return call.Call(ctx)

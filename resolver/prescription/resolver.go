@@ -4,7 +4,10 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/train-formula/graphcms/validation"
+	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -28,75 +31,18 @@ func (r *PrescriptionResolver) HasRepModifier(ctx context.Context, obj *workout.
 	return true, nil
 }
 
-/*func (r *PrescriptionResolver) HasSets(ctx context.Context, obj *workout.Prescription) (bool, error) {
-	return obj.SetNumeral != nil || obj.SetText != nil, nil
-}
-
-func (r *PrescriptionResolver) RepUnit(ctx context.Context, obj *workout.Prescription) (*workout.Unit, error) {
+func (r *PrescriptionResolver) Sets(ctx context.Context, obj *workout.Prescription) ([]*workout.PrescriptionSet, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate rep unit from nil prescription")
+		return nil, gqlerror.Errorf("Cannot locate prescription sets from nil prescription")
 	}
 
-	if obj.RepUnitID == nil {
-		return nil, nil
-	}
+	call := workoutcall.NewGetPrescriptionPrescriptionSets(obj.ID, r.logger, r.db)
 
-	g := workoutcall.GetUnit{
-		ID:     *obj.RepUnitID,
-		DB:     r.db,
-		Logger: r.logger,
-	}
-
-	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
-		return g.Call(ctx)
-	}
-
-	return nil, nil
-}
-
-func (r *PrescriptionResolver) RepModifierUnit(ctx context.Context, obj *workout.Prescription) (*workout.Unit, error) {
-	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate rep unit from nil prescription")
-	}
-
-	if obj.RepModifierUnitID == nil {
-		return nil, nil
-	}
-
-	g := workoutcall.GetUnit{
-		ID:     *obj.RepModifierUnitID,
-		DB:     r.db,
-		Logger: r.logger,
-	}
-
-	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
-		return g.Call(ctx)
-	}
-
-	return nil, nil
-}
-
-func (r *PrescriptionResolver) SetUnit(ctx context.Context, obj *workout.Prescription) (*workout.Unit, error) {
-
-	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate rep unit from nil prescription")
-	}
-
-	if obj.SetUnitID == nil {
-		return nil, nil
-	}
-
-	g := workoutcall.GetUnit{
-		ID:     *obj.SetUnitID,
-		DB:     r.db,
-		Logger: r.logger,
-	}
-
-	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
-		return g.Call(ctx)
+	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
+		return call.Call(ctx)
 	}
 
 	return nil, nil
 
-}*/
+}

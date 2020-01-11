@@ -13,16 +13,16 @@ import (
 
 func NewDeleteExercise(request uuid.UUID, logger *zap.Logger, db *pg.DB) *DeleteExercise {
 	return &DeleteExercise{
-		Request: request,
-		DB:      db,
-		Logger:  logger.Named("DeleteExercise"),
+		request: request,
+		db:      db,
+		logger:  logger.Named("DeleteExercise"),
 	}
 }
 
 type DeleteExercise struct {
-	Request uuid.UUID
-	DB      *pg.DB
-	Logger  *zap.Logger
+	request uuid.UUID
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c DeleteExercise) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -32,21 +32,21 @@ func (c DeleteExercise) Validate(ctx context.Context) []validation.ValidatorFunc
 
 func (c DeleteExercise) Call(ctx context.Context) (*uuid.UUID, error) {
 
-	err := c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		_, err := workoutdb.GetExerciseForUpdate(ctx, t, c.Request)
+		_, err := workoutdb.GetExerciseForUpdate(ctx, t, c.request)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Exercise does not exist")
 			}
 
-			c.Logger.Error("Error retrieving exercise", zap.Error(err))
+			c.logger.Error("Error retrieving exercise", zap.Error(err))
 			return err
 		}
 
-		connected, err := workoutdb.ExerciseConnectedToBlocks(ctx, t, c.Request)
+		connected, err := workoutdb.ExerciseConnectedToBlocks(ctx, t, c.request)
 		if err != nil {
-			c.Logger.Error("Error checking if exercise is connected to blocks", zap.Error(err))
+			c.logger.Error("Error checking if exercise is connected to blocks", zap.Error(err))
 			return err
 		}
 
@@ -54,9 +54,9 @@ func (c DeleteExercise) Call(ctx context.Context) (*uuid.UUID, error) {
 			return gqlerror.Errorf("Exercise is still connected to blocks")
 		}
 
-		err = workoutdb.DeleteExercise(ctx, t, c.Request)
+		err = workoutdb.DeleteExercise(ctx, t, c.request)
 		if err != nil {
-			c.Logger.Error("Error deleting exercise", zap.Error(err))
+			c.logger.Error("Error deleting exercise", zap.Error(err))
 			return err
 		}
 
@@ -67,6 +67,6 @@ func (c DeleteExercise) Call(ctx context.Context) (*uuid.UUID, error) {
 		return nil, err
 	}
 
-	return &c.Request, nil
+	return &c.request, nil
 
 }

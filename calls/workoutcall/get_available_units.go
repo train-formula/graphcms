@@ -7,10 +7,19 @@ import (
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"go.uber.org/zap"
 )
 
+func NewGetAvailableUnits(logger *zap.Logger, db *pg.DB) *GetAvailableUnits {
+	return &GetAvailableUnits{
+		db:     db,
+		logger: logger.Named("GetAvailableUnits"),
+	}
+}
+
 type GetAvailableUnits struct {
-	DB *pg.DB
+	db     *pg.DB
+	logger *zap.Logger
 }
 
 func (g GetAvailableUnits) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -20,5 +29,12 @@ func (g GetAvailableUnits) Validate(ctx context.Context) []validation.ValidatorF
 
 func (g GetAvailableUnits) Call(ctx context.Context) ([]*workout.Unit, error) {
 
-	return workoutdb.GetAllUnits(ctx, g.DB)
+	results, err := workoutdb.GetAllUnits(ctx, g.db)
+
+	if err != nil {
+		g.logger.Error("Failed to retrieve all available units", zap.Error(err))
+		return nil, err
+	}
+
+	return results, nil
 }

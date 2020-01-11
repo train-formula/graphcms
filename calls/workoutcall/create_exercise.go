@@ -16,24 +16,24 @@ import (
 
 func NewCreateExercise(request generated.CreateExercise, logger *zap.Logger, db *pg.DB) *CreateExercise {
 	return &CreateExercise{
-		Request: request,
-		DB:      db,
-		Logger:  logger.Named("CreateExercise"),
+		request: request,
+		db:      db,
+		logger:  logger.Named("CreateExercise"),
 	}
 }
 
 type CreateExercise struct {
-	Request generated.CreateExercise
-	DB      *pg.DB
-	Logger  *zap.Logger
+	request generated.CreateExercise
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c CreateExercise) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringIsNotEmpty(c.Request.Name, "Name must not be empty"),
-		validation.CheckStringNilOrIsURL(c.Request.VideoURL, "Invalid video URL"),
-		validation.OrganizationExists(ctx, c.DB, c.Request.TrainerOrganizationID),
+		validation.CheckStringIsNotEmpty(c.request.Name, "Name must not be empty"),
+		validation.CheckStringNilOrIsURL(c.request.VideoURL, "Invalid video URL"),
+		validation.OrganizationExists(ctx, c.db, c.request.TrainerOrganizationID),
 	}
 }
 
@@ -41,14 +41,15 @@ func (c CreateExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 
 	newUuid, err := uuid.NewV4()
 	if err != nil {
+		c.logger.Error("Failed to generate UUID", zap.Error(err))
 		return nil, err
 	}
 
 	var finalExercise *workout.Exercise
 
-	err = c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err = c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		err = validation.TagsAllExistForTrainer(ctx, t, c.Request.TrainerOrganizationID, c.Request.Tags)
+		err = validation.TagsAllExistForTrainer(ctx, t, c.request.TrainerOrganizationID, c.request.Tags)
 		if err != nil {
 			return err
 		}
@@ -56,20 +57,26 @@ func (c CreateExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 		new := workout.Exercise{
 			ID: newUuid,
 
-			TrainerOrganizationID: c.Request.TrainerOrganizationID,
+			TrainerOrganizationID: c.request.TrainerOrganizationID,
 
-			Name:        strings.TrimSpace(c.Request.Name),
-			Description: strings.TrimSpace(c.Request.Description),
+			Name:        strings.TrimSpace(c.request.Name),
+			Description: strings.TrimSpace(c.request.Description),
 
-			VideoURL: c.Request.VideoURL,
+			VideoURL: c.request.VideoURL,
 		}
 
 		finalExercise, err = workoutdb.InsertExercise(ctx, t, new)
 
-		for _, tagUUID := range c.Request.Tags {
+		if err != nil {
+			c.logger.Error("Failed to insert exercise", zap.Error(err))
+			return err
+		}
 
-			_, err := tagdb.TagWorkout(ctx, t, tagUUID, c.Request.TrainerOrganizationID, finalExercise.ID)
+		for _, tagUUID := range c.request.Tags {
+
+			_, err := tagdb.TagExercise(ctx, t, tagUUID, c.request.TrainerOrganizationID, finalExercise.ID)
 			if err != nil {
+				c.logger.Error("Failed to tag exercise", zap.Error(err))
 				return err
 			}
 		}

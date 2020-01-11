@@ -13,18 +13,22 @@ import (
 	"go.uber.org/zap"
 )
 
-type SearchWorkoutProgram struct {
-	Request generated.WorkoutProgramSearchRequest
-	First   int
-	After   cursor.Cursor
-	DB      *pg.DB
-	Logger  *zap.Logger
+func NewSearchWorkoutProgram(request generated.WorkoutProgramSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db *pg.DB) *SearchWorkoutProgram {
+	return &SearchWorkoutProgram{
+		request: request,
+		first:   first,
+		after:   after,
+		db:      db,
+		logger:  logger.Named("SearchWorkoutProgram"),
+	}
 }
 
-func (s SearchWorkoutProgram) logger() *zap.Logger {
-
-	return s.Logger.Named("SearchWorkoutProgram")
-
+type SearchWorkoutProgram struct {
+	request generated.WorkoutProgramSearchRequest
+	first   int
+	after   cursor.Cursor
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (s SearchWorkoutProgram) genQuery(count bool) (string, []interface{}) {
@@ -40,13 +44,13 @@ func (s SearchWorkoutProgram) genQuery(count bool) (string, []interface{}) {
 	query += ` FROM ` + database.TableName(workout.WorkoutProgram{}) + `
 							WHERE trainer_organization_id = ?`
 
-	return query, []interface{}{s.Request.TrainerOrganizationID}
+	return query, []interface{}{s.request.TrainerOrganizationID}
 }
 
 func (s SearchWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.DefaultCheckPageSize(s.First),
+		validation.DefaultCheckPageSize(s.first),
 	}
 }
 
@@ -56,17 +60,17 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 
 	query, params := s.genQuery(false)
 
-	/*query, params, err := database.BasicCursorPaginationQuery(query, "", s.After, workout.WorkoutProgram{}, s.First, params...)
+	/*query, params, err := database.BasicCursorPaginationQuery(query, "", s.after, workout.WorkoutProgram{}, s.first, params...)
 	if err != nil {
 		s.logger().Error("Failed to generate pagination query", zap.Error(err))
 
 		return nil, err
 	}*/
 
-	_, err := s.DB.QueryContext(ctx, &programs, query, params...)
+	_, err := s.db.QueryContext(ctx, &programs, query, params...)
 
 	if err != nil {
-		s.logger().Error("Failed to search", zap.Error(err))
+		s.logger.Error("Failed to search workout programs", zap.Error(err))
 
 		return nil, err
 	}
@@ -79,9 +83,9 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 
 				var count int
 
-				_, err := s.DB.QueryContext(ctx, pg.Scan(&count), query, params...)
+				_, err := s.db.QueryContext(ctx, pg.Scan(&count), query, params...)
 				if err != nil {
-					zap.L().Error("Failed to count", zap.Error(err))
+					s.logger.Error("Failed to count workout programs", zap.Error(err))
 
 					return -1, err
 				}

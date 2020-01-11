@@ -14,59 +14,59 @@ import (
 
 func NewEditWorkoutBlock(request generated.EditWorkoutBlock, logger *zap.Logger, db *pg.DB) *EditWorkoutBlock {
 	return &EditWorkoutBlock{
-		Request: request,
-		DB:      db,
-		Logger:  logger.Named("EditWorkoutBlock"),
+		request: request,
+		db:      db,
+		logger:  logger.Named("EditWorkoutBlock"),
 	}
 }
 
 type EditWorkoutBlock struct {
-	Request generated.EditWorkoutBlock
-	DB      *pg.DB
-	Logger  *zap.Logger
+	request generated.EditWorkoutBlock
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c EditWorkoutBlock) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
 		func() *gqlerror.Error {
-			if c.Request.RoundText != nil {
-				return validation.CheckStringNilOrIsNotEmpty(c.Request.RoundText.Value, "If round text is set it must not be empty")()
+			if c.request.RoundText != nil {
+				return validation.CheckStringNilOrIsNotEmpty(c.request.RoundText.Value, "If round text is set it must not be empty")()
 			}
 
 			return nil
 		},
 		func() *gqlerror.Error {
-			if c.Request.RoundText != nil {
-				return validation.CheckIntIsNilOrGTE(c.Request.RoundNumeral.Value, 0, "If round numeral is set it must be >= 0")()
+			if c.request.RoundText != nil {
+				return validation.CheckIntIsNilOrGTE(c.request.RoundNumeral.Value, 0, "If round numeral is set it must be >= 0")()
 			}
 
 			return nil
 		},
 		func() *gqlerror.Error {
-			if c.Request.RoundText != nil {
-				return validation.CheckIntIsNilOrGT(c.Request.RoundRestDuration.Value, 0, "If round rest duration is set it must be > 0")()
+			if c.request.RoundText != nil {
+				return validation.CheckIntIsNilOrGT(c.request.RoundRestDuration.Value, 0, "If round rest duration is set it must be > 0")()
 			}
 
 			return nil
 		},
 		func() *gqlerror.Error {
-			if c.Request.RoundText != nil {
-				return validation.CheckIntIsNilOrGT(c.Request.NumberOfRounds.Value, 0, "If number of rounds is set it must be > 0")()
+			if c.request.RoundText != nil {
+				return validation.CheckIntIsNilOrGT(c.request.NumberOfRounds.Value, 0, "If number of rounds is set it must be > 0")()
 			}
 
 			return nil
 		},
 		func() *gqlerror.Error {
-			if c.Request.RoundText != nil {
-				return validation.CheckIntIsNilOrGT(c.Request.DurationSeconds.Value, 0, "If duration seconds is set it must be > 0")()
+			if c.request.RoundText != nil {
+				return validation.CheckIntIsNilOrGT(c.request.DurationSeconds.Value, 0, "If duration seconds is set it must be > 0")()
 			}
 
 			return nil
 		},
 		func() *gqlerror.Error {
-			if c.Request.RoundUnitID != nil {
-				return validation.UnitIsNilOrExists(ctx, c.DB, c.Request.RoundUnitID.Value)()
+			if c.request.RoundUnitID != nil {
+				return validation.UnitIsNilOrExists(ctx, c.db, c.request.RoundUnitID.Value)()
 			}
 
 			return nil
@@ -78,53 +78,53 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 
 	var finalWorkoutBlock *workout.WorkoutBlock
 
-	err := c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		workoutBlock, err := workoutdb.GetWorkoutBlockForUpdate(ctx, c.DB, c.Request.ID)
+		workoutBlock, err := workoutdb.GetWorkoutBlockForUpdate(ctx, c.db, c.request.ID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout block does not exist")
 			}
 
-			c.Logger.Error("Error retrieving workout block", zap.Error(err))
+			c.logger.Error("Error retrieving workout block", zap.Error(err))
 			return err
 		}
 
-		if c.Request.CategoryOrder != nil {
-			workoutBlock.CategoryOrder = *c.Request.CategoryOrder
+		if c.request.CategoryOrder != nil {
+			workoutBlock.CategoryOrder = *c.request.CategoryOrder
 		}
 
-		if c.Request.RoundNumeral != nil {
-			workoutBlock.RoundNumeral = c.Request.RoundNumeral.Value
+		if c.request.RoundNumeral != nil {
+			workoutBlock.RoundNumeral = c.request.RoundNumeral.Value
 		}
 
-		if c.Request.RoundText != nil {
-			workoutBlock.RoundText = c.Request.RoundText.Value
+		if c.request.RoundText != nil {
+			workoutBlock.RoundText = c.request.RoundText.Value
 		}
 
-		if c.Request.RoundUnitID != nil {
-			workoutBlock.RoundUnitID = c.Request.RoundUnitID.Value
+		if c.request.RoundUnitID != nil {
+			workoutBlock.RoundUnitID = c.request.RoundUnitID.Value
 		}
 
-		if c.Request.RoundRestDuration != nil {
-			workoutBlock.RoundRestDuration = c.Request.RoundRestDuration.Value
+		if c.request.RoundRestDuration != nil {
+			workoutBlock.RoundRestDuration = c.request.RoundRestDuration.Value
 		}
 
-		if c.Request.NumberOfRounds != nil {
-			workoutBlock.NumberOfRounds = c.Request.NumberOfRounds.Value
+		if c.request.NumberOfRounds != nil {
+			workoutBlock.NumberOfRounds = c.request.NumberOfRounds.Value
 		}
 
-		if c.Request.DurationSeconds != nil {
-			workoutBlock.DurationSeconds = c.Request.DurationSeconds.Value
+		if c.request.DurationSeconds != nil {
+			workoutBlock.DurationSeconds = c.request.DurationSeconds.Value
 		}
 
 		if workoutBlock.RoundNumeral != nil && workoutBlock.RoundUnitID == nil {
 			return gqlerror.Errorf("If round numeral is set, round unit ID must also be set")
 		}
 
-		finalWorkoutBlock, err = workoutdb.UpdateWorkoutBlock(ctx, c.DB, workoutBlock)
+		finalWorkoutBlock, err = workoutdb.UpdateWorkoutBlock(ctx, c.db, workoutBlock)
 		if err != nil {
-			c.Logger.Error("Error updating workout block", zap.Error(err))
+			c.logger.Error("Error updating workout block", zap.Error(err))
 			return err
 		}
 

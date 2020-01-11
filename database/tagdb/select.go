@@ -9,7 +9,7 @@ import (
 	"github.com/train-formula/graphcms/models/tag"
 )
 
-// Request struct to retrieve a tag by its tag + organization ID
+// request struct to retrieve a tag by its tag + organization ID
 // Grouped together for easy batching
 type TagByTag struct {
 	Tag                   string
@@ -25,7 +25,7 @@ func (t TagByTag) Stable() TagByTag {
 	}
 }
 
-// Request struct to retrieve tags by the type of object they are attached to, the object UUID + the trainer organization UUID
+// request struct to retrieve tags by the type of object they are attached to, the object UUID + the trainer organization UUID
 // Grouped together for easy batching
 type TagsByObject struct {
 	ObjectUUID uuid.UUID

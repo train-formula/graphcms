@@ -14,18 +14,22 @@ import (
 	"go.uber.org/zap"
 )
 
-type SearchWorkoutCategory struct {
-	Request generated.WorkoutCategorySearchRequest
-	First   int
-	After   cursor.Cursor
-	DB      *pg.DB
-	Logger  *zap.Logger
+func NewSearchWorkoutCategory(request generated.WorkoutCategorySearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db *pg.DB) *SearchWorkoutCategory {
+	return &SearchWorkoutCategory{
+		request: request,
+		first:   first,
+		after:   after,
+		db:      db,
+		logger:  logger.Named("SearchWorkoutCategory"),
+	}
 }
 
-func (s SearchWorkoutCategory) logger() *zap.Logger {
-
-	return s.Logger.Named("SearchWorkoutCategory")
-
+type SearchWorkoutCategory struct {
+	request generated.WorkoutCategorySearchRequest
+	first   int
+	after   cursor.Cursor
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (s SearchWorkoutCategory) genQuery(count bool) (string, []interface{}) {
@@ -40,14 +44,14 @@ func (s SearchWorkoutCategory) genQuery(count bool) (string, []interface{}) {
 
 	var params []interface{}
 
-	if len(s.Request.TagUUIDs) > 0 {
+	if len(s.request.TagUUIDs) > 0 {
 		query += ` FROM ` + database.TableName(workout.WorkoutCategory{}) + ` wc ` +
 			` INNER JOIN ` + database.TableName(tag.Tagged{}) + ` t ` +
 			` ON wc.id = t.tagged_id WHERE wc.trainer_organization_id = ? AND `
 
-		params = []interface{}{s.Request.TrainerOrganizationID}
+		params = []interface{}{s.request.TrainerOrganizationID}
 
-		for _, tagUUID := range s.Request.TagUUIDs {
+		for _, tagUUID := range s.request.TagUUIDs {
 			params = append(params, tagUUID)
 		}
 
@@ -55,7 +59,7 @@ func (s SearchWorkoutCategory) genQuery(count bool) (string, []interface{}) {
 		query += ` FROM ` + database.TableName(workout.WorkoutCategory{}) + `
 								WHERE trainer_organization_id = ?`
 
-		params = []interface{}{s.Request.TrainerOrganizationID}
+		params = []interface{}{s.request.TrainerOrganizationID}
 	}
 
 	return query, params
@@ -65,7 +69,7 @@ func (s SearchWorkoutCategory) genQuery(count bool) (string, []interface{}) {
 func (s SearchWorkoutCategory) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.DefaultCheckPageSize(s.First),
+		validation.DefaultCheckPageSize(s.first),
 	}
 }
 
@@ -75,17 +79,17 @@ func (s SearchWorkoutCategory) Call(ctx context.Context) (*generated.WorkoutCate
 
 	query, params := s.genQuery(false)
 
-	/*query, params, err := database.BasicCursorPaginationQuery(query, "", s.After, workout.WorkoutProgram{}, s.First, params...)
+	/*query, params, err := database.BasicCursorPaginationQuery(query, "", s.after, workout.WorkoutProgram{}, s.first, params...)
 	if err != nil {
 		s.logger().Error("Failed to generate pagination query", zap.Error(err))
 
 		return nil, err
 	}*/
 
-	_, err := s.DB.QueryContext(ctx, &programs, query, params...)
+	_, err := s.db.QueryContext(ctx, &programs, query, params...)
 
 	if err != nil {
-		s.logger().Error("Failed to search", zap.Error(err))
+		s.logger.Error("Failed to search workout categories", zap.Error(err))
 
 		return nil, err
 	}
@@ -98,9 +102,9 @@ func (s SearchWorkoutCategory) Call(ctx context.Context) (*generated.WorkoutCate
 
 				var count int
 
-				_, err := s.DB.QueryContext(ctx, pg.Scan(&count), query, params...)
+				_, err := s.db.QueryContext(ctx, pg.Scan(&count), query, params...)
 				if err != nil {
-					zap.L().Error("Failed to count", zap.Error(err))
+					s.logger.Error("Failed to count workout categories", zap.Error(err))
 
 					return -1, err
 				}

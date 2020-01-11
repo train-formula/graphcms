@@ -7,6 +7,7 @@ import (
 	"github.com/train-formula/graphcms/dataloader/exerciseid"
 	"github.com/train-formula/graphcms/dataloader/organizationid"
 	"github.com/train-formula/graphcms/dataloader/prescriptionid"
+	"github.com/train-formula/graphcms/dataloader/prescriptionsetsbyprescription"
 	"github.com/train-formula/graphcms/dataloader/tagbytag"
 	"github.com/train-formula/graphcms/dataloader/tagid"
 	"github.com/train-formula/graphcms/dataloader/tagsbyobject"
@@ -16,6 +17,7 @@ import (
 	"github.com/train-formula/graphcms/dataloader/workoutcategoriesbyworkout"
 	"github.com/train-formula/graphcms/dataloader/workoutcategoryid"
 	"github.com/train-formula/graphcms/dataloader/workoutid"
+	"github.com/train-formula/graphcms/dataloader/workoutprogramid"
 )
 
 func RegisterLoaders(db *pg.DB) gin.HandlerFunc {
@@ -34,6 +36,8 @@ func RegisterLoaders(db *pg.DB) gin.HandlerFunc {
 		workoutcategoriesbyworkout.AddContextLoader(c, db)
 		exerciseid.AddContextLoader(c, db)
 		blockexercisesbyblock.AddContextLoader(c, db)
+		prescriptionsetsbyprescription.AddContextLoader(c, db)
+		workoutprogramid.AddContextLoader(c, db)
 
 		c.Request = c.Request.WithContext(c)
 

@@ -52,11 +52,7 @@ func (r *WorkoutCategoryResolver) WorkoutBlocks(ctx context.Context, obj *workou
 		return nil, gqlerror.Errorf("Cannot locate workout blocks from nil workout category")
 	}
 
-	g := workoutcall.GetWorkoutCategoryBlocks{
-		Logger: r.logger,
-		ID:     obj.ID,
-		DB:     r.db,
-	}
+	g := workoutcall.NewGetWorkoutCategoryBlocks(obj.ID, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)

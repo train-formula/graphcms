@@ -12,16 +12,19 @@ import (
 	"go.uber.org/zap"
 )
 
-type GetUnit struct {
-	ID     uuid.UUID
-	DB     *pg.DB
-	Logger *zap.Logger
+func NewGetUnit(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetUnit {
+
+	return &GetUnit{
+		id:     id,
+		db:     db,
+		logger: logger.Named("GetUnit"),
+	}
 }
 
-func (g GetUnit) logger() *zap.Logger {
-
-	return g.Logger.Named("GetUnit")
-
+type GetUnit struct {
+	id     uuid.UUID
+	db     *pg.DB
+	logger *zap.Logger
 }
 
 func (g GetUnit) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -33,8 +36,9 @@ func (g GetUnit) Call(ctx context.Context) (*workout.Unit, error) {
 
 	loader := unitid.GetContextLoader(ctx)
 
-	loaded, err := loader.Load(g.ID)
+	loaded, err := loader.Load(g.id)
 	if err != nil {
+		g.logger.Error("Failed to load unit with dataloader", zap.Error(err))
 		return nil, err
 	}
 

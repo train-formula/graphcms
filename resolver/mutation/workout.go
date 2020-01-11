@@ -12,10 +12,7 @@ import (
 
 func (m *MutationResolver) CreateWorkout(ctx context.Context, request generated.CreateWorkout) (*workout.Workout, error) {
 
-	call := workoutcall.CreateWorkout{
-		Request: request,
-		DB:      m.db,
-	}
+	call := workoutcall.NewCreateWorkout(request, m.logger, m.db)
 
 	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
 		return call.Call(ctx)
@@ -27,11 +24,7 @@ func (m *MutationResolver) CreateWorkout(ctx context.Context, request generated.
 
 func (m *MutationResolver) EditWorkout(ctx context.Context, request generated.EditWorkout) (*workout.Workout, error) {
 
-	call := workoutcall.EditWorkout{
-		Logger:  m.logger,
-		Request: request,
-		DB:      m.db,
-	}
+	call := workoutcall.NewEditWorkout(request, m.logger, m.db)
 
 	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
 		return call.Call(ctx)
@@ -42,11 +35,7 @@ func (m *MutationResolver) EditWorkout(ctx context.Context, request generated.Ed
 
 func (m *MutationResolver) DeleteWorkout(ctx context.Context, request uuid.UUID) (*uuid.UUID, error) {
 
-	call := workoutcall.DeleteWorkout{
-		Logger:  m.logger,
-		Request: request,
-		DB:      m.db,
-	}
+	call := workoutcall.NewDeleteWorkout(request, m.logger, m.db)
 
 	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
 		return call.Call(ctx)

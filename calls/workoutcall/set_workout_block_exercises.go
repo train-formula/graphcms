@@ -14,16 +14,16 @@ import (
 
 func NewSetWorkoutBlockExercises(request generated.SetWorkoutBlockExercises, logger *zap.Logger, db *pg.DB) *SetWorkoutBlockExercises {
 	return &SetWorkoutBlockExercises{
-		Request: request,
-		DB:      db,
-		Logger:  logger.Named("SetWorkoutBlockExercises"),
+		request: request,
+		db:      db,
+		logger:  logger.Named("SetWorkoutBlockExercises"),
 	}
 }
 
 type SetWorkoutBlockExercises struct {
-	Request generated.SetWorkoutBlockExercises
-	DB      *pg.DB
-	Logger  *zap.Logger
+	request generated.SetWorkoutBlockExercises
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c SetWorkoutBlockExercises) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -34,35 +34,47 @@ func (c SetWorkoutBlockExercises) Validate(ctx context.Context) []validation.Val
 func (c SetWorkoutBlockExercises) Call(ctx context.Context) (*workout.WorkoutBlock, error) {
 
 	var finalWorkout *workout.WorkoutBlock
-	err := c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
 		var err error
-		wrkout, err := workoutdb.GetWorkoutBlockForUpdate(ctx, c.DB, c.Request.WorkoutBlockID)
+		wrkout, err := workoutdb.GetWorkoutBlockForUpdate(ctx, c.db, c.request.WorkoutBlockID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout block does not exist")
 			}
 
-			c.Logger.Error("Error retrieving workout block", zap.Error(err))
+			c.logger.Error("Error retrieving workout block", zap.Error(err))
 			return err
 		}
 
 		finalWorkout = &wrkout
 
-		if len(c.Request.BlockExercises) <= 0 {
-			return workoutdb.ClearWorkoutBlockBlockExercises(ctx, t, wrkout.ID)
+		if len(c.request.BlockExercises) <= 0 {
+			err = workoutdb.ClearWorkoutBlockBlockExercises(ctx, t, wrkout.ID)
+			if err != nil {
+				c.logger.Error("Failed to clear workout block block exercises", zap.Error(err))
+				return err
+			}
+			return nil
 		}
 
 		var toSet []workoutdb.ExercisePrescription
 
-		for _, blockExercise := range c.Request.BlockExercises {
+		for _, blockExercise := range c.request.BlockExercises {
 			toSet = append(toSet, workoutdb.ExercisePrescription{
 				ExerciseID:     blockExercise.ExerciseID,
 				PrescriptionID: blockExercise.PrescriptionID,
 			})
 		}
 
-		return workoutdb.SetWorkoutBlockBlockExercises(ctx, t, c.Request.WorkoutBlockID, toSet)
+		err = workoutdb.SetWorkoutBlockBlockExercises(ctx, t, c.request.WorkoutBlockID, toSet)
+
+		if err != nil {
+			c.logger.Error("Failed to set workout block block exercises", zap.Error(err))
+			return err
+		}
+
+		return nil
 
 	})
 

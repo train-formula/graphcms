@@ -12,22 +12,24 @@ import (
 	"go.uber.org/zap"
 )
 
-type EditWorkout struct {
-	Request generated.EditWorkout
-	DB      *pg.DB
-	Logger  *zap.Logger
+func NewEditWorkout(request generated.EditWorkout, logger *zap.Logger, db *pg.DB) *EditWorkout {
+	return &EditWorkout{
+		request: request,
+		db:      db,
+		logger:  logger.Named("EditWorkout"),
+	}
 }
 
-func (c EditWorkout) logger() *zap.Logger {
-
-	return c.Logger.Named("EditWorkout")
-
+type EditWorkout struct {
+	request generated.EditWorkout
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c EditWorkout) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringNilOrIsNotEmpty(c.Request.Name, "Name must not be empty"),
+		validation.CheckStringNilOrIsNotEmpty(c.request.Name, "Name must not be empty"),
 	}
 }
 
@@ -35,29 +37,29 @@ func (c EditWorkout) Call(ctx context.Context) (*workout.Workout, error) {
 
 	var finalWorkout *workout.Workout
 
-	err := c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		wrkout, err := workoutdb.GetWorkoutForUpdate(ctx, c.DB, c.Request.ID)
+		wrkout, err := workoutdb.GetWorkoutForUpdate(ctx, c.db, c.request.ID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout does not exist")
 			}
 
-			c.logger().Error("Error retrieving workout", zap.Error(err))
+			c.logger.Error("Error retrieving workout", zap.Error(err))
 			return err
 		}
 
-		if c.Request.Name != nil {
-			wrkout.Name = *c.Request.Name
+		if c.request.Name != nil {
+			wrkout.Name = *c.request.Name
 		}
 
-		if c.Request.Description != nil {
-			wrkout.Description = *c.Request.Description
+		if c.request.Description != nil {
+			wrkout.Description = *c.request.Description
 		}
 
-		finalWorkout, err = workoutdb.UpdateWorkout(ctx, c.DB, wrkout)
+		finalWorkout, err = workoutdb.UpdateWorkout(ctx, c.db, wrkout)
 		if err != nil {
-			c.logger().Error("Error updating workout", zap.Error(err))
+			c.logger.Error("Error updating workout", zap.Error(err))
 			return err
 		}
 

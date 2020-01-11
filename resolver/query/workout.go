@@ -11,11 +11,7 @@ import (
 
 func (r *QueryResolver) Workout(ctx context.Context, id uuid.UUID) (*workout.Workout, error) {
 
-	g := workoutcall.GetWorkout{
-		ID:     id,
-		DB:     r.db,
-		Logger: r.logger,
-	}
+	g := workoutcall.NewGetWorkout(id, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)
@@ -26,9 +22,7 @@ func (r *QueryResolver) Workout(ctx context.Context, id uuid.UUID) (*workout.Wor
 
 func (r *QueryResolver) AvailableUnits(ctx context.Context) ([]*workout.Unit, error) {
 
-	g := workoutcall.GetAvailableUnits{
-		DB: r.db,
-	}
+	g := workoutcall.NewGetAvailableUnits(r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)

@@ -12,18 +12,28 @@ import (
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"go.uber.org/zap"
 )
 
+func NewCreateWorkout(request generated.CreateWorkout, logger *zap.Logger, db *pg.DB) *CreateWorkout {
+	return &CreateWorkout{
+		request: request,
+		db:      db,
+		logger:  logger.Named("CreateWorkout"),
+	}
+}
+
 type CreateWorkout struct {
-	Request generated.CreateWorkout
-	DB      *pg.DB
+	request generated.CreateWorkout
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c CreateWorkout) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringIsNotEmpty(c.Request.Name, "Name must not be empty"),
-		validation.CheckIntGT(c.Request.DaysFromStart, 0, "Days from start must be > 0"),
+		validation.CheckStringIsNotEmpty(c.request.Name, "Name must not be empty"),
+		validation.CheckIntGT(c.request.DaysFromStart, 0, "Days from start must be > 0"),
 	}
 }
 
@@ -36,18 +46,20 @@ func (c CreateWorkout) Call(ctx context.Context) (*workout.Workout, error) {
 
 	var finalWorkout *workout.Workout
 
-	err = c.DB.RunInTransaction(func(t *pg.Tx) error {
-		program, err := workoutdb.GetWorkoutProgram(ctx, t, c.Request.WorkoutProgramID)
+	err = c.db.RunInTransaction(func(t *pg.Tx) error {
+		program, err := workoutdb.GetWorkoutProgram(ctx, t, c.request.WorkoutProgramID)
 
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout program does not exist")
 			}
+			c.logger.Error("Failed to retrieve workout program", zap.Error(err))
 			return err
 		}
 
-		err = validation.TagsAllExistForTrainer(ctx, t, program.TrainerOrganizationID, c.Request.Tags)
+		err = validation.TagsAllExistForTrainer(ctx, t, program.TrainerOrganizationID, c.request.Tags)
 		if err != nil {
+			c.logger.Error("Failed to check if tag exists", zap.Error(err))
 			return err
 		}
 
@@ -57,18 +69,24 @@ func (c CreateWorkout) Call(ctx context.Context) (*workout.Workout, error) {
 			TrainerOrganizationID: program.TrainerOrganizationID,
 			WorkoutProgramID:      program.ID,
 
-			Name:        c.Request.Name,
-			Description: strings.TrimSpace(c.Request.Description),
+			Name:        c.request.Name,
+			Description: strings.TrimSpace(c.request.Description),
 
-			DaysFromStart: c.Request.DaysFromStart,
+			DaysFromStart: c.request.DaysFromStart,
 		}
 
 		finalWorkout, err = workoutdb.InsertWorkout(ctx, t, new)
 
-		for _, tagUUID := range c.Request.Tags {
+		if err != nil {
+			c.logger.Error("Failed to insert workout", zap.Error(err))
+			return err
+		}
+
+		for _, tagUUID := range c.request.Tags {
 
 			_, err := tagdb.TagWorkout(ctx, t, tagUUID, program.TrainerOrganizationID, finalWorkout.ID)
 			if err != nil {
+				c.logger.Error("Failed to tag workout", zap.Error(err))
 				return err
 			}
 		}

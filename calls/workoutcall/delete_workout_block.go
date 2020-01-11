@@ -13,16 +13,16 @@ import (
 
 func NewDeleteWorkoutBlock(request uuid.UUID, logger *zap.Logger, db *pg.DB) *DeleteWorkoutBlock {
 	return &DeleteWorkoutBlock{
-		Request: request,
-		DB:      db,
-		Logger:  logger,
+		request: request,
+		db:      db,
+		logger:  logger.Named("DeleteWorkoutBlock"),
 	}
 }
 
 type DeleteWorkoutBlock struct {
-	Request uuid.UUID
-	DB      *pg.DB
-	Logger  *zap.Logger
+	request uuid.UUID
+	db      *pg.DB
+	logger  *zap.Logger
 }
 
 func (c DeleteWorkoutBlock) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -32,21 +32,21 @@ func (c DeleteWorkoutBlock) Validate(ctx context.Context) []validation.Validator
 
 func (c DeleteWorkoutBlock) Call(ctx context.Context) (*uuid.UUID, error) {
 
-	err := c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		_, err := workoutdb.GetWorkoutBlockForUpdate(ctx, t, c.Request)
+		_, err := workoutdb.GetWorkoutBlockForUpdate(ctx, t, c.request)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout block does not exist")
 			}
 
-			c.Logger.Error("Error retrieving workout block", zap.Error(err))
+			c.logger.Error("Error retrieving workout block", zap.Error(err))
 			return err
 		}
 
-		err = workoutdb.DeleteWorkoutBlock(ctx, t, c.Request)
+		err = workoutdb.DeleteWorkoutBlock(ctx, t, c.request)
 		if err != nil {
-			c.Logger.Error("Error deleting workout block", zap.Error(err))
+			c.logger.Error("Error deleting workout block", zap.Error(err))
 			return err
 		}
 
@@ -57,6 +57,6 @@ func (c DeleteWorkoutBlock) Call(ctx context.Context) (*uuid.UUID, error) {
 		return nil, err
 	}
 
-	return &c.Request, nil
+	return &c.request, nil
 
 }
