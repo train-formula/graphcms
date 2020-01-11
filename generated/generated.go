@@ -1087,35 +1087,35 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.WorkoutProgramSearch(childComplexity, args["request"].(WorkoutProgramSearchRequest), args["first"].(int), args["after"].(*string)), true
 
-	case "tag.createdAt":
+	case "Tag.createdAt":
 		if e.complexity.Tag.CreatedAt == nil {
 			break
 		}
 
 		return e.complexity.Tag.CreatedAt(childComplexity), true
 
-	case "tag.id":
+	case "Tag.id":
 		if e.complexity.Tag.ID == nil {
 			break
 		}
 
 		return e.complexity.Tag.ID(childComplexity), true
 
-	case "tag.tag":
+	case "Tag.tag":
 		if e.complexity.Tag.Tag == nil {
 			break
 		}
 
 		return e.complexity.Tag.Tag(childComplexity), true
 
-	case "tag.trainerOrganizationID":
+	case "Tag.trainerOrganizationID":
 		if e.complexity.Tag.TrainerOrganizationID == nil {
 			break
 		}
 
 		return e.complexity.Tag.TrainerOrganizationID(childComplexity), true
 
-	case "tag.updatedAt":
+	case "Tag.updatedAt":
 		if e.complexity.Tag.UpdatedAt == nil {
 			break
 		}
@@ -1769,7 +1769,7 @@ type Exercise {
     videoURL: String
 
     # Fetchers
-    tags: [tag!]
+    tags: [Tag!]
 
 }
 `},
@@ -1946,7 +1946,7 @@ input NullableIntEditor {
 	&ast.Source{Name: "schema/graphql/tag/facets.graphql", Input: `
 type TagFacet {
 
-    tags: [tag!]
+    tags: [Tag!]
 
 }
 
@@ -1954,20 +1954,20 @@ type TagFacet {
 	&ast.Source{Name: "schema/graphql/tag/tag.graphql", Input: `
 extend type Query {
 
-    tag(id: ID!): tag
+    tag(id: ID!): Tag
 
-    tagByTag(tag: String!, trainerOrganizationID: ID!): tag
+    tagByTag(tag: String!, trainerOrganizationID: ID!): Tag
 }
 
 extend type Mutation {
-    createTag(request: CreateTag!): tag
+    createTag(request: CreateTag!): Tag
 }
 
 ########################
 ###### TAG #############
 ########################
 
-type tag {
+type Tag {
     id: ID!
 
     createdAt: Time!
@@ -1985,7 +1985,7 @@ type TagConnection {
 
 type TagEdge {
     cursor: String!
-    node: tag!
+    node: Tag!
 }
 
 
@@ -2237,7 +2237,7 @@ type WorkoutCategory {
     description: String!
 
     # Fetchers
-    tags: [tag!]
+    tags: [Tag!]
     trainerOrganization: Organization
     workoutBlocks: [WorkoutBlock!]
 }
@@ -2341,7 +2341,7 @@ type WorkoutProgram {
 
     # Fetchers
     trainerOrganization: Organization
-    tags: [tag!]
+    tags: [Tag!]
 
     # Connections
     workouts(first: Int, after: ID!): WorkoutConnection!
@@ -5996,7 +5996,7 @@ func (ec *executionContext) _Tag_id(ctx context.Context, field graphql.Collected
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "tag",
+		Object:   "Tag",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -6033,7 +6033,7 @@ func (ec *executionContext) _Tag_createdAt(ctx context.Context, field graphql.Co
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "tag",
+		Object:   "Tag",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -6070,7 +6070,7 @@ func (ec *executionContext) _Tag_updatedAt(ctx context.Context, field graphql.Co
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "tag",
+		Object:   "Tag",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -6107,7 +6107,7 @@ func (ec *executionContext) _Tag_tag(ctx context.Context, field graphql.Collecte
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "tag",
+		Object:   "Tag",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -6144,7 +6144,7 @@ func (ec *executionContext) _Tag_trainerOrganizationID(ctx context.Context, fiel
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "tag",
+		Object:   "Tag",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -11507,7 +11507,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var tagImplementors = []string{"tag"}
+var tagImplementors = []string{"Tag"}
 
 func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj *tag.Tag) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, tagImplementors)
@@ -11517,7 +11517,7 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("tag")
+			out.Values[i] = graphql.MarshalString("Tag")
 		case "id":
 			out.Values[i] = ec._Tag_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

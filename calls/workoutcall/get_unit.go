@@ -45,7 +45,7 @@ func (g GetUnit) Call(ctx context.Context) (*workout.Unit, error) {
 	}
 
 	if loaded == nil {
-		return nil, gqlerror.Errorf("Unknown unit ID")
+		return nil, gqlerror.Errorf("Unknown unit id")
 	}
 
 	return loaded, nil

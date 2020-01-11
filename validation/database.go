@@ -12,7 +12,7 @@ import (
 	"github.com/vektah/gqlparser/gqlerror"
 )
 
-// Validates all tag UUIDs specified exist for a given trainer organization ID
+// Validates all tag UUIDs specified exist for a given trainer organization id
 // Returns an error if any don't exist
 func TagsAllExistForTrainer(ctx context.Context, conn database.Conn, trainerOrganizationID uuid.UUID, ids []uuid.UUID) error {
 
@@ -40,7 +40,7 @@ func TagsAllExistForTrainer(ctx context.Context, conn database.Conn, trainerOrga
 	return nil
 }
 
-// Validates that a unid ID is either nil, or exists in the database
+// Validates that a unid id is either nil, or exists in the database
 func UnitIsNilOrExists(ctx context.Context, conn database.Conn, unitID *uuid.UUID) ValidatorFunc {
 
 	return func() *gqlerror.Error {
@@ -53,7 +53,7 @@ func UnitIsNilOrExists(ctx context.Context, conn database.Conn, unitID *uuid.UUI
 
 		if err != nil {
 			if err == pg.ErrNoRows {
-				return gqlerror.Errorf("Unit ID %s does not exist", searchID)
+				return gqlerror.Errorf("Unit id %s does not exist", searchID)
 			}
 			return gqlerror.Errorf(err.Error())
 		}
@@ -63,7 +63,7 @@ func UnitIsNilOrExists(ctx context.Context, conn database.Conn, unitID *uuid.UUI
 
 }
 
-// Validates that a organization ID is either nil, or exists in the database
+// Validates that a organization id is either nil, or exists in the database
 func OrganizationExists(ctx context.Context, conn database.Conn, organizationID uuid.UUID) ValidatorFunc {
 
 	return func() *gqlerror.Error {
@@ -72,7 +72,7 @@ func OrganizationExists(ctx context.Context, conn database.Conn, organizationID 
 
 		if err != nil {
 			if err == pg.ErrNoRows {
-				return gqlerror.Errorf("Organization ID %s does not exist", organizationID)
+				return gqlerror.Errorf("Organization id %s does not exist", organizationID)
 			}
 			return gqlerror.Errorf(err.Error())
 		}

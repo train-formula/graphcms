@@ -9,7 +9,7 @@ import (
 	"github.com/train-formula/graphcms/models/workout"
 )
 
-// Combined exercise + prescription ID used, for example, to create BlockExercises
+// Combined exercise + prescription id used, for example, to create BlockExercises
 type ExercisePrescription struct {
 	ExerciseID     uuid.UUID
 	PrescriptionID uuid.UUID
@@ -85,7 +85,7 @@ func InsertExercise(ctx context.Context, conn database.Conn, new workout.Exercis
 func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, workoutID uuid.UUID, workoutCategoryIDs []uuid.UUID) error {
 
 	if len(workoutCategoryIDs) <= 0 {
-		return errors.New("must specify at least one workout category ID to set onto workout")
+		return errors.New("must specify at least one workout category id to set onto workout")
 	}
 
 	err := ClearWorkoutWorkoutCategories(ctx, conn, workoutID)
@@ -123,7 +123,7 @@ func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, workou
 func SetWorkoutBlockBlockExercises(ctx context.Context, conn database.Conn, workoutBlockID uuid.UUID, exercisePrescriptions []ExercisePrescription) error {
 
 	if len(exercisePrescriptions) <= 0 {
-		return errors.New("must specify at least exercise + prescription ID to set onto workout block")
+		return errors.New("must specify at least exercise + prescription id to set onto workout block")
 	}
 
 	err := ClearWorkoutBlockBlockExercises(ctx, conn, workoutBlockID)

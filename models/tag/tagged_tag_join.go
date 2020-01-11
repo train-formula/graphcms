@@ -14,7 +14,7 @@ type TaggedTagJoin struct {
 	TagUpdatedAt             time.Time
 	TagTag                   string
 	TagTrainerOrganizationID uuid.UUID
-	// TaggedID from Tagged table, NOT ID field, hence TaggedTagged
+	// TaggedID from Tagged table, NOT id field, hence TaggedTagged
 	TaggedTaggedID uuid.UUID
 	TaggedTagType  TagType `sql:"type:tag.tag_type"`
 }

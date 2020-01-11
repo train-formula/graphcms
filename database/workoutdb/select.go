@@ -47,7 +47,7 @@ func GetUnits(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*work
 	return result, err
 }
 
-// Retrieves an workout category by its ID
+// Retrieves an workout category by its id
 func GetUnit(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Unit, error) {
 
 	var result workout.Unit
@@ -57,7 +57,7 @@ func GetUnit(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Uni
 	return result, err
 }
 
-// Retrieves an workout category by its ID
+// Retrieves an workout category by its id
 func GetWorkoutCategory(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutCategory, error) {
 
 	var result workout.WorkoutCategory
@@ -67,7 +67,7 @@ func GetWorkoutCategory(ctx context.Context, conn database.Conn, id uuid.UUID) (
 	return result, err
 }
 
-// Retrieves an workout category by its ID, and locks the row
+// Retrieves an workout category by its id, and locks the row
 func GetWorkoutCategoryForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutCategory, error) {
 
 	var result workout.WorkoutCategory
@@ -187,7 +187,7 @@ func GetWorkoutCategoryBlocks(ctx context.Context, conn database.Conn, workoutCa
 	return results, err
 }
 
-// Retrieves a workout block by its ID, and locks the row
+// Retrieves a workout block by its id, and locks the row
 func GetWorkoutBlockForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutBlock, error) {
 
 	var result workout.WorkoutBlock
@@ -197,7 +197,7 @@ func GetWorkoutBlockForUpdate(ctx context.Context, conn database.Conn, id uuid.U
 	return result, err
 }
 
-// Retrieves a workout by its ID, and locks the row
+// Retrieves a workout by its id, and locks the row
 func GetWorkoutForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Workout, error) {
 
 	var result workout.Workout
@@ -231,7 +231,7 @@ func GetWorkouts(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*w
 	return result, err
 }
 
-// Retrieve a workout program by it's ID
+// Retrieve a workout program by it's id
 func GetWorkoutProgram(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutProgram, error) {
 	var result workout.WorkoutProgram
 
@@ -327,7 +327,7 @@ func GetExercises(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*
 	return result, err
 }
 
-// Retrieves an exercise by its ID, and locks the row
+// Retrieves an exercise by its id, and locks the row
 func GetExerciseForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Exercise, error) {
 
 	var result workout.Exercise
@@ -354,7 +354,7 @@ func ExerciseConnectedToBlocks(ctx context.Context, conn database.Conn, id uuid.
 
 }
 
-// Retrieves workout block exercise + prescription combinations by block ID
+// Retrieves workout block exercise + prescription combinations by block id
 func GetBlockExercisesByBlock(ctx context.Context, conn database.Conn, blockIDs []uuid.UUID) (map[uuid.UUID][]*workout.BlockExercise, error) {
 
 	results := make(map[uuid.UUID][]*workout.BlockExercise)

@@ -9,7 +9,7 @@ import (
 	"github.com/train-formula/graphcms/models/trainer"
 )
 
-// Retrieves an individual organization by its ID
+// Retrieves an individual organization by its id
 func GetOrganization(ctx context.Context, conn database.Conn, id uuid.UUID) (trainer.Organization, error) {
 
 	var result trainer.Organization

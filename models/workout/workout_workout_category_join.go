@@ -16,7 +16,7 @@ type WorkoutWorkoutCategoryJoin struct {
 	WorkoutCategoryName                  string
 	WorkoutCategoryDescription           string
 
-	// WorkoutWorkoutID from WorkoutWorkoutCategory (workout.workout_category) table, NOT ID field, hence WorkoutWorkoutID
+	// WorkoutWorkoutID from WorkoutWorkoutCategory (workout.workout_category) table, NOT id field, hence WorkoutWorkoutID
 	WorkoutWorkoutID uuid.UUID
 }
 

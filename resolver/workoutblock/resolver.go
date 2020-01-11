@@ -26,10 +26,11 @@ func NewWorkoutBlockResolver(db *pg.DB, logger *zap.Logger) *WorkoutBlockResolve
 }
 
 func (r *WorkoutBlockResolver) TrainerOrganization(ctx context.Context, obj *workout.WorkoutBlock) (*trainer.Organization, error) {
-	g := organizationcall.GetOrganization{
-		ID: obj.TrainerOrganizationID,
-		DB: r.db,
+	if obj == nil {
+		return nil, gqlerror.Errorf("Cannot locate organization from nil workout block")
 	}
+
+	g := organizationcall.NewGetOrganization(obj.TrainerOrganizationID, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)
@@ -41,7 +42,7 @@ func (r *WorkoutBlockResolver) TrainerOrganization(ctx context.Context, obj *wor
 func (r *WorkoutBlockResolver) WorkoutCategory(ctx context.Context, obj *workout.WorkoutBlock) (*workout.WorkoutCategory, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate workout category ID from nil workout block")
+		return nil, gqlerror.Errorf("Cannot locate workout category id from nil workout block")
 	}
 
 	g := workoutcall.NewGetWorkoutCategory(obj.WorkoutCategoryID, r.logger, r.db)

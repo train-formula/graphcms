@@ -45,7 +45,7 @@ func (g GetWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory,
 	}
 
 	if loaded == nil {
-		return nil, gqlerror.Errorf("Unknown workout category ID")
+		return nil, gqlerror.Errorf("Unknown workout category id")
 	}
 
 	return loaded, nil

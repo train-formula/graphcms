@@ -9,14 +9,12 @@ import (
 	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/trainer"
 	"github.com/train-formula/graphcms/validation"
+	"go.uber.org/zap"
 )
 
 func (r *QueryResolver) Organization(ctx context.Context, id uuid.UUID) (*trainer.Organization, error) {
 
-	g := organizationcall.GetOrganization{
-		ID: id,
-		DB: r.db,
-	}
+	g := organizationcall.NewGetOrganization(id, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)
@@ -29,16 +27,11 @@ func (r *QueryResolver) OrganizationAvailableTags(ctx context.Context, id uuid.U
 
 	cursor, err := cursor.DeserializeCursor(after)
 	if err != nil {
+		r.logger.Error("Failed to deserialize cursor", zap.Error(err))
 		return nil, err
 	}
 
-	g := organizationcall.GetOrganizationAvailableTags{
-		TrainerOrganizationID: id,
-		First:                 first,
-		After:                 cursor,
-		DB:                    r.db,
-		Logger:                r.logger,
-	}
+	g := organizationcall.NewGetOrganizationAvailableTags(id, first, cursor, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)

@@ -44,7 +44,7 @@ func (g GetWorkout) Call(ctx context.Context) (*workout.Workout, error) {
 	}
 
 	if loaded == nil {
-		return nil, gqlerror.Errorf("Unknown workout ID")
+		return nil, gqlerror.Errorf("Unknown workout id")
 	}
 
 	return loaded, nil

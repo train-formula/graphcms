@@ -121,7 +121,7 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 		}
 
 		if workoutBlock.RoundNumeral != nil && workoutBlock.RoundUnitID == nil {
-			return gqlerror.Errorf("If round numeral is set, round unit ID must also be set")
+			return gqlerror.Errorf("If round numeral is set, round unit id must also be set")
 		}
 
 		finalWorkoutBlock, err = workoutdb.UpdateWorkoutBlock(ctx, c.db, workoutBlock)

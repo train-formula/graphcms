@@ -35,10 +35,7 @@ func (r *WorkoutCategoryResolver) TrainerOrganization(ctx context.Context, obj *
 		return nil, gqlerror.Errorf("Cannot locate organization from nil workout category")
 	}
 
-	g := organizationcall.GetOrganization{
-		ID: obj.TrainerOrganizationID,
-		DB: r.db,
-	}
+	g := organizationcall.NewGetOrganization(obj.TrainerOrganizationID, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
 		return g.Call(ctx)

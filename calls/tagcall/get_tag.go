@@ -43,7 +43,7 @@ func (g GetTag) Call(ctx context.Context) (*tag.Tag, error) {
 	}
 
 	if loaded == nil {
-		return nil, gqlerror.Errorf("Unknown tag ID")
+		return nil, gqlerror.Errorf("Unknown tag id")
 	}
 
 	return loaded, nil

@@ -37,7 +37,7 @@ func (c CreateWorkoutBlock) Validate(ctx context.Context) []validation.Validator
 		validation.CheckIntIsNilOrGT(c.request.DurationSeconds, 0, "If duration seconds is set it must be > 0"),
 		func() *gqlerror.Error {
 			if c.request.RoundNumeral != nil && c.request.RoundUnitID == nil {
-				return gqlerror.Errorf("If round numeral is set, round unit ID must also be set")
+				return gqlerror.Errorf("If round numeral is set, round unit id must also be set")
 			}
 
 			return nil

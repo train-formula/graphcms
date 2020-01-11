@@ -44,7 +44,7 @@ func (g GetPrescription) Call(ctx context.Context) (*workout.Prescription, error
 	}
 
 	if loaded == nil {
-		return nil, gqlerror.Errorf("Unknown prescription ID")
+		return nil, gqlerror.Errorf("Unknown prescription id")
 	}
 
 	return loaded, nil

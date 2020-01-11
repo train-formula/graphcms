@@ -9,7 +9,7 @@ import (
 	"github.com/train-formula/graphcms/models/tag"
 )
 
-// request struct to retrieve a tag by its tag + organization ID
+// request struct to retrieve a tag by its tag + organization id
 // Grouped together for easy batching
 type TagByTag struct {
 	Tag                   string
@@ -32,7 +32,7 @@ type TagsByObject struct {
 	ObjectType tag.TagType
 }
 
-// Retrieves an individual tag by its ID
+// Retrieves an individual tag by its id
 func GetTag(ctx context.Context, conn database.Conn, id uuid.UUID) (tag.Tag, error) {
 
 	var result tag.Tag
@@ -67,7 +67,7 @@ func GetTags(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*tag.T
 	return result, err
 }
 
-// Retrieves an individual tag by its tag and organization ID
+// Retrieves an individual tag by its tag and organization id
 func GetTagByTag(ctx context.Context, conn database.Conn, byTag TagByTag) (tag.Tag, error) {
 
 	var result tag.Tag

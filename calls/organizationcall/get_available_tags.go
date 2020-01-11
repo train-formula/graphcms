@@ -7,24 +7,30 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/cursor"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/validation"
 	"go.uber.org/zap"
 )
 
-type GetOrganizationAvailableTags struct {
-	TrainerOrganizationID uuid.UUID
-	First                 int
-	After                 cursor.Cursor
-	DB                    *pg.DB
-	Logger                *zap.Logger
+func NewGetOrganizationAvailableTags(trainerOrganizationID uuid.UUID, first int, after cursor.Cursor, logger *zap.Logger, db *pg.DB) *GetOrganizationAvailableTags {
+	return &GetOrganizationAvailableTags{
+		trainerOrganizationID: trainerOrganizationID,
+		first:                 first,
+		after:                 after,
+		db:                    db,
+		logger:                logger.Named("GetOrganizationAvailableTags"),
+	}
+
 }
 
-func (g GetOrganizationAvailableTags) logger() *zap.Logger {
-
-	return g.Logger.Named("GetOrganizationAvailableTags")
-
+type GetOrganizationAvailableTags struct {
+	trainerOrganizationID uuid.UUID
+	first                 int
+	after                 cursor.Cursor
+	db                    *pg.DB
+	logger                *zap.Logger
 }
 
 func (g GetOrganizationAvailableTags) genQuery(count bool) (string, []interface{}) {
@@ -40,12 +46,12 @@ func (g GetOrganizationAvailableTags) genQuery(count bool) (string, []interface{
 	query += ` FROM ` + database.TableName(tag.Tag{}) + `
 							WHERE trainer_organization_id = ?`
 
-	return query, []interface{}{g.TrainerOrganizationID}
+	return query, []interface{}{g.trainerOrganizationID}
 }
 
 func (g GetOrganizationAvailableTags) Validate(ctx context.Context) []validation.ValidatorFunc {
 	return []validation.ValidatorFunc{
-		validation.DefaultCheckPageSize(g.First),
+		validation.DefaultCheckPageSize(g.first),
 	}
 }
 
@@ -62,10 +68,12 @@ func (g GetOrganizationAvailableTags) Call(ctx context.Context) (*connections.Ta
 		return nil, err
 	}*/
 
-	_, err := g.DB.QueryContext(ctx, &tags, query, params...)
+	_, err := g.db.QueryContext(ctx, &tags, query, params...)
 
 	if err != nil {
-		g.logger().Error("Failed to organization tags", zap.Error(err))
+		g.logger.Error("Failed to load organization tags", zap.Error(err),
+			logging.UUID("trainerOrganizationID", g.trainerOrganizationID), zap.Int("first", g.first),
+			logging.Cursor("after", g.after))
 
 		return nil, err
 	}
@@ -76,9 +84,11 @@ func (g GetOrganizationAvailableTags) Call(ctx context.Context) (*connections.Ta
 
 			var count int
 
-			_, err := g.DB.QueryContext(ctx, pg.Scan(&count), query, params...)
+			_, err := g.db.QueryContext(ctx, pg.Scan(&count), query, params...)
 			if err != nil {
-				zap.L().Error("Failed to count", zap.Error(err))
+				g.logger.Error("Failed to count organization tags", zap.Error(err),
+					logging.UUID("trainerOrganizationID", g.trainerOrganizationID), zap.Int("first", g.first),
+					logging.Cursor("after", g.after))
 
 				return -1, err
 			}

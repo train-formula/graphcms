@@ -12,7 +12,7 @@ model:
   filename: generated/models.go
   package: generated
 resolver:
-  filename: resolver.go
+  filename: resolver/resolver.go
   type: Resolver
 autobind:
   - github.com/train-formula/graphcms/models
