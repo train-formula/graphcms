@@ -7,6 +7,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/tagdb"
+	"github.com/train-formula/graphcms/database/trainerdb"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/vektah/gqlparser/gqlerror"
 )
@@ -67,7 +68,7 @@ func OrganizationExists(ctx context.Context, conn database.Conn, organizationID 
 
 	return func() *gqlerror.Error {
 
-		_, err := workoutdb.GetUnit(ctx, conn, organizationID)
+		_, err := trainerdb.GetOrganization(ctx, conn, organizationID)
 
 		if err != nil {
 			if err == pg.ErrNoRows {
