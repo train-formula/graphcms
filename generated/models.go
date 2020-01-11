@@ -107,6 +107,26 @@ type EditWorkoutCategory struct {
 	Description *string   `json:"description"`
 }
 
+type ExerciseSearchRequest struct {
+	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
+	TagUUIDs              []uuid.UUID `json:"tagUUIDs"`
+}
+
+type ExerciseSearchResults struct {
+	TagFacet *TagFacet                       `json:"tag_facet"`
+	Results  *connections.ExerciseConnection `json:"results"`
+}
+
+type PrescriptionSearchRequest struct {
+	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
+	TagUUIDs              []uuid.UUID `json:"tagUUIDs"`
+}
+
+type PrescriptionSearchResults struct {
+	TagFacet *TagFacet                           `json:"tag_facet"`
+	Results  *connections.PrescriptionConnection `json:"results"`
+}
+
 type SetWorkoutBlockExercises struct {
 	WorkoutBlockID uuid.UUID              `json:"workoutBlockID"`
 	BlockExercises []*CreateBlockExercise `json:"blockExercises"`

@@ -21,3 +21,16 @@ type Exercise {
     tags: [Tag!]
 
 }
+
+# Connection for an exercise
+type ExerciseConnection {
+    totalCount: Int!
+    edges: [ExerciseEdge!]
+    pageInfo: PageInfo!
+}
+
+# Edge for an exercise connection
+type ExerciseEdge {
+    cursor: String!
+    node: Exercise!
+}

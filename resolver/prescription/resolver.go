@@ -4,7 +4,10 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/train-formula/graphcms/calls/tagcall"
 	"github.com/train-formula/graphcms/calls/workoutcall"
+	"github.com/train-formula/graphcms/database/tagdb"
+	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
@@ -45,4 +48,23 @@ func (r *PrescriptionResolver) Sets(ctx context.Context, obj *workout.Prescripti
 
 	return nil, nil
 
+}
+
+func (r *PrescriptionResolver) Tags(ctx context.Context, obj *workout.Prescription) ([]*tag.Tag, error) {
+	if obj == nil {
+		return nil, gqlerror.Errorf("Cannot locate tags from nil prescription")
+	}
+
+	request := tagdb.TagsByObject{
+		ObjectUUID: obj.ID,
+		ObjectType: tag.PrescriptionTagType,
+	}
+
+	g := tagcall.NewGetObjectTags(request, r.logger, r.db)
+
+	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
+		return g.Call(ctx)
+	}
+
+	return nil, nil
 }

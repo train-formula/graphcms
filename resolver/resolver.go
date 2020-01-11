@@ -57,6 +57,14 @@ func (r *Resolver) WorkoutBlock() generated.WorkoutBlockResolver {
 	return workoutblock.NewWorkoutBlockResolver(r.db, r.logger)
 }
 
+func (r *Resolver) Exercise() generated.ExerciseResolver {
+	return exercise.NewExerciseResolver(r.db, r.logger)
+}
+
+func (r *Resolver) BlockExercise() generated.BlockExerciseResolver {
+	return blockexercise.NewBlockExerciseResolver(r.db, r.logger)
+}
+
 func (r *Resolver) WorkoutProgramConnection() generated.WorkoutProgramConnectionResolver {
 	return &connections.WorkoutProgramConnection{}
 }
@@ -69,10 +77,10 @@ func (r *Resolver) WorkoutCategoryConnection() generated.WorkoutCategoryConnecti
 	return &connections.WorkoutCategoryConnection{}
 }
 
-func (r *Resolver) Exercise() generated.ExerciseResolver {
-	return exercise.NewExerciseResolver(r.db, r.logger)
+func (r *Resolver) ExerciseConnection() generated.ExerciseConnectionResolver {
+	return &connections.ExerciseConnection{}
 }
 
-func (r *Resolver) BlockExercise() generated.BlockExerciseResolver {
-	return blockexercise.NewBlockExerciseResolver(r.db, r.logger)
+func (r *Resolver) PrescriptionConnection() generated.PrescriptionConnectionResolver {
+	return &connections.PrescriptionConnection{}
 }

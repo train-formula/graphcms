@@ -15,6 +15,7 @@ const (
 	WorkoutCategoryTagType
 	ExerciseTagType
 	WorkoutTagType
+	PrescriptionTagType
 )
 
 func (t TagType) String() string {
@@ -28,6 +29,8 @@ func (t TagType) String() string {
 		return "EXERCISE"
 	case WorkoutTagType:
 		return "WORKOUT"
+	case PrescriptionTagType:
+		return "PRESCRIPTION"
 	}
 
 	return "UNKNOWN"
@@ -44,7 +47,8 @@ func ParseTagType(s string) TagType {
 		return ExerciseTagType
 	case WorkoutTagType.String():
 		return WorkoutTagType
-
+	case PrescriptionTagType.String():
+		return PrescriptionTagType
 	}
 
 	return UnknownTagType

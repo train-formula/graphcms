@@ -48,5 +48,19 @@ type Prescription {
 
     # Fetchers
     sets: [PrescriptionSet!]
+    tags: [Tag!]
 
+}
+
+# Connection for a prescription
+type PrescriptionConnection {
+    totalCount: Int!
+    edges: [PrescriptionEdge!]
+    pageInfo: PageInfo!
+}
+
+# Edge for a prescription connection
+type PrescriptionEdge {
+    cursor: String!
+    node: Prescription!
 }

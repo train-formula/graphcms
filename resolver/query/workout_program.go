@@ -25,13 +25,13 @@ func (r *QueryResolver) WorkoutProgram(ctx context.Context, id uuid.UUID) (*work
 
 func (r *QueryResolver) WorkoutProgramSearch(ctx context.Context, request generated.WorkoutProgramSearchRequest, first int, after *string) (*generated.WorkoutProgramSearchResults, error) {
 
-	cursor, err := cursor.DeserializeCursor(after)
+	curse, err := cursor.DeserializeCursor(after)
 	if err != nil {
 		r.logger.Error("Failed to deserialize cursor", zap.Error(err))
 		return nil, err
 	}
 
-	s := workoutcall.NewSearchWorkoutProgram(request, first, cursor, r.logger, r.db)
+	s := workoutcall.NewSearchWorkoutProgram(request, first, curse, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, s.Validate(ctx)...) {
 

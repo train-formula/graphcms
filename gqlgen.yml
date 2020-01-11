@@ -36,3 +36,6 @@ models:
   PrescriptionEdge:
     model:
       - github.com/train-formula/graphcms/models/workout.Prescription
+  ExerciseEdge:
+    model:
+      - github.com/train-formula/graphcms/models/workout.Exercise

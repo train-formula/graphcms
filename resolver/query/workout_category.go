@@ -25,13 +25,13 @@ func (r *QueryResolver) WorkoutCategory(ctx context.Context, id uuid.UUID) (*wor
 
 func (r *QueryResolver) WorkoutCategorySearch(ctx context.Context, request generated.WorkoutCategorySearchRequest, first int, after *string) (*generated.WorkoutCategorySearchResults, error) {
 
-	cursor, err := cursor.DeserializeCursor(after)
+	curse, err := cursor.DeserializeCursor(after)
 	if err != nil {
 		r.logger.Error("Failed to deserialize cursor", zap.Error(err))
 		return nil, err
 	}
 
-	s := workoutcall.NewSearchWorkoutCategory(request, first, cursor, r.logger, r.db)
+	s := workoutcall.NewSearchWorkoutCategory(request, first, curse, r.logger, r.db)
 
 	if validation.ValidationChain(ctx, s.Validate(ctx)...) {
 
