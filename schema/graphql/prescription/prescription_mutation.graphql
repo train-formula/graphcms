@@ -4,6 +4,8 @@ extend type Mutation {
     createPrescription(request: CreatePrescription!): Prescription
     createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
 
+    editPrescription(request: EditPrescription!): Prescription
+
 }
 
 
@@ -36,6 +38,20 @@ input CreatePrescription {
 }
 
 ###############################
+###### EDIT PRESCRIPTION ######
+###############################
+input EditPrescription {
+
+    id: ID!
+
+    name: String
+    prescriptionCategory: String
+
+    durationSeconds: NullableIntEditor
+
+}
+
+###############################
 ### CREATE PRESCRIPTION SET ###
 ###############################
 input CreatePrescriptionSet {
@@ -44,3 +60,4 @@ input CreatePrescriptionSet {
 
     data: CreatePrescriptionSetData!
 }
+
