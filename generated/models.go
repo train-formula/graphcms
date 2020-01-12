@@ -35,15 +35,20 @@ type CreateExercise struct {
 }
 
 type CreatePrescription struct {
-	TrainerOrganizationID uuid.UUID                                `json:"trainerOrganizationID"`
-	Name                  string                                   `json:"name"`
-	PrescriptionCategory  string                                   `json:"prescriptionCategory"`
-	DurationSeconds       *int                                     `json:"durationSeconds"`
-	Sets                  []*CreatePrescriptionSetWithPrescription `json:"sets"`
-	Tags                  []uuid.UUID                              `json:"tags"`
+	TrainerOrganizationID uuid.UUID                    `json:"trainerOrganizationID"`
+	Name                  string                       `json:"name"`
+	PrescriptionCategory  string                       `json:"prescriptionCategory"`
+	DurationSeconds       *int                         `json:"durationSeconds"`
+	Sets                  []*CreatePrescriptionSetData `json:"sets"`
+	Tags                  []uuid.UUID                  `json:"tags"`
 }
 
-type CreatePrescriptionSetWithPrescription struct {
+type CreatePrescriptionSet struct {
+	PrescriptionID uuid.UUID                  `json:"prescriptionID"`
+	Data           *CreatePrescriptionSetData `json:"data"`
+}
+
+type CreatePrescriptionSetData struct {
 	SetNumber          int             `json:"setNumber"`
 	PrimaryParameter   *AttachUnitData `json:"primaryParameter"`
 	SecondaryParameter *AttachUnitData `json:"secondaryParameter"`

@@ -105,6 +105,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateExercise              func(childComplexity int, request CreateExercise) int
 		CreatePrescription          func(childComplexity int, request CreatePrescription) int
+		CreatePrescriptionSet       func(childComplexity int, request CreatePrescriptionSet) int
 		CreateTag                   func(childComplexity int, request CreateTag) int
 		CreateWorkout               func(childComplexity int, request CreateWorkout) int
 		CreateWorkoutBlock          func(childComplexity int, request CreateWorkoutBlock) int
@@ -165,15 +166,14 @@ type ComplexityRoot struct {
 	}
 
 	PrescriptionSet struct {
-		CreatedAt             func(childComplexity int) int
-		ID                    func(childComplexity int) int
-		Order                 func(childComplexity int) int
-		PrescriptionID        func(childComplexity int) int
-		PrimaryParameter      func(childComplexity int) int
-		SecondaryParameter    func(childComplexity int) int
-		SetNumber             func(childComplexity int) int
-		TrainerOrganizationID func(childComplexity int) int
-		UpdatedAt             func(childComplexity int) int
+		CreatedAt          func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		Prescription       func(childComplexity int) int
+		PrescriptionID     func(childComplexity int) int
+		PrimaryParameter   func(childComplexity int) int
+		SecondaryParameter func(childComplexity int) int
+		SetNumber          func(childComplexity int) int
+		UpdatedAt          func(childComplexity int) int
 	}
 
 	Query struct {
@@ -355,6 +355,7 @@ type MutationResolver interface {
 	EditExercise(ctx context.Context, request EditExercise) (*workout.Exercise, error)
 	DeleteExercise(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
 	CreatePrescription(ctx context.Context, request CreatePrescription) (*workout.Prescription, error)
+	CreatePrescriptionSet(ctx context.Context, request CreatePrescriptionSet) (*workout.PrescriptionSet, error)
 	CreateTag(ctx context.Context, request CreateTag) (*tag.Tag, error)
 	CreateWorkout(ctx context.Context, request CreateWorkout) (*workout.Workout, error)
 	EditWorkout(ctx context.Context, request EditWorkout) (*workout.Workout, error)
@@ -380,6 +381,7 @@ type PrescriptionConnectionResolver interface {
 type PrescriptionSetResolver interface {
 	PrimaryParameter(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error)
 	SecondaryParameter(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error)
+	Prescription(ctx context.Context, obj *workout.PrescriptionSet) (*workout.Prescription, error)
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (string, error)
@@ -644,6 +646,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreatePrescription(childComplexity, args["request"].(CreatePrescription)), true
+
+	case "Mutation.createPrescriptionSet":
+		if e.complexity.Mutation.CreatePrescriptionSet == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createPrescriptionSet_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreatePrescriptionSet(childComplexity, args["request"].(CreatePrescriptionSet)), true
 
 	case "Mutation.createTag":
 		if e.complexity.Mutation.CreateTag == nil {
@@ -1002,12 +1016,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PrescriptionSet.ID(childComplexity), true
 
-	case "PrescriptionSet.order":
-		if e.complexity.PrescriptionSet.Order == nil {
+	case "PrescriptionSet.prescription":
+		if e.complexity.PrescriptionSet.Prescription == nil {
 			break
 		}
 
-		return e.complexity.PrescriptionSet.Order(childComplexity), true
+		return e.complexity.PrescriptionSet.Prescription(childComplexity), true
 
 	case "PrescriptionSet.prescriptionID":
 		if e.complexity.PrescriptionSet.PrescriptionID == nil {
@@ -1036,13 +1050,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PrescriptionSet.SetNumber(childComplexity), true
-
-	case "PrescriptionSet.trainerOrganizationID":
-		if e.complexity.PrescriptionSet.TrainerOrganizationID == nil {
-			break
-		}
-
-		return e.complexity.PrescriptionSet.TrainerOrganizationID(childComplexity), true
 
 	case "PrescriptionSet.updatedAt":
 		if e.complexity.PrescriptionSet.UpdatedAt == nil {
@@ -2033,7 +2040,6 @@ type PrescriptionSet {
     createdAt: Time!
     updatedAt: Time!
 
-    trainerOrganizationID: ID!
     prescriptionID: ID!
 
     setNumber: Int!
@@ -2041,7 +2047,8 @@ type PrescriptionSet {
     primaryParameter: UnitData!
     secondaryParameter: UnitData
 
-    order: Int!
+    # Fetchers
+    prescription: Prescription
 }
 
 type Prescription {
@@ -2080,8 +2087,20 @@ type PrescriptionEdge {
 extend type Mutation {
 
     createPrescription(request: CreatePrescription!): Prescription
+    createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
+
 }
 
+
+# Data used across createPrescription and createPrescriptionSet to create a PrescriptionSet
+input CreatePrescriptionSetData {
+
+    setNumber: Int!
+
+    primaryParameter: AttachUnitData!
+
+    secondaryParameter: AttachUnitData
+}
 
 ###############################
 ##### CREATE PRESCRIPTION #####
@@ -2095,21 +2114,21 @@ input CreatePrescription {
 
     durationSeconds: Int
 
-    sets: [CreatePrescriptionSetWithPrescription!]
+    # Optional, sets can be added later with createPrescriptionSet
+    sets: [CreatePrescriptionSetData!]
 
     tags: [ID!]
 }
 
-# Create a PrescriptionSet inside a CreatePrescription request
-input CreatePrescriptionSetWithPrescription {
+###############################
+### CREATE PRESCRIPTION SET ###
+###############################
+input CreatePrescriptionSet {
 
-    setNumber: Int!
+    prescriptionID: ID!
 
-    primaryParameter: AttachUnitData!
-
-    secondaryParameter: AttachUnitData
-}
-`},
+    data: CreatePrescriptionSetData!
+}`},
 	&ast.Source{Name: "schema/graphql/prescription/prescription_search.graphql", Input: `extend type Query {
 
     prescriptionSearch(request: PrescriptionSearchRequest!, first: Int!, after: String): PrescriptionSearchResults
@@ -2667,6 +2686,20 @@ func (ec *executionContext) field_Mutation_createExercise_args(ctx context.Conte
 	var arg0 CreateExercise
 	if tmp, ok := rawArgs["request"]; ok {
 		arg0, err = ec.unmarshalNCreateExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateExercise(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createPrescriptionSet_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 CreatePrescriptionSet
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNCreatePrescriptionSet2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSet(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4312,6 +4345,47 @@ func (ec *executionContext) _Mutation_createPrescription(ctx context.Context, fi
 	return ec.marshalOPrescription2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_createPrescriptionSet(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createPrescriptionSet_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreatePrescriptionSet(rctx, args["request"].(CreatePrescriptionSet))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.PrescriptionSet)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPrescriptionSet2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSet(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5785,43 +5859,6 @@ func (ec *executionContext) _PrescriptionSet_updatedAt(ctx context.Context, fiel
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PrescriptionSet_trainerOrganizationID(ctx context.Context, field graphql.CollectedField, obj *workout.PrescriptionSet) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "PrescriptionSet",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TrainerOrganizationID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(uuid.UUID)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _PrescriptionSet_prescriptionID(ctx context.Context, field graphql.CollectedField, obj *workout.PrescriptionSet) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5967,7 +6004,7 @@ func (ec *executionContext) _PrescriptionSet_secondaryParameter(ctx context.Cont
 	return ec.marshalOUnitData2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐUnitData(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PrescriptionSet_order(ctx context.Context, field graphql.CollectedField, obj *workout.PrescriptionSet) (ret graphql.Marshaler) {
+func (ec *executionContext) _PrescriptionSet_prescription(ctx context.Context, field graphql.CollectedField, obj *workout.PrescriptionSet) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5980,28 +6017,25 @@ func (ec *executionContext) _PrescriptionSet_order(ctx context.Context, field gr
 		Object:   "PrescriptionSet",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Order, nil
+		return ec.resolvers.PrescriptionSet().Prescription(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*workout.Prescription)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOPrescription2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_health(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -11151,7 +11185,7 @@ func (ec *executionContext) unmarshalInputCreatePrescription(ctx context.Context
 			}
 		case "sets":
 			var err error
-			it.Sets, err = ec.unmarshalOCreatePrescriptionSetWithPrescription2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetWithPrescriptionᚄ(ctx, v)
+			it.Sets, err = ec.unmarshalOCreatePrescriptionSetData2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetDataᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -11167,8 +11201,32 @@ func (ec *executionContext) unmarshalInputCreatePrescription(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCreatePrescriptionSetWithPrescription(ctx context.Context, obj interface{}) (CreatePrescriptionSetWithPrescription, error) {
-	var it CreatePrescriptionSetWithPrescription
+func (ec *executionContext) unmarshalInputCreatePrescriptionSet(ctx context.Context, obj interface{}) (CreatePrescriptionSet, error) {
+	var it CreatePrescriptionSet
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "prescriptionID":
+			var err error
+			it.PrescriptionID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "data":
+			var err error
+			it.Data, err = ec.unmarshalNCreatePrescriptionSetData2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetData(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreatePrescriptionSetData(ctx context.Context, obj interface{}) (CreatePrescriptionSetData, error) {
+	var it CreatePrescriptionSetData
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -12060,6 +12118,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteExercise(ctx, field)
 		case "createPrescription":
 			out.Values[i] = ec._Mutation_createPrescription(ctx, field)
+		case "createPrescriptionSet":
+			out.Values[i] = ec._Mutation_createPrescriptionSet(ctx, field)
 		case "createTag":
 			out.Values[i] = ec._Mutation_createTag(ctx, field)
 		case "createWorkout":
@@ -12391,11 +12451,6 @@ func (ec *executionContext) _PrescriptionSet(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "trainerOrganizationID":
-			out.Values[i] = ec._PrescriptionSet_trainerOrganizationID(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "prescriptionID":
 			out.Values[i] = ec._PrescriptionSet_prescriptionID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -12431,11 +12486,17 @@ func (ec *executionContext) _PrescriptionSet(ctx context.Context, sel ast.Select
 				res = ec._PrescriptionSet_secondaryParameter(ctx, field, obj)
 				return res
 			})
-		case "order":
-			out.Values[i] = ec._PrescriptionSet_order(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+		case "prescription":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PrescriptionSet_prescription(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13876,15 +13937,19 @@ func (ec *executionContext) unmarshalNCreatePrescription2githubᚗcomᚋtrainᚑ
 	return ec.unmarshalInputCreatePrescription(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCreatePrescriptionSetWithPrescription2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetWithPrescription(ctx context.Context, v interface{}) (CreatePrescriptionSetWithPrescription, error) {
-	return ec.unmarshalInputCreatePrescriptionSetWithPrescription(ctx, v)
+func (ec *executionContext) unmarshalNCreatePrescriptionSet2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSet(ctx context.Context, v interface{}) (CreatePrescriptionSet, error) {
+	return ec.unmarshalInputCreatePrescriptionSet(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCreatePrescriptionSetWithPrescription2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetWithPrescription(ctx context.Context, v interface{}) (*CreatePrescriptionSetWithPrescription, error) {
+func (ec *executionContext) unmarshalNCreatePrescriptionSetData2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetData(ctx context.Context, v interface{}) (CreatePrescriptionSetData, error) {
+	return ec.unmarshalInputCreatePrescriptionSetData(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNCreatePrescriptionSetData2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetData(ctx context.Context, v interface{}) (*CreatePrescriptionSetData, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalNCreatePrescriptionSetWithPrescription2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetWithPrescription(ctx, v)
+	res, err := ec.unmarshalNCreatePrescriptionSetData2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetData(ctx, v)
 	return &res, err
 }
 
@@ -14633,7 +14698,7 @@ func (ec *executionContext) unmarshalOCreateBlockExercise2ᚕᚖgithubᚗcomᚋt
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOCreatePrescriptionSetWithPrescription2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetWithPrescriptionᚄ(ctx context.Context, v interface{}) ([]*CreatePrescriptionSetWithPrescription, error) {
+func (ec *executionContext) unmarshalOCreatePrescriptionSetData2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetDataᚄ(ctx context.Context, v interface{}) ([]*CreatePrescriptionSetData, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -14643,9 +14708,9 @@ func (ec *executionContext) unmarshalOCreatePrescriptionSetWithPrescription2ᚕ�
 		}
 	}
 	var err error
-	res := make([]*CreatePrescriptionSetWithPrescription, len(vSlice))
+	res := make([]*CreatePrescriptionSetData, len(vSlice))
 	for i := range vSlice {
-		res[i], err = ec.unmarshalNCreatePrescriptionSetWithPrescription2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetWithPrescription(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNCreatePrescriptionSetData2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescriptionSetData(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -14902,6 +14967,10 @@ func (ec *executionContext) marshalOPrescriptionSearchResults2ᚖgithubᚗcomᚋ
 	return ec._PrescriptionSearchResults(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOPrescriptionSet2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSet(ctx context.Context, sel ast.SelectionSet, v workout.PrescriptionSet) graphql.Marshaler {
+	return ec._PrescriptionSet(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalOPrescriptionSet2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSetᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.PrescriptionSet) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -14940,6 +15009,13 @@ func (ec *executionContext) marshalOPrescriptionSet2ᚕᚖgithubᚗcomᚋtrain�
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalOPrescriptionSet2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSet(ctx context.Context, sel ast.SelectionSet, v *workout.PrescriptionSet) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PrescriptionSet(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

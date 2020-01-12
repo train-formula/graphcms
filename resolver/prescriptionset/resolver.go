@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
@@ -20,6 +22,20 @@ func NewPrescriptionSetResolver(db *pg.DB, logger *zap.Logger) *PrescriptionSetR
 		db:     db,
 		logger: logger.Named("PrescriptionSetResolver"),
 	}
+}
+
+func (r *PrescriptionSetResolver) Prescription(ctx context.Context, obj *workout.PrescriptionSet) (*workout.Prescription, error) {
+	if obj == nil {
+		return nil, nil
+	}
+
+	g := workoutcall.NewGetPrescription(obj.PrescriptionID, r.logger, r.db)
+
+	if validation.ValidationChain(ctx, g.Validate(ctx)...) {
+		return g.Call(ctx)
+	}
+
+	return nil, nil
 }
 
 func (r *PrescriptionSetResolver) PrimaryParameter(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error) {

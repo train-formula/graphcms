@@ -40,7 +40,7 @@ func (c CreatePrescription) Validate(ctx context.Context) []validation.Validator
 	for setIdx, set := range c.request.Sets {
 
 		if set != nil {
-			funcs = append(funcs, validation.CheckCreatePrescriptionSetWithPrescription(ctx, c.db, *set, &setIdx)...)
+			funcs = append(funcs, validation.CheckCreatePrescriptionSetData(ctx, c.db, *set, &setIdx)...)
 
 		}
 
@@ -100,7 +100,6 @@ func (c CreatePrescription) Call(ctx context.Context) (*workout.Prescription, er
 
 			newPrescriptionSet := workout.PrescriptionSet{
 				ID:                        newSetUuid,
-				TrainerOrganizationID:     finalPrescription.TrainerOrganizationID,
 				PrescriptionID:            finalPrescription.ID,
 				SetNumber:                 set.SetNumber,
 				PrimaryParameterNumeral:   set.PrimaryParameter.Numeral,

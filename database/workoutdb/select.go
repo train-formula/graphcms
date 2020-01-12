@@ -102,6 +102,15 @@ func GetWorkoutCategories(ctx context.Context, conn database.Conn, ids []uuid.UU
 	return result, err
 }
 
+// Retrieve a prescription by it's id
+func GetPrescription(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Prescription, error) {
+	var result workout.Prescription
+
+	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+
+	return result, err
+}
+
 // Retrieves individual prescription's by their IDs
 func GetPrescriptions(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Prescription, error) {
 
@@ -409,7 +418,7 @@ func GetPrescriptionSetsByPrescription(ctx context.Context, conn database.Conn, 
 		params = append(params, id)
 	}
 
-	query = strings.TrimSuffix(query, " OR ") + " ORDER BY order ASC"
+	query = strings.TrimSuffix(query, " OR ") + " ORDER BY set_number ASC"
 
 	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
 

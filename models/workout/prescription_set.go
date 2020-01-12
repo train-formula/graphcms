@@ -9,12 +9,11 @@ import (
 )
 
 type PrescriptionSet struct {
-	tableName             struct{}  `sql:"workout.prescription_set"`
-	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"createdAt"`
-	UpdatedAt             time.Time `json:"updatedAt"`
-	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
-	PrescriptionID        uuid.UUID `json:"prescriptionID"`
+	tableName      struct{}  `sql:"workout.prescription_set"`
+	ID             uuid.UUID `json:"id"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+	PrescriptionID uuid.UUID `json:"prescriptionID"`
 
 	SetNumber int `json:"setNumber"`
 
@@ -25,8 +24,6 @@ type PrescriptionSet struct {
 	SecondaryParameterNumeral *int
 	SecondaryParameterText    *string
 	SecondaryParameterUnitID  *uuid.UUID
-
-	Order int `json:"order"`
 }
 
 func (p PrescriptionSet) TableName() string {

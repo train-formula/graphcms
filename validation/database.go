@@ -70,7 +70,7 @@ func UnitIsNilOrExists(ctx context.Context, conn database.Conn, unitID *uuid.UUI
 
 }
 
-// Validates that a organization id is either nil, or exists in the database
+// Validates that a organization id exists in the database
 func OrganizationExists(ctx context.Context, conn database.Conn, organizationID uuid.UUID) ValidatorFunc {
 
 	return func() *gqlerror.Error {
@@ -80,6 +80,25 @@ func OrganizationExists(ctx context.Context, conn database.Conn, organizationID 
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Organization id %s does not exist", organizationID)
+			}
+			return gqlerror.Errorf(err.Error())
+		}
+
+		return nil
+	}
+
+}
+
+// Validates that a prescription id  exists in the database
+func PrescriptionExists(ctx context.Context, conn database.Conn, prescriptionID uuid.UUID) ValidatorFunc {
+
+	return func() *gqlerror.Error {
+
+		_, err := workoutdb.GetPrescription(ctx, conn, prescriptionID)
+
+		if err != nil {
+			if err == pg.ErrNoRows {
+				return gqlerror.Errorf("Prescription id %s does not exist", prescriptionID)
 			}
 			return gqlerror.Errorf(err.Error())
 		}

@@ -2,8 +2,20 @@
 extend type Mutation {
 
     createPrescription(request: CreatePrescription!): Prescription
+    createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
+
 }
 
+
+# Data used across createPrescription and createPrescriptionSet to create a PrescriptionSet
+input CreatePrescriptionSetData {
+
+    setNumber: Int!
+
+    primaryParameter: AttachUnitData!
+
+    secondaryParameter: AttachUnitData
+}
 
 ###############################
 ##### CREATE PRESCRIPTION #####
@@ -17,17 +29,18 @@ input CreatePrescription {
 
     durationSeconds: Int
 
-    sets: [CreatePrescriptionSetWithPrescription!]
+    # Optional, sets can be added later with createPrescriptionSet
+    sets: [CreatePrescriptionSetData!]
 
     tags: [ID!]
 }
 
-# Create a PrescriptionSet inside a CreatePrescription request
-input CreatePrescriptionSetWithPrescription {
+###############################
+### CREATE PRESCRIPTION SET ###
+###############################
+input CreatePrescriptionSet {
 
-    setNumber: Int!
+    prescriptionID: ID!
 
-    primaryParameter: AttachUnitData!
-
-    secondaryParameter: AttachUnitData
+    data: CreatePrescriptionSetData!
 }
