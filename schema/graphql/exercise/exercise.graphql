@@ -25,7 +25,7 @@ type Exercise {
 # Connection for an exercise
 type ExerciseConnection {
     totalCount: Int!
-    edges: [ExerciseEdge!]
+    edges: [ExerciseEdge!]!
     pageInfo: PageInfo!
 }
 

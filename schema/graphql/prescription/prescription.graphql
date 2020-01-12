@@ -45,7 +45,7 @@ type Prescription {
 # Connection for a prescription
 type PrescriptionConnection {
     totalCount: Int!
-    edges: [PrescriptionEdge!]
+    edges: [PrescriptionEdge!]!
     pageInfo: PageInfo!
 }
 

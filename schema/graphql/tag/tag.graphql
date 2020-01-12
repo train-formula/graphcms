@@ -26,7 +26,7 @@ type Tag {
 
 type TagConnection {
     totalCount: Int!
-    edges: [TagEdge!]
+    edges: [TagEdge!]!
     pageInfo: PageInfo!
 }
 

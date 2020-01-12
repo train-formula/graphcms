@@ -46,7 +46,7 @@ type WorkoutProgram {
 # Connection for a workout program
 type WorkoutProgramConnection {
     totalCount: Int!
-    edges: [WorkoutProgramEdge!]
+    edges: [WorkoutProgramEdge!]!
     pageInfo: PageInfo!
 }
 

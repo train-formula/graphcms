@@ -27,7 +27,7 @@ type WorkoutCategory {
 
 type WorkoutCategoryConnection {
     totalCount: Int!
-    edges: [WorkoutCategoryEdge!]
+    edges: [WorkoutCategoryEdge!]!
     pageInfo: PageInfo!
 }
 

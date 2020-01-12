@@ -1943,7 +1943,7 @@ type Exercise {
 # Connection for an exercise
 type ExerciseConnection {
     totalCount: Int!
-    edges: [ExerciseEdge!]
+    edges: [ExerciseEdge!]!
     pageInfo: PageInfo!
 }
 
@@ -2074,7 +2074,7 @@ type Prescription {
 # Connection for a prescription
 type PrescriptionConnection {
     totalCount: Int!
-    edges: [PrescriptionEdge!]
+    edges: [PrescriptionEdge!]!
     pageInfo: PageInfo!
 }
 
@@ -2088,6 +2088,8 @@ extend type Mutation {
 
     createPrescription(request: CreatePrescription!): Prescription
     createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
+
+    #editPrescription(request: EditPrescription!): Prescription
 
 }
 
@@ -2121,6 +2123,20 @@ input CreatePrescription {
 }
 
 ###############################
+###### EDIT PRESCRIPTION ######
+###############################
+input EditPrescription {
+
+    id: ID!
+
+    name: String
+    prescriptionCategory: String
+
+    durationSeconds: NullableIntEditor
+
+}
+
+###############################
 ### CREATE PRESCRIPTION SET ###
 ###############################
 input CreatePrescriptionSet {
@@ -2128,7 +2144,9 @@ input CreatePrescriptionSet {
     prescriptionID: ID!
 
     data: CreatePrescriptionSetData!
-}`},
+}
+
+`},
 	&ast.Source{Name: "schema/graphql/prescription/prescription_search.graphql", Input: `extend type Query {
 
     prescriptionSearch(request: PrescriptionSearchRequest!, first: Int!, after: String): PrescriptionSearchResults
@@ -2221,7 +2239,7 @@ type Tag {
 
 type TagConnection {
     totalCount: Int!
-    edges: [TagEdge!]
+    edges: [TagEdge!]!
     pageInfo: PageInfo!
 }
 
@@ -2311,7 +2329,7 @@ type Workout {
 
 type WorkoutConnection {
     totalCount: Int!
-    edges: [WorkoutEdge!]
+    edges: [WorkoutEdge!]!
     pageInfo: PageInfo!
 }
 
@@ -2505,7 +2523,7 @@ type WorkoutCategory {
 
 type WorkoutCategoryConnection {
     totalCount: Int!
-    edges: [WorkoutCategoryEdge!]
+    edges: [WorkoutCategoryEdge!]!
     pageInfo: PageInfo!
 }
 
@@ -2611,7 +2629,7 @@ type WorkoutProgram {
 # Connection for a workout program
 type WorkoutProgramConnection {
     totalCount: Int!
-    edges: [WorkoutProgramEdge!]
+    edges: [WorkoutProgramEdge!]!
     pageInfo: PageInfo!
 }
 
@@ -3954,12 +3972,15 @@ func (ec *executionContext) _ExerciseConnection_edges(ctx context.Context, field
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*workout.Exercise)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOExerciseEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExerciseᚄ(ctx, field.Selections, res)
+	return ec.marshalNExerciseEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExerciseᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ExerciseConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.ExerciseConnection) (ret graphql.Marshaler) {
@@ -5558,12 +5579,15 @@ func (ec *executionContext) _PrescriptionConnection_edges(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*workout.Prescription)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOPrescriptionEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionᚄ(ctx, field.Selections, res)
+	return ec.marshalNPrescriptionEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PrescriptionConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.PrescriptionConnection) (ret graphql.Marshaler) {
@@ -7006,12 +7030,15 @@ func (ec *executionContext) _TagConnection_edges(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*tag.Tag)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOTagEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTagEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TagConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.TagConnection) (ret graphql.Marshaler) {
@@ -8845,12 +8872,15 @@ func (ec *executionContext) _WorkoutCategoryConnection_edges(ctx context.Context
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*workout.WorkoutCategory)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategoryᚄ(ctx, field.Selections, res)
+	return ec.marshalNWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategoryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutCategoryConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.WorkoutCategoryConnection) (ret graphql.Marshaler) {
@@ -9098,12 +9128,15 @@ func (ec *executionContext) _WorkoutConnection_edges(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*WorkoutEdge)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOWorkoutEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNWorkoutEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *WorkoutConnection) (ret graphql.Marshaler) {
@@ -9716,12 +9749,15 @@ func (ec *executionContext) _WorkoutProgramConnection_edges(ctx context.Context,
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*workout.WorkoutProgram)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgramᚄ(ctx, field.Selections, res)
+	return ec.marshalNWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgramᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WorkoutProgramConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.WorkoutProgramConnection) (ret graphql.Marshaler) {
@@ -11495,6 +11531,42 @@ func (ec *executionContext) unmarshalInputEditExercise(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditPrescription(ctx context.Context, obj interface{}) (EditPrescription, error) {
+	var it EditPrescription
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "prescriptionCategory":
+			var err error
+			it.PrescriptionCategory, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "durationSeconds":
+			var err error
+			it.DurationSeconds, err = ec.unmarshalONullableIntEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditWorkout(ctx context.Context, obj interface{}) (EditWorkout, error) {
 	var it EditWorkout
 	var asMap = obj.(map[string]interface{})
@@ -12004,6 +12076,9 @@ func (ec *executionContext) _ExerciseConnection(ctx context.Context, sel ast.Sel
 			})
 		case "edges":
 			out.Values[i] = ec._ExerciseConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "pageInfo":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -12339,6 +12414,9 @@ func (ec *executionContext) _PrescriptionConnection(ctx context.Context, sel ast
 			})
 		case "edges":
 			out.Values[i] = ec._PrescriptionConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "pageInfo":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -12791,6 +12869,9 @@ func (ec *executionContext) _TagConnection(ctx context.Context, sel ast.Selectio
 			})
 		case "edges":
 			out.Values[i] = ec._TagConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "pageInfo":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -13273,6 +13354,9 @@ func (ec *executionContext) _WorkoutCategoryConnection(ctx context.Context, sel 
 			})
 		case "edges":
 			out.Values[i] = ec._WorkoutCategoryConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "pageInfo":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -13377,6 +13461,9 @@ func (ec *executionContext) _WorkoutConnection(ctx context.Context, sel ast.Sele
 			}
 		case "edges":
 			out.Values[i] = ec._WorkoutConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "pageInfo":
 			out.Values[i] = ec._WorkoutConnection_pageInfo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13546,6 +13633,9 @@ func (ec *executionContext) _WorkoutProgramConnection(ctx context.Context, sel a
 			})
 		case "edges":
 			out.Values[i] = ec._WorkoutProgramConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "pageInfo":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -14021,6 +14111,43 @@ func (ec *executionContext) marshalNExerciseEdge2githubᚗcomᚋtrainᚑformula�
 	return ec._ExerciseEdge(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNExerciseEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExerciseᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.Exercise) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNExerciseEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) marshalNExerciseEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx context.Context, sel ast.SelectionSet, v *workout.Exercise) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
@@ -14109,6 +14236,43 @@ func (ec *executionContext) marshalNPrescriptionEdge2githubᚗcomᚋtrainᚑform
 	return ec._PrescriptionEdge(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNPrescriptionEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.Prescription) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPrescriptionEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) marshalNPrescriptionEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx context.Context, sel ast.SelectionSet, v *workout.Prescription) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
@@ -14175,6 +14339,43 @@ func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋtrainᚑformulaᚋgrap
 
 func (ec *executionContext) marshalNTagEdge2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx context.Context, sel ast.SelectionSet, v tag.Tag) graphql.Marshaler {
 	return ec._TagEdge(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTagEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*tag.Tag) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTagEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalNTagEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx context.Context, sel ast.SelectionSet, v *tag.Tag) graphql.Marshaler {
@@ -14289,6 +14490,43 @@ func (ec *executionContext) marshalNWorkoutCategoryEdge2githubᚗcomᚋtrainᚑf
 	return ec._WorkoutCategoryEdge(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutCategory) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWorkoutCategoryEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategory(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) marshalNWorkoutCategoryEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategory(ctx context.Context, sel ast.SelectionSet, v *workout.WorkoutCategory) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
@@ -14319,6 +14557,43 @@ func (ec *executionContext) marshalNWorkoutConnection2ᚖgithubᚗcomᚋtrainᚑ
 
 func (ec *executionContext) marshalNWorkoutEdge2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdge(ctx context.Context, sel ast.SelectionSet, v WorkoutEdge) graphql.Marshaler {
 	return ec._WorkoutEdge(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWorkoutEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*WorkoutEdge) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWorkoutEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalNWorkoutEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdge(ctx context.Context, sel ast.SelectionSet, v *WorkoutEdge) graphql.Marshaler {
@@ -14361,6 +14636,43 @@ func (ec *executionContext) marshalNWorkoutProgramConnection2ᚖgithubᚗcomᚋt
 
 func (ec *executionContext) marshalNWorkoutProgramEdge2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v workout.WorkoutProgram) graphql.Marshaler {
 	return ec._WorkoutProgramEdge(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgramᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutProgram) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWorkoutProgramEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalNWorkoutProgramEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v *workout.WorkoutProgram) graphql.Marshaler {
@@ -14729,46 +15041,6 @@ func (ec *executionContext) marshalOExercise2ᚖgithubᚗcomᚋtrainᚑformula�
 	return ec._Exercise(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOExerciseEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExerciseᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.Exercise) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNExerciseEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
 func (ec *executionContext) marshalOExerciseSearchResults2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐExerciseSearchResults(ctx context.Context, sel ast.SelectionSet, v ExerciseSearchResults) graphql.Marshaler {
 	return ec._ExerciseSearchResults(ctx, sel, &v)
 }
@@ -14916,46 +15188,6 @@ func (ec *executionContext) marshalOPrescription2ᚖgithubᚗcomᚋtrainᚑformu
 	return ec._Prescription(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPrescriptionEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.Prescription) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPrescriptionEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
 func (ec *executionContext) marshalOPrescriptionSearchResults2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐPrescriptionSearchResults(ctx context.Context, sel ast.SelectionSet, v PrescriptionSearchResults) graphql.Marshaler {
 	return ec._PrescriptionSearchResults(ctx, sel, &v)
 }
@@ -15101,46 +15333,6 @@ func (ec *executionContext) marshalOTagConnection2ᚖgithubᚗcomᚋtrainᚑform
 		return graphql.Null
 	}
 	return ec._TagConnection(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOTagEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*tag.Tag) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNTagEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
 }
 
 func (ec *executionContext) marshalOTagFacet2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐTagFacet(ctx context.Context, sel ast.SelectionSet, v TagFacet) graphql.Marshaler {
@@ -15352,46 +15544,6 @@ func (ec *executionContext) marshalOWorkoutCategory2ᚖgithubᚗcomᚋtrainᚑfo
 	return ec._WorkoutCategory(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOWorkoutCategoryEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutCategory) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNWorkoutCategoryEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutCategory(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
 func (ec *executionContext) marshalOWorkoutCategorySearchResults2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutCategorySearchResults(ctx context.Context, sel ast.SelectionSet, v WorkoutCategorySearchResults) graphql.Marshaler {
 	return ec._WorkoutCategorySearchResults(ctx, sel, &v)
 }
@@ -15403,46 +15555,6 @@ func (ec *executionContext) marshalOWorkoutCategorySearchResults2ᚖgithubᚗcom
 	return ec._WorkoutCategorySearchResults(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOWorkoutEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*WorkoutEdge) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNWorkoutEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutEdge(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
 func (ec *executionContext) marshalOWorkoutProgram2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx context.Context, sel ast.SelectionSet, v workout.WorkoutProgram) graphql.Marshaler {
 	return ec._WorkoutProgram(ctx, sel, &v)
 }
@@ -15452,46 +15564,6 @@ func (ec *executionContext) marshalOWorkoutProgram2ᚖgithubᚗcomᚋtrainᚑfor
 		return graphql.Null
 	}
 	return ec._WorkoutProgram(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOWorkoutProgramEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgramᚄ(ctx context.Context, sel ast.SelectionSet, v []*workout.WorkoutProgram) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNWorkoutProgramEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐWorkoutProgram(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
 }
 
 func (ec *executionContext) marshalOWorkoutProgramSearchResults2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐWorkoutProgramSearchResults(ctx context.Context, sel ast.SelectionSet, v WorkoutProgramSearchResults) graphql.Marshaler {

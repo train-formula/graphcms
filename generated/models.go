@@ -100,6 +100,13 @@ type EditExercise struct {
 	VideoURL    *models.NullableStringEditor `json:"videoURL"`
 }
 
+type EditPrescription struct {
+	ID                   uuid.UUID                 `json:"id"`
+	Name                 *string                   `json:"name"`
+	PrescriptionCategory *string                   `json:"prescriptionCategory"`
+	DurationSeconds      *models.NullableIntEditor `json:"durationSeconds"`
+}
+
 type EditWorkout struct {
 	ID            uuid.UUID `json:"id"`
 	Name          *string   `json:"name"`

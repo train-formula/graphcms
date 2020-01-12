@@ -4,7 +4,7 @@ extend type Mutation {
     createPrescription(request: CreatePrescription!): Prescription
     createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
 
-    editPrescription(request: EditPrescription!): Prescription
+    #editPrescription(request: EditPrescription!): Prescription
 
 }
 
