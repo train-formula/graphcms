@@ -2,6 +2,7 @@ package workoutcall
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database/workoutdb"
@@ -32,7 +33,7 @@ func (c EditWorkoutBlock) Validate(ctx context.Context) []validation.ValidatorFu
 	return []validation.ValidatorFunc{
 		func() *gqlerror.Error {
 			if c.request.RoundText != nil {
-				return validation.CheckStringNilOrIsNotEmpty(c.request.RoundText.Value, "If round text is set it must not be empty")()
+				return validation.CheckStringNilOrIsNotEmpty(c.request.RoundText.Value, "If round text is set it must not be empty", true)()
 			}
 
 			return nil
@@ -67,7 +68,12 @@ func (c EditWorkoutBlock) Validate(ctx context.Context) []validation.ValidatorFu
 		},
 		func() *gqlerror.Error {
 			if c.request.RoundUnitID != nil {
-				return validation.UnitIsNilOrExists(ctx, c.db, c.request.RoundUnitID.Value)()
+				unitMessage := ""
+				if c.request.RoundUnitID.Value != nil {
+					unitMessage = fmt.Sprintf("Round unit ID %s does not exist", (*c.request.RoundUnitID.Value).String())
+				}
+
+				return validation.UnitIsNilOrExists(ctx, c.db, c.request.RoundUnitID.Value, unitMessage)()
 			}
 
 			return nil

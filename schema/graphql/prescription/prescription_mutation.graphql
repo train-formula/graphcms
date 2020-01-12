@@ -1,8 +1,8 @@
 
-#extend type Mutation {
+extend type Mutation {
 
-    # createPrescription(request: CreatePrescription!): Prescription
-#}
+    createPrescription(request: CreatePrescription!): Prescription
+}
 
 
 ###############################
@@ -16,6 +16,22 @@ input CreatePrescription {
     prescriptionCategory: String!
 
     durationSeconds: Int
+
+    sets: [CreatePrescriptionSetWithPrescription!]
+
+    tags: [ID!]
 }
 
+# Create a PrescriptionSet inside a CreatePrescription request
+input CreatePrescriptionSetWithPrescription {
 
+    setNumber: Int!
+
+    repNumeral: Int
+    repText: String
+    repUnitID: ID!
+
+    repModifierNumeral: Int
+    repModifierText: String
+    repModifierUnitID: ID
+}

@@ -1,0 +1,19 @@
+
+# Associates a numeral and/or text with a unit ID (at least one must be specified)
+# This object is attached to other objects to return unit data
+type UnitData {
+    numeral: Int
+    text: String
+    unitID: ID!
+
+    # Fetchers:
+    unit: Unit
+}
+
+# Input type that allows a way of attaching UnitData to an object
+# Numeral and/or text MUST be specified
+input AttachUnitData {
+    numeral: Int
+    text: String
+    unitID: ID!
+}

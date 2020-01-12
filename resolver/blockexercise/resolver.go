@@ -7,7 +7,6 @@ import (
 	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
-	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +25,7 @@ func NewBlockExerciseResolver(db *pg.DB, logger *zap.Logger) *BlockExerciseResol
 func (r *BlockExerciseResolver) Exercise(ctx context.Context, obj *workout.BlockExercise) (*workout.Exercise, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate exercise from nil block exercise")
+		return nil, nil
 	}
 
 	call := workoutcall.NewGetExercise(obj.ExerciseID, r.logger, r.db)
@@ -41,7 +40,7 @@ func (r *BlockExerciseResolver) Exercise(ctx context.Context, obj *workout.Block
 func (r *BlockExerciseResolver) Prescription(ctx context.Context, obj *workout.BlockExercise) (*workout.Prescription, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate prescription from nil block exercise")
+		return nil, nil
 	}
 
 	call := workoutcall.NewGetPrescription(obj.PrescriptionID, r.logger, r.db)

@@ -16,17 +16,10 @@ type PrescriptionSet {
 
     setNumber: Int!
 
-    repNumeral: Int
-    repText: String
-    repUnitID: ID!
+    rep: UnitData!
+    repModifier: UnitData
 
-    repModifierNumeral: Int
-    repModifierText: String
-    repModifierUnitID: ID
-
-    # Fetchers
-    repUnit: Unit
-    repModifierUnit: Unit
+    order: Int!
 }
 
 type Prescription {

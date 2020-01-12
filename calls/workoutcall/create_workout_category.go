@@ -23,7 +23,7 @@ type CreateWorkoutCategory struct {
 func (c CreateWorkoutCategory) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringIsNotEmpty(c.Request.Name, "Name must not be empty"),
+		validation.CheckStringIsNotEmpty(c.Request.Name, "Name must not be empty", true),
 		/*func() *gqlerror.Error {
 
 			if c.request.Type == workout.UnknownBlockType {

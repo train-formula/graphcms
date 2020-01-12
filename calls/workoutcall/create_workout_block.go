@@ -2,6 +2,7 @@ package workoutcall
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
@@ -29,8 +30,13 @@ type CreateWorkoutBlock struct {
 
 func (c CreateWorkoutBlock) Validate(ctx context.Context) []validation.ValidatorFunc {
 
+	unitMessage := ""
+	if c.request.RoundUnitID != nil {
+		unitMessage = fmt.Sprintf("Round unit ID %s does not exist", (*c.request.RoundUnitID).String())
+	}
+
 	return []validation.ValidatorFunc{
-		validation.CheckStringNilOrIsNotEmpty(c.request.RoundText, "If round text is set it must not be empty"),
+		validation.CheckStringNilOrIsNotEmpty(c.request.RoundText, "If round text is set it must not be empty", true),
 		validation.CheckIntIsNilOrGTE(c.request.RoundNumeral, 0, "If round numeral is set it must be >= 0"),
 		validation.CheckIntIsNilOrGT(c.request.RoundRestDuration, 0, "If round rest duration is set it must be > 0"),
 		validation.CheckIntIsNilOrGT(c.request.NumberOfRounds, 0, "If number of rounds is set it must be > 0"),
@@ -43,7 +49,7 @@ func (c CreateWorkoutBlock) Validate(ctx context.Context) []validation.Validator
 			return nil
 		},
 
-		validation.UnitIsNilOrExists(ctx, c.db, c.request.RoundUnitID),
+		validation.UnitIsNilOrExists(ctx, c.db, c.request.RoundUnitID, unitMessage),
 	}
 }
 

@@ -4,9 +4,8 @@ import (
 	"context"
 
 	"github.com/go-pg/pg/v9"
-	"github.com/train-formula/graphcms/calls/workoutcall"
+	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
-	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
@@ -23,41 +22,40 @@ func NewPrescriptionSetResolver(db *pg.DB, logger *zap.Logger) *PrescriptionSetR
 	}
 }
 
-func (r *PrescriptionSetResolver) RepUnit(ctx context.Context, obj *workout.PrescriptionSet) (*workout.Unit, error) {
+func (r *PrescriptionSetResolver) Rep(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate rep unit from nil prescription set")
-	}
-
-	if obj.RepUnitID == nil {
 		return nil, nil
 	}
 
-	call := workoutcall.NewGetUnit(*obj.RepUnitID, r.logger, r.db)
-
-	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
-		return call.Call(ctx)
+	if obj.RepNumeral == nil && obj.RepText == nil {
+		r.logger.Error("Prescription set malformed, missing rep numerap and/or rep text", logging.UUID("prescriptionSet", obj.ID))
+		return nil, gqlerror.Errorf("Prescription set malformed, missing rep numerap and/or rep text")
 	}
 
-	return nil, nil
-
+	return &workout.UnitData{
+		Numeral: obj.RepNumeral,
+		Text:    obj.RepText,
+		UnitID:  obj.RepUnitID,
+	}, nil
 }
 
-func (r *PrescriptionSetResolver) RepModifierUnit(ctx context.Context, obj *workout.PrescriptionSet) (*workout.Unit, error) {
+func (r *PrescriptionSetResolver) RepModifier(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate rep modifier unit from nil prescription set")
-	}
-
-	if obj.RepModifierUnitID == nil {
 		return nil, nil
 	}
 
-	call := workoutcall.NewGetUnit(*obj.RepModifierUnitID, r.logger, r.db)
-
-	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
-		return call.Call(ctx)
+	if obj.RepModifierUnitID == nil && obj.RepModifierNumeral == nil && obj.RepModifierText == nil {
+		return nil, nil
+	} else if obj.RepModifierUnitID == nil && (obj.RepModifierNumeral != nil || obj.RepModifierText != nil) {
+		r.logger.Error("Prescription set malformed, has rep modifier numeral and/or rep modifier text but no rep modifier unit ID", logging.UUID("prescriptionSet", obj.ID))
+		return nil, gqlerror.Errorf("Prescription set malformed, has rep modifier numeral and/or rep modifier text but no rep modifier unit ID")
 	}
 
-	return nil, nil
+	return &workout.UnitData{
+		Numeral: obj.RepModifierNumeral,
+		Text:    obj.RepModifierText,
+		UnitID:  *obj.RepModifierUnitID,
+	}, nil
 }

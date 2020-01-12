@@ -9,7 +9,6 @@ import (
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
-	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -27,7 +26,7 @@ func NewExerciseResolver(db *pg.DB, logger *zap.Logger) *ExerciseResolver {
 
 func (r *ExerciseResolver) Tags(ctx context.Context, obj *workout.Exercise) ([]*tag.Tag, error) {
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate tags from nil exercise")
+		return nil, nil
 	}
 
 	request := tagdb.TagsByObject{

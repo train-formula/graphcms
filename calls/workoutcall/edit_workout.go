@@ -30,7 +30,7 @@ type EditWorkout struct {
 func (c EditWorkout) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringNilOrIsNotEmpty(c.request.Name, "Name must not be empty"),
+		validation.CheckStringNilOrIsNotEmpty(c.request.Name, "Name must not be empty", true),
 	}
 }
 

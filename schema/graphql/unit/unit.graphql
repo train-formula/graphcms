@@ -4,7 +4,6 @@ extend type Query {
     availableUnits: [Unit!]
 }
 
-
 type Unit {
     id: ID!
 

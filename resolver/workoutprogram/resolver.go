@@ -9,7 +9,6 @@ import (
 	"github.com/train-formula/graphcms/calls/tagcall"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/models/tag"
-	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 
 	"github.com/train-formula/graphcms/generated"
@@ -33,7 +32,7 @@ type WorkoutProgramResolver struct {
 func (r *WorkoutProgramResolver) TrainerOrganization(ctx context.Context, obj *workout.WorkoutProgram) (*trainer.Organization, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot organization from nil workout program")
+		return nil, nil
 	}
 
 	g := organizationcall.NewGetOrganization(obj.TrainerOrganizationID, r.logger, r.db)
@@ -53,7 +52,7 @@ func (r *WorkoutProgramResolver) Workouts(ctx context.Context, obj *workout.Work
 func (r *WorkoutProgramResolver) Tags(ctx context.Context, obj *workout.WorkoutProgram) ([]*tag.Tag, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate tags from nil workout program")
+		return nil, nil
 	}
 
 	request := tagdb.TagsByObject{

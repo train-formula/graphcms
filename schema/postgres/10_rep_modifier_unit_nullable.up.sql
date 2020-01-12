@@ -1,0 +1,1 @@
+ALTER TABLE "workout"."prescription_set" ALTER COLUMN "rep_modifier_unit_id" DROP NOT NULL;

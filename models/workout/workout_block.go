@@ -9,19 +9,19 @@ import (
 )
 
 type WorkoutBlock struct {
-	tableName             struct{}   `sql:"workout.category"`
-	ID                    uuid.UUID  `json:"id"`
-	CreatedAt             time.Time  `json:"createdAt"`
-	UpdatedAt             time.Time  `json:"updatedAt"`
-	TrainerOrganizationID uuid.UUID  `json:"trainerOrganizationID"`
-	WorkoutCategoryID     uuid.UUID  `json:"workoutCategoryID"`
-	CategoryOrder         int        `json:"categoryOrder"`
-	RoundNumeral          *int       `json:"roundNumeral"`
-	RoundText             *string    `json:"roundText"`
-	RoundUnitID           *uuid.UUID `json:"roundUnitID"`
-	DurationSeconds       *int       `json:"durationSeconds"`
-	RoundRestDuration     *int       `json:"roundRestDuration"`
-	NumberOfRounds        *int       `json:"numberOfRounds"`
+	tableName             struct{}  `sql:"workout.category"`
+	ID                    uuid.UUID `json:"id"`
+	CreatedAt             time.Time `json:"createdAt"`
+	UpdatedAt             time.Time `json:"updatedAt"`
+	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
+	WorkoutCategoryID     uuid.UUID `json:"workoutCategoryID"`
+	CategoryOrder         int       `json:"categoryOrder"`
+	RoundNumeral          *int
+	RoundText             *string
+	RoundUnitID           *uuid.UUID
+	DurationSeconds       *int `json:"durationSeconds"`
+	RoundRestDuration     *int `json:"roundRestDuration"`
+	NumberOfRounds        *int `json:"numberOfRounds"`
 }
 
 func (w WorkoutBlock) TableName() string {

@@ -30,7 +30,7 @@ type CreateWorkoutProgram struct {
 func (c CreateWorkoutProgram) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringIsNotEmpty(c.request.Name, "Name must not be empty"),
+		validation.CheckStringIsNotEmpty(c.request.Name, "Name must not be empty", true),
 		validation.OrganizationExists(ctx, c.db, c.request.TrainerOrganizationID),
 	}
 }

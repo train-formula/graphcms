@@ -10,6 +10,7 @@ import (
 	"github.com/train-formula/graphcms/resolver/prescription"
 	"github.com/train-formula/graphcms/resolver/prescriptionset"
 	"github.com/train-formula/graphcms/resolver/query"
+	"github.com/train-formula/graphcms/resolver/unitdata"
 	"github.com/train-formula/graphcms/resolver/workout"
 	"github.com/train-formula/graphcms/resolver/workoutblock"
 	"github.com/train-formula/graphcms/resolver/workoutcategory"
@@ -63,6 +64,10 @@ func (r *Resolver) Exercise() generated.ExerciseResolver {
 
 func (r *Resolver) BlockExercise() generated.BlockExerciseResolver {
 	return blockexercise.NewBlockExerciseResolver(r.db, r.logger)
+}
+
+func (r *Resolver) UnitData() generated.UnitDataResolver {
+	return unitdata.NewUnitDataResolver(r.db, r.logger)
 }
 
 func (r *Resolver) WorkoutProgramConnection() generated.WorkoutProgramConnectionResolver {

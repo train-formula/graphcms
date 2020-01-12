@@ -40,26 +40,33 @@ func TagsAllExistForTrainer(ctx context.Context, conn database.Conn, trainerOrga
 	return nil
 }
 
-// Validates that a unid id is either nil, or exists in the database
-func UnitIsNilOrExists(ctx context.Context, conn database.Conn, unitID *uuid.UUID) ValidatorFunc {
+// Validates that a unit exists in the database
+func UnitExists(ctx context.Context, conn database.Conn, unitID uuid.UUID, message string) ValidatorFunc {
 
 	return func() *gqlerror.Error {
-		if unitID == nil {
-			return nil
-		}
 
-		searchID := *unitID
-		_, err := workoutdb.GetUnit(ctx, conn, searchID)
+		_, err := workoutdb.GetUnit(ctx, conn, unitID)
 
 		if err != nil {
 			if err == pg.ErrNoRows {
-				return gqlerror.Errorf("Unit id %s does not exist", searchID)
+				return gqlerror.Errorf(message)
 			}
 			return gqlerror.Errorf(err.Error())
 		}
 
 		return nil
 	}
+
+}
+
+// Validates that a unit id is either nil, or exists in the database
+func UnitIsNilOrExists(ctx context.Context, conn database.Conn, unitID *uuid.UUID, message string) ValidatorFunc {
+
+	if unitID == nil {
+		return EmptyValidatorFunc
+	}
+
+	return UnitExists(ctx, conn, *unitID, message)
 
 }
 

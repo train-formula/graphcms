@@ -31,7 +31,7 @@ type EditExercise struct {
 func (c EditExercise) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringNilOrIsNotEmpty(c.request.Name, "Name must not be empty"),
+		validation.CheckStringNilOrIsNotEmpty(c.request.Name, "Name must not be empty", true),
 		func() *gqlerror.Error {
 			if c.request.VideoURL != nil {
 				return validation.CheckStringNilOrIsURL(c.request.VideoURL.Value, "Invalid video URL")()

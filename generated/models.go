@@ -15,6 +15,12 @@ import (
 	"github.com/train-formula/graphcms/models/workout"
 )
 
+type AttachUnitData struct {
+	Numeral *int      `json:"numeral"`
+	Text    *string   `json:"text"`
+	UnitID  uuid.UUID `json:"unitID"`
+}
+
 type CreateBlockExercise struct {
 	ExerciseID     uuid.UUID `json:"exerciseID"`
 	PrescriptionID uuid.UUID `json:"prescriptionID"`
@@ -29,10 +35,22 @@ type CreateExercise struct {
 }
 
 type CreatePrescription struct {
-	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
-	Name                  string    `json:"name"`
-	PrescriptionCategory  string    `json:"prescriptionCategory"`
-	DurationSeconds       *int      `json:"durationSeconds"`
+	TrainerOrganizationID uuid.UUID                                `json:"trainerOrganizationID"`
+	Name                  string                                   `json:"name"`
+	PrescriptionCategory  string                                   `json:"prescriptionCategory"`
+	DurationSeconds       *int                                     `json:"durationSeconds"`
+	Sets                  []*CreatePrescriptionSetWithPrescription `json:"sets"`
+	Tags                  []uuid.UUID                              `json:"tags"`
+}
+
+type CreatePrescriptionSetWithPrescription struct {
+	SetNumber          int        `json:"setNumber"`
+	RepNumeral         *int       `json:"repNumeral"`
+	RepText            *string    `json:"repText"`
+	RepUnitID          uuid.UUID  `json:"repUnitID"`
+	RepModifierNumeral *int       `json:"repModifierNumeral"`
+	RepModifierText    *string    `json:"repModifierText"`
+	RepModifierUnitID  *uuid.UUID `json:"repModifierUnitID"`
 }
 
 type CreateTag struct {

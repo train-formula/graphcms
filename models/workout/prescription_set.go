@@ -18,13 +18,15 @@ type PrescriptionSet struct {
 
 	SetNumber int `json:"setNumber"`
 
-	RepNumeral *int       `json:"repNumeral"`
-	RepText    *string    `json:"repText"`
-	RepUnitID  *uuid.UUID `json:"repUnitID"`
+	RepNumeral *int
+	RepText    *string
+	RepUnitID  uuid.UUID
 
-	RepModifierNumeral *int       `json:"repModifierNumeral"`
-	RepModifierText    *string    `json:"repModifierText"`
-	RepModifierUnitID  *uuid.UUID `json:"repModifierUnitID"`
+	RepModifierNumeral *int
+	RepModifierText    *string
+	RepModifierUnitID  *uuid.UUID
+
+	Order int `json:"order"`
 }
 
 func (p PrescriptionSet) TableName() string {

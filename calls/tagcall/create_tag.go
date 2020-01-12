@@ -32,7 +32,7 @@ type CreateTag struct {
 func (g CreateTag) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringIsNotEmpty(g.request.Tag, "tag must not be empty"),
+		validation.CheckStringIsNotEmpty(g.request.Tag, "tag must not be empty", true),
 	}
 }
 

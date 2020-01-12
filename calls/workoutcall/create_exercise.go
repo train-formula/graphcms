@@ -31,7 +31,7 @@ type CreateExercise struct {
 func (c CreateExercise) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringIsNotEmpty(c.request.Name, "Name must not be empty"),
+		validation.CheckStringIsNotEmpty(c.request.Name, "Name must not be empty", true),
 		validation.CheckStringNilOrIsURL(c.request.VideoURL, "Invalid video URL"),
 		validation.OrganizationExists(ctx, c.db, c.request.TrainerOrganizationID),
 	}

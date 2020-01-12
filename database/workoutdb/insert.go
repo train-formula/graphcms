@@ -80,6 +80,32 @@ func InsertExercise(ctx context.Context, conn database.Conn, new workout.Exercis
 	return newModel, nil
 }
 
+// Insert a new prescription
+func InsertPrescription(ctx context.Context, conn database.Conn, new workout.Prescription) (*workout.Prescription, error) {
+
+	newModel := &new
+
+	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	if err != nil {
+		return nil, err
+	}
+
+	return newModel, nil
+}
+
+// Insert a new prescription set
+func InsertPrescriptionSet(ctx context.Context, conn database.Conn, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
+
+	newModel := &new
+
+	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	if err != nil {
+		return nil, err
+	}
+
+	return newModel, nil
+}
+
 // Remove all workout categories from a workout, and set a new list
 // The order of the categories will be the order they appear in the list
 func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, workoutID uuid.UUID, workoutCategoryIDs []uuid.UUID) error {

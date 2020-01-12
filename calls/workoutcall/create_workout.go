@@ -32,7 +32,7 @@ type CreateWorkout struct {
 func (c CreateWorkout) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
-		validation.CheckStringIsNotEmpty(c.request.Name, "Name must not be empty"),
+		validation.CheckStringIsNotEmpty(c.request.Name, "Name must not be empty", true),
 		validation.CheckIntGT(c.request.DaysFromStart, 0, "Days from start must be > 0"),
 	}
 }

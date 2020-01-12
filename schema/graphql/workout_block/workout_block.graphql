@@ -31,9 +31,7 @@ type WorkoutBlock {
     workoutCategoryID: ID!
     categoryOrder: Int!
 
-    roundNumeral: Int
-    roundText: String
-    roundUnitID: ID
+    round: UnitData
 
     roundRestDuration: Int
 

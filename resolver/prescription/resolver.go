@@ -10,7 +10,6 @@ import (
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
-	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -37,7 +36,7 @@ func (r *PrescriptionResolver) HasRepModifier(ctx context.Context, obj *workout.
 func (r *PrescriptionResolver) Sets(ctx context.Context, obj *workout.Prescription) ([]*workout.PrescriptionSet, error) {
 
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate prescription sets from nil prescription")
+		return nil, nil
 	}
 
 	call := workoutcall.NewGetPrescriptionPrescriptionSets(obj.ID, r.logger, r.db)
@@ -52,7 +51,7 @@ func (r *PrescriptionResolver) Sets(ctx context.Context, obj *workout.Prescripti
 
 func (r *PrescriptionResolver) Tags(ctx context.Context, obj *workout.Prescription) ([]*tag.Tag, error) {
 	if obj == nil {
-		return nil, gqlerror.Errorf("Cannot locate tags from nil prescription")
+		return nil, nil
 	}
 
 	request := tagdb.TagsByObject{
