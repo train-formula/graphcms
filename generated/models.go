@@ -44,13 +44,9 @@ type CreatePrescription struct {
 }
 
 type CreatePrescriptionSetWithPrescription struct {
-	SetNumber          int        `json:"setNumber"`
-	RepNumeral         *int       `json:"repNumeral"`
-	RepText            *string    `json:"repText"`
-	RepUnitID          uuid.UUID  `json:"repUnitID"`
-	RepModifierNumeral *int       `json:"repModifierNumeral"`
-	RepModifierText    *string    `json:"repModifierText"`
-	RepModifierUnitID  *uuid.UUID `json:"repModifierUnitID"`
+	SetNumber          int             `json:"setNumber"`
+	PrimaryParameter   *AttachUnitData `json:"primaryParameter"`
+	SecondaryParameter *AttachUnitData `json:"secondaryParameter"`
 }
 
 type CreateTag struct {
@@ -67,14 +63,12 @@ type CreateWorkout struct {
 }
 
 type CreateWorkoutBlock struct {
-	WorkoutCategoryID uuid.UUID  `json:"workoutCategoryID"`
-	CategoryOrder     int        `json:"categoryOrder"`
-	RoundNumeral      *int       `json:"roundNumeral"`
-	RoundText         *string    `json:"roundText"`
-	RoundUnitID       *uuid.UUID `json:"roundUnitID"`
-	RoundRestDuration *int       `json:"roundRestDuration"`
-	NumberOfRounds    *int       `json:"numberOfRounds"`
-	DurationSeconds   *int       `json:"durationSeconds"`
+	WorkoutCategoryID uuid.UUID       `json:"workoutCategoryID"`
+	CategoryOrder     int             `json:"categoryOrder"`
+	Round             *AttachUnitData `json:"round"`
+	RoundRestDuration *int            `json:"roundRestDuration"`
+	NumberOfRounds    *int            `json:"numberOfRounds"`
+	DurationSeconds   *int            `json:"durationSeconds"`
 }
 
 type CreateWorkoutCategory struct {
@@ -109,14 +103,12 @@ type EditWorkout struct {
 }
 
 type EditWorkoutBlock struct {
-	ID                uuid.UUID                    `json:"id"`
-	CategoryOrder     *int                         `json:"categoryOrder"`
-	RoundNumeral      *models.NullableIntEditor    `json:"roundNumeral"`
-	RoundText         *models.NullableStringEditor `json:"roundText"`
-	RoundUnitID       *models.NullableIDEditor     `json:"roundUnitID"`
-	RoundRestDuration *models.NullableIntEditor    `json:"roundRestDuration"`
-	NumberOfRounds    *models.NullableIntEditor    `json:"numberOfRounds"`
-	DurationSeconds   *models.NullableIntEditor    `json:"durationSeconds"`
+	ID                uuid.UUID                 `json:"id"`
+	CategoryOrder     *int                      `json:"categoryOrder"`
+	Round             *NullableAttachUnitData   `json:"round"`
+	RoundRestDuration *models.NullableIntEditor `json:"roundRestDuration"`
+	NumberOfRounds    *models.NullableIntEditor `json:"numberOfRounds"`
+	DurationSeconds   *models.NullableIntEditor `json:"durationSeconds"`
 }
 
 type EditWorkoutCategory struct {
@@ -133,6 +125,10 @@ type ExerciseSearchRequest struct {
 type ExerciseSearchResults struct {
 	TagFacet *TagFacet                       `json:"tag_facet"`
 	Results  *connections.ExerciseConnection `json:"results"`
+}
+
+type NullableAttachUnitData struct {
+	Value *AttachUnitData `json:"value"`
 }
 
 type PrescriptionSearchRequest struct {

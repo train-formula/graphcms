@@ -2,7 +2,6 @@ package workoutcall
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
@@ -30,26 +29,11 @@ type CreateWorkoutBlock struct {
 
 func (c CreateWorkoutBlock) Validate(ctx context.Context) []validation.ValidatorFunc {
 
-	unitMessage := ""
-	if c.request.RoundUnitID != nil {
-		unitMessage = fmt.Sprintf("Round unit ID %s does not exist", (*c.request.RoundUnitID).String())
-	}
-
 	return []validation.ValidatorFunc{
-		validation.CheckStringNilOrIsNotEmpty(c.request.RoundText, "If round text is set it must not be empty", true),
-		validation.CheckIntIsNilOrGTE(c.request.RoundNumeral, 0, "If round numeral is set it must be >= 0"),
 		validation.CheckIntIsNilOrGT(c.request.RoundRestDuration, 0, "If round rest duration is set it must be > 0"),
 		validation.CheckIntIsNilOrGT(c.request.NumberOfRounds, 0, "If number of rounds is set it must be > 0"),
 		validation.CheckIntIsNilOrGT(c.request.DurationSeconds, 0, "If duration seconds is set it must be > 0"),
-		func() *gqlerror.Error {
-			if c.request.RoundNumeral != nil && c.request.RoundUnitID == nil {
-				return gqlerror.Errorf("If round numeral is set, round unit id must also be set")
-			}
-
-			return nil
-		},
-
-		validation.UnitIsNilOrExists(ctx, c.db, c.request.RoundUnitID, unitMessage),
+		validation.CheckUnitDataValidOrNil(ctx, c.db, c.request.Round, "round"),
 	}
 }
 
@@ -74,15 +58,25 @@ func (c CreateWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, er
 			return err
 		}
 
+		var roundNumeral *int
+		var roundText *string
+		var roundUnitID *uuid.UUID
+
+		if c.request.Round != nil {
+			roundNumeral = c.request.Round.Numeral
+			roundText = c.request.Round.Text
+			roundUnitID = &c.request.Round.UnitID
+		}
+
 		new := workout.WorkoutBlock{
 			ID:                    newUuid,
 			TrainerOrganizationID: workoutCategory.TrainerOrganizationID,
 			WorkoutCategoryID:     workoutCategory.ID,
 			CategoryOrder:         c.request.CategoryOrder,
 
-			RoundNumeral:      c.request.RoundNumeral,
-			RoundText:         c.request.RoundText,
-			RoundUnitID:       c.request.RoundUnitID,
+			RoundNumeral:      roundNumeral,
+			RoundText:         roundText,
+			RoundUnitID:       roundUnitID,
 			DurationSeconds:   c.request.DurationSeconds,
 			RoundRestDuration: c.request.RoundRestDuration,
 			NumberOfRounds:    c.request.NumberOfRounds,

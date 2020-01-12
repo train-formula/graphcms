@@ -20,9 +20,7 @@ input CreateWorkoutBlock {
     workoutCategoryID: ID!
     categoryOrder: Int!
 
-    roundNumeral: Int
-    roundText: String
-    roundUnitID: ID
+    round: AttachUnitData
 
     roundRestDuration: Int
 
@@ -39,9 +37,7 @@ input EditWorkoutBlock {
 
     categoryOrder: Int
 
-    roundNumeral: NullableIntEditor
-    roundText: NullableStringEditor
-    roundUnitID: NullableIDEditor
+    round: NullableAttachUnitData
 
     roundRestDuration: NullableIntEditor
 

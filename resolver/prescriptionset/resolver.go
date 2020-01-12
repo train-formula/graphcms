@@ -22,40 +22,40 @@ func NewPrescriptionSetResolver(db *pg.DB, logger *zap.Logger) *PrescriptionSetR
 	}
 }
 
-func (r *PrescriptionSetResolver) Rep(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error) {
+func (r *PrescriptionSetResolver) PrimaryParameter(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error) {
 
 	if obj == nil {
 		return nil, nil
 	}
 
-	if obj.RepNumeral == nil && obj.RepText == nil {
-		r.logger.Error("Prescription set malformed, missing rep numerap and/or rep text", logging.UUID("prescriptionSet", obj.ID))
-		return nil, gqlerror.Errorf("Prescription set malformed, missing rep numerap and/or rep text")
+	if obj.PrimaryParameterNumeral == nil && obj.PrimaryParameterText == nil {
+		r.logger.Error("Prescription set malformed, missing primary parameter numeral and/or primary parameter text", logging.UUID("prescriptionSet", obj.ID))
+		return nil, gqlerror.Errorf("Prescription set malformed, missing primary parameter numeral and/or primary parameter text")
 	}
 
 	return &workout.UnitData{
-		Numeral: obj.RepNumeral,
-		Text:    obj.RepText,
-		UnitID:  obj.RepUnitID,
+		Numeral: obj.PrimaryParameterNumeral,
+		Text:    obj.PrimaryParameterText,
+		UnitID:  obj.PrimaryParameterUnitID,
 	}, nil
 }
 
-func (r *PrescriptionSetResolver) RepModifier(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error) {
+func (r *PrescriptionSetResolver) SecondaryParameter(ctx context.Context, obj *workout.PrescriptionSet) (*workout.UnitData, error) {
 
 	if obj == nil {
 		return nil, nil
 	}
 
-	if obj.RepModifierUnitID == nil && obj.RepModifierNumeral == nil && obj.RepModifierText == nil {
+	if obj.SecondaryParameterUnitID == nil && obj.SecondaryParameterNumeral == nil && obj.SecondaryParameterText == nil {
 		return nil, nil
-	} else if obj.RepModifierUnitID == nil && (obj.RepModifierNumeral != nil || obj.RepModifierText != nil) {
-		r.logger.Error("Prescription set malformed, has rep modifier numeral and/or rep modifier text but no rep modifier unit ID", logging.UUID("prescriptionSet", obj.ID))
-		return nil, gqlerror.Errorf("Prescription set malformed, has rep modifier numeral and/or rep modifier text but no rep modifier unit ID")
+	} else if obj.SecondaryParameterUnitID == nil && (obj.SecondaryParameterNumeral != nil || obj.SecondaryParameterText != nil) {
+		r.logger.Error("Prescription set malformed, has secondary parameter numeral and/or secondary parameter text but no secondary parameter unit ID", logging.UUID("prescriptionSet", obj.ID))
+		return nil, gqlerror.Errorf("Prescription set malformed, has secondary parameter numeral and/or secondary parameter text but no secondary parameter unit ID")
 	}
 
 	return &workout.UnitData{
-		Numeral: obj.RepModifierNumeral,
-		Text:    obj.RepModifierText,
-		UnitID:  *obj.RepModifierUnitID,
+		Numeral: obj.SecondaryParameterNumeral,
+		Text:    obj.SecondaryParameterText,
+		UnitID:  *obj.SecondaryParameterUnitID,
 	}, nil
 }

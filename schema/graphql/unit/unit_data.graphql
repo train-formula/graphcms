@@ -17,3 +17,10 @@ input AttachUnitData {
     text: String
     unitID: ID!
 }
+
+# Allows editing of unit data that can be null
+# If the value in this type is null, then the outer value will be set to null
+# However, if the outer value is null (meaning this whole data structure is omitted), nothing will change
+input NullableAttachUnitData {
+    value: AttachUnitData
+}

@@ -2,9 +2,9 @@ package workoutcall
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
@@ -30,55 +30,24 @@ type EditWorkoutBlock struct {
 
 func (c EditWorkoutBlock) Validate(ctx context.Context) []validation.ValidatorFunc {
 
-	return []validation.ValidatorFunc{
-		func() *gqlerror.Error {
-			if c.request.RoundText != nil {
-				return validation.CheckStringNilOrIsNotEmpty(c.request.RoundText.Value, "If round text is set it must not be empty", true)()
-			}
+	var validators []validation.ValidatorFunc
 
-			return nil
-		},
-		func() *gqlerror.Error {
-			if c.request.RoundText != nil {
-				return validation.CheckIntIsNilOrGTE(c.request.RoundNumeral.Value, 0, "If round numeral is set it must be >= 0")()
-			}
-
-			return nil
-		},
-		func() *gqlerror.Error {
-			if c.request.RoundText != nil {
-				return validation.CheckIntIsNilOrGT(c.request.RoundRestDuration.Value, 0, "If round rest duration is set it must be > 0")()
-			}
-
-			return nil
-		},
-		func() *gqlerror.Error {
-			if c.request.RoundText != nil {
-				return validation.CheckIntIsNilOrGT(c.request.NumberOfRounds.Value, 0, "If number of rounds is set it must be > 0")()
-			}
-
-			return nil
-		},
-		func() *gqlerror.Error {
-			if c.request.RoundText != nil {
-				return validation.CheckIntIsNilOrGT(c.request.DurationSeconds.Value, 0, "If duration seconds is set it must be > 0")()
-			}
-
-			return nil
-		},
-		func() *gqlerror.Error {
-			if c.request.RoundUnitID != nil {
-				unitMessage := ""
-				if c.request.RoundUnitID.Value != nil {
-					unitMessage = fmt.Sprintf("Round unit ID %s does not exist", (*c.request.RoundUnitID.Value).String())
-				}
-
-				return validation.UnitIsNilOrExists(ctx, c.db, c.request.RoundUnitID.Value, unitMessage)()
-			}
-
-			return nil
-		},
+	if c.request.RoundRestDuration != nil {
+		validators = append(validators, validation.CheckIntIsNilOrGT(c.request.RoundRestDuration.Value, 0, "If round rest duration is set it must be > 0"))
 	}
+	if c.request.NumberOfRounds != nil {
+		validators = append(validators, validation.CheckIntIsNilOrGT(c.request.NumberOfRounds.Value, 0, "If number of rounds is set it must be > 0"))
+	}
+
+	if c.request.DurationSeconds != nil {
+		validators = append(validators, validation.CheckIntIsNilOrGT(c.request.DurationSeconds.Value, 0, "If duration seconds is set it must be > 0"))
+	}
+
+	if c.request.Round != nil {
+		validators = append(validators, validation.CheckUnitDataValidOrNil(ctx, c.db, c.request.Round.Value, "round"))
+	}
+
+	return validators
 }
 
 func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, error) {
@@ -102,16 +71,20 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 			workoutBlock.CategoryOrder = *c.request.CategoryOrder
 		}
 
-		if c.request.RoundNumeral != nil {
-			workoutBlock.RoundNumeral = c.request.RoundNumeral.Value
-		}
+		if c.request.Round != nil {
+			var roundNumeral *int
+			var roundText *string
+			var roundUnitID *uuid.UUID
 
-		if c.request.RoundText != nil {
-			workoutBlock.RoundText = c.request.RoundText.Value
-		}
+			if c.request.Round.Value != nil {
+				roundNumeral = c.request.Round.Value.Numeral
+				roundText = c.request.Round.Value.Text
+				roundUnitID = &c.request.Round.Value.UnitID
+			}
 
-		if c.request.RoundUnitID != nil {
-			workoutBlock.RoundUnitID = c.request.RoundUnitID.Value
+			workoutBlock.RoundNumeral = roundNumeral
+			workoutBlock.RoundText = roundText
+			workoutBlock.RoundUnitID = roundUnitID
 		}
 
 		if c.request.RoundRestDuration != nil {

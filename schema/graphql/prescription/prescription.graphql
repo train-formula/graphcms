@@ -16,8 +16,8 @@ type PrescriptionSet {
 
     setNumber: Int!
 
-    rep: UnitData!
-    repModifier: UnitData
+    primaryParameter: UnitData!
+    secondaryParameter: UnitData
 
     order: Int!
 }
@@ -35,9 +35,6 @@ type Prescription {
     prescriptionCategory: String!
 
     durationSeconds: Int
-
-    hasReps: Boolean!
-    hasRepModifier: Boolean!
 
     # Fetchers
     sets: [PrescriptionSet!]

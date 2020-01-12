@@ -27,11 +27,7 @@ input CreatePrescriptionSetWithPrescription {
 
     setNumber: Int!
 
-    repNumeral: Int
-    repText: String
-    repUnitID: ID!
+    primaryParameter: AttachUnitData!
 
-    repModifierNumeral: Int
-    repModifierText: String
-    repModifierUnitID: ID
+    secondaryParameter: AttachUnitData
 }

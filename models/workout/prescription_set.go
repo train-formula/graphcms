@@ -18,13 +18,13 @@ type PrescriptionSet struct {
 
 	SetNumber int `json:"setNumber"`
 
-	RepNumeral *int
-	RepText    *string
-	RepUnitID  uuid.UUID
+	PrimaryParameterNumeral *int
+	PrimaryParameterText    *string
+	PrimaryParameterUnitID  uuid.UUID
 
-	RepModifierNumeral *int
-	RepModifierText    *string
-	RepModifierUnitID  *uuid.UUID
+	SecondaryParameterNumeral *int
+	SecondaryParameterText    *string
+	SecondaryParameterUnitID  *uuid.UUID
 
 	Order int `json:"order"`
 }

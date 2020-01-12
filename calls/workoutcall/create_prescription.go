@@ -41,6 +41,7 @@ func (c CreatePrescription) Validate(ctx context.Context) []validation.Validator
 
 		if set != nil {
 			funcs = append(funcs, validation.CheckCreatePrescriptionSetWithPrescription(ctx, c.db, *set, &setIdx)...)
+
 		}
 
 	}
@@ -87,17 +88,27 @@ func (c CreatePrescription) Call(ctx context.Context) (*workout.Prescription, er
 				return err
 			}
 
+			var secondaryUnitID *uuid.UUID
+			var secondaryNumeral *int
+			var secondaryText *string
+
+			if set.SecondaryParameter != nil {
+				secondaryUnitID = &set.SecondaryParameter.UnitID
+				secondaryNumeral = set.SecondaryParameter.Numeral
+				secondaryText = set.SecondaryParameter.Text
+			}
+
 			newPrescriptionSet := workout.PrescriptionSet{
-				ID:                    newSetUuid,
-				TrainerOrganizationID: finalPrescription.TrainerOrganizationID,
-				PrescriptionID:        finalPrescription.ID,
-				SetNumber:             set.SetNumber,
-				RepNumeral:            set.RepNumeral,
-				RepText:               set.RepText,
-				RepUnitID:             set.RepUnitID,
-				RepModifierNumeral:    set.RepModifierNumeral,
-				RepModifierText:       set.RepModifierText,
-				RepModifierUnitID:     set.RepModifierUnitID,
+				ID:                        newSetUuid,
+				TrainerOrganizationID:     finalPrescription.TrainerOrganizationID,
+				PrescriptionID:            finalPrescription.ID,
+				SetNumber:                 set.SetNumber,
+				PrimaryParameterNumeral:   set.PrimaryParameter.Numeral,
+				PrimaryParameterText:      set.PrimaryParameter.Text,
+				PrimaryParameterUnitID:    set.PrimaryParameter.UnitID,
+				SecondaryParameterNumeral: secondaryNumeral,
+				SecondaryParameterText:    secondaryText,
+				SecondaryParameterUnitID:  secondaryUnitID,
 			}
 
 			_, err = workoutdb.InsertPrescriptionSet(ctx, t, newPrescriptionSet)
