@@ -111,6 +111,26 @@ func GetPrescription(ctx context.Context, conn database.Conn, id uuid.UUID) (wor
 	return result, err
 }
 
+// Retrieves a prescription by its id, and locks the row
+func GetPrescriptionForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Prescription, error) {
+
+	var result workout.Prescription
+
+	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+
+	return result, err
+}
+
+// Retrieves a prescription set by its id, and locks the row
+func GetPrescriptionSetForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.PrescriptionSet, error) {
+
+	var result workout.PrescriptionSet
+
+	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+
+	return result, err
+}
+
 // Retrieves individual prescription's by their IDs
 func GetPrescriptions(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Prescription, error) {
 
@@ -350,6 +370,23 @@ func GetExerciseForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID)
 func ExerciseConnectedToBlocks(ctx context.Context, conn database.Conn, id uuid.UUID) (bool, error) {
 
 	query := "SELECT COUNT(1) FROM " + database.TableName(workout.BlockExercise{}) + " WHERE exercise_id = ?"
+
+	var count int
+
+	_, err := conn.QueryContext(ctx, pg.Scan(&count), query, id)
+	if err != nil {
+
+		return false, err
+	}
+
+	return count > 0, nil
+
+}
+
+// Check if an prescription is connected to any blocks
+func PrescriptionConnectedToBlocks(ctx context.Context, conn database.Conn, id uuid.UUID) (bool, error) {
+
+	query := "SELECT COUNT(1) FROM " + database.TableName(workout.BlockExercise{}) + " WHERE prescription_id = ?"
 
 	var count int
 

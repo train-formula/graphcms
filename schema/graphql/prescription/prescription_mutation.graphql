@@ -2,9 +2,13 @@
 extend type Mutation {
 
     createPrescription(request: CreatePrescription!): Prescription
-    createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
+    editPrescription(request: EditPrescription!): Prescription
+    # Before deletion prescriptions must be removed from all workout blocks individually
+    # Will auto-delete all attached prescription set's
+    deletePrescription(request: ID!): ID
 
-    #editPrescription(request: EditPrescription!): Prescription
+    createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
+    deletePrescriptionSet(request: ID!): ID
 
 }
 

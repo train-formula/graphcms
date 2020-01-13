@@ -12,6 +12,9 @@ import (
 func DeleteWorkout(ctx context.Context, conn database.Conn, workoutID uuid.UUID) error {
 
 	err := ClearWorkoutWorkoutCategories(ctx, conn, workoutID)
+	if err != nil {
+		return err
+	}
 
 	_, err = conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.Workout{})+" WHERE id = ?", workoutID)
 
@@ -59,6 +62,49 @@ func DeleteExercise(ctx context.Context, conn database.Conn, exerciseID uuid.UUI
 // Remove all block exercises from a workout block
 func ClearWorkoutBlockBlockExercises(ctx context.Context, conn database.Conn, workoutBlockID uuid.UUID) error {
 	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.BlockExercise{})+" WHERE block_id = ?", workoutBlockID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Delete all prescription sets that are attached to a prescription
+func DeleteAllSetsFromPrescription(ctx context.Context, conn database.Conn, prescriptionID uuid.UUID) error {
+
+	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.PrescriptionSet{})+" WHERE prescription_id = ?", prescriptionID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// Delete a prescription and all attached prescription sets
+func DeletePrescription(ctx context.Context, conn database.Conn, prescriptionID uuid.UUID) error {
+
+	err := DeleteAllSetsFromPrescription(ctx, conn, prescriptionID)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.Prescription{})+" WHERE id = ?", prescriptionID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Delete a prescription set
+func DeletePrescriptionSet(ctx context.Context, conn database.Conn, prescriptionSetID uuid.UUID) error {
+
+	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.PrescriptionSet{})+" WHERE id = ?", prescriptionSetID)
+
 	if err != nil {
 		return err
 	}
