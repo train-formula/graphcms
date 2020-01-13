@@ -8,6 +8,7 @@ extend type Mutation {
     deletePrescription(request: ID!): ID
 
     createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
+    editPrescriptionSet(request: EditPrescriptionSet!): PrescriptionSet
     deletePrescriptionSet(request: ID!): ID
 
 }
@@ -65,3 +66,17 @@ input CreatePrescriptionSet {
     data: CreatePrescriptionSetData!
 }
 
+
+###############################
+#### EDIT PRESCRIPTION SET ####
+###############################
+input EditPrescriptionSet {
+    id: ID!
+
+    setNumber: Int
+
+    primaryParameter: AttachUnitData
+
+    secondaryParameter: NullableAttachUnitData
+
+}

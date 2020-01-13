@@ -30,18 +30,16 @@ type EditPrescription struct {
 
 func (c EditPrescription) Validate(ctx context.Context) []validation.ValidatorFunc {
 
-	return []validation.ValidatorFunc{
+	funcs := []validation.ValidatorFunc{
 		validation.CheckStringNilOrIsNotEmpty(c.request.Name, "Name must not be empty", true),
 		validation.CheckStringNilOrIsNotEmpty(c.request.PrescriptionCategory, "Prescription category must not be empty", true),
-		func() *gqlerror.Error {
-			if c.request.DurationSeconds != nil {
-				return nil
-			}
-
-			return validation.CheckIntIsNilOrGT(c.request.DurationSeconds.Value, 0, "If duration seconds is set it must be > 0")()
-		},
 	}
 
+	if c.request.DurationSeconds != nil {
+		funcs = append(funcs, validation.CheckIntIsNilOrGT(c.request.DurationSeconds.Value, 0, "If duration seconds is set it must be > 0"))
+	}
+
+	return funcs
 }
 
 func (c EditPrescription) Call(ctx context.Context) (*workout.Prescription, error) {

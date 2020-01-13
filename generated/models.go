@@ -107,6 +107,13 @@ type EditPrescription struct {
 	DurationSeconds      *models.NullableIntEditor `json:"durationSeconds"`
 }
 
+type EditPrescriptionSet struct {
+	ID                 uuid.UUID               `json:"id"`
+	SetNumber          *int                    `json:"setNumber"`
+	PrimaryParameter   *AttachUnitData         `json:"primaryParameter"`
+	SecondaryParameter *NullableAttachUnitData `json:"secondaryParameter"`
+}
+
 type EditWorkout struct {
 	ID            uuid.UUID `json:"id"`
 	Name          *string   `json:"name"`

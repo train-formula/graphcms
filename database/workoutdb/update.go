@@ -84,3 +84,16 @@ func UpdatePrescription(ctx context.Context, conn database.Conn, new workout.Pre
 
 	return newModel, nil
 }
+
+// Update prescription set, replace all fields with new row
+func UpdatePrescriptionSet(ctx context.Context, conn database.Conn, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
+
+	newModel := &new
+
+	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	if err != nil {
+		return nil, err
+	}
+
+	return newModel, nil
+}

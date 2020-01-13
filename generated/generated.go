@@ -118,6 +118,7 @@ type ComplexityRoot struct {
 		DeleteWorkoutBlock          func(childComplexity int, request uuid.UUID) int
 		EditExercise                func(childComplexity int, request EditExercise) int
 		EditPrescription            func(childComplexity int, request EditPrescription) int
+		EditPrescriptionSet         func(childComplexity int, request EditPrescriptionSet) int
 		EditWorkout                 func(childComplexity int, request EditWorkout) int
 		EditWorkoutBlock            func(childComplexity int, request EditWorkoutBlock) int
 		EditWorkoutCategory         func(childComplexity int, request EditWorkoutCategory) int
@@ -361,6 +362,7 @@ type MutationResolver interface {
 	EditPrescription(ctx context.Context, request EditPrescription) (*workout.Prescription, error)
 	DeletePrescription(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
 	CreatePrescriptionSet(ctx context.Context, request CreatePrescriptionSet) (*workout.PrescriptionSet, error)
+	EditPrescriptionSet(ctx context.Context, request EditPrescriptionSet) (*workout.PrescriptionSet, error)
 	DeletePrescriptionSet(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
 	CreateTag(ctx context.Context, request CreateTag) (*tag.Tag, error)
 	CreateWorkout(ctx context.Context, request CreateWorkout) (*workout.Workout, error)
@@ -808,6 +810,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.EditPrescription(childComplexity, args["request"].(EditPrescription)), true
+
+	case "Mutation.editPrescriptionSet":
+		if e.complexity.Mutation.EditPrescriptionSet == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editPrescriptionSet_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditPrescriptionSet(childComplexity, args["request"].(EditPrescriptionSet)), true
 
 	case "Mutation.editWorkout":
 		if e.complexity.Mutation.EditWorkout == nil {
@@ -2130,9 +2144,12 @@ extend type Mutation {
 
     createPrescription(request: CreatePrescription!): Prescription
     editPrescription(request: EditPrescription!): Prescription
+    # Before deletion prescriptions must be removed from all workout blocks individually
+    # Will auto-delete all attached prescription set's
     deletePrescription(request: ID!): ID
 
     createPrescriptionSet(request: CreatePrescriptionSet!): PrescriptionSet
+    editPrescriptionSet(request: EditPrescriptionSet!): PrescriptionSet
     deletePrescriptionSet(request: ID!): ID
 
 }
@@ -2190,7 +2207,20 @@ input CreatePrescriptionSet {
     data: CreatePrescriptionSetData!
 }
 
-`},
+
+###############################
+#### EDIT PRESCRIPTION SET ####
+###############################
+input EditPrescriptionSet {
+    id: ID!
+
+    setNumber: Int
+
+    primaryParameter: AttachUnitData
+
+    secondaryParameter: NullableAttachUnitData
+
+}`},
 	&ast.Source{Name: "schema/graphql/prescription/prescription_search.graphql", Input: `extend type Query {
 
     prescriptionSearch(request: PrescriptionSearchRequest!, first: Int!, after: String): PrescriptionSearchResults
@@ -2930,6 +2960,20 @@ func (ec *executionContext) field_Mutation_editExercise_args(ctx context.Context
 	var arg0 EditExercise
 	if tmp, ok := rawArgs["request"]; ok {
 		arg0, err = ec.unmarshalNEditExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditExercise(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editPrescriptionSet_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 EditPrescriptionSet
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNEditPrescriptionSet2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditPrescriptionSet(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4561,6 +4605,47 @@ func (ec *executionContext) _Mutation_createPrescriptionSet(ctx context.Context,
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CreatePrescriptionSet(rctx, args["request"].(CreatePrescriptionSet))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*workout.PrescriptionSet)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPrescriptionSet2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescriptionSet(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_editPrescriptionSet(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_editPrescriptionSet_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditPrescriptionSet(rctx, args["request"].(EditPrescriptionSet))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11776,6 +11861,42 @@ func (ec *executionContext) unmarshalInputEditPrescription(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditPrescriptionSet(ctx context.Context, obj interface{}) (EditPrescriptionSet, error) {
+	var it EditPrescriptionSet
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "setNumber":
+			var err error
+			it.SetNumber, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "primaryParameter":
+			var err error
+			it.PrimaryParameter, err = ec.unmarshalOAttachUnitData2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐAttachUnitData(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "secondaryParameter":
+			var err error
+			it.SecondaryParameter, err = ec.unmarshalONullableAttachUnitData2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐNullableAttachUnitData(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditWorkout(ctx context.Context, obj interface{}) (EditWorkout, error) {
 	var it EditWorkout
 	var asMap = obj.(map[string]interface{})
@@ -12408,6 +12529,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deletePrescription(ctx, field)
 		case "createPrescriptionSet":
 			out.Values[i] = ec._Mutation_createPrescriptionSet(ctx, field)
+		case "editPrescriptionSet":
+			out.Values[i] = ec._Mutation_editPrescriptionSet(ctx, field)
 		case "deletePrescriptionSet":
 			out.Values[i] = ec._Mutation_deletePrescriptionSet(ctx, field)
 		case "createTag":
@@ -14284,6 +14407,10 @@ func (ec *executionContext) unmarshalNEditExercise2githubᚗcomᚋtrainᚑformul
 
 func (ec *executionContext) unmarshalNEditPrescription2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditPrescription(ctx context.Context, v interface{}) (EditPrescription, error) {
 	return ec.unmarshalInputEditPrescription(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNEditPrescriptionSet2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditPrescriptionSet(ctx context.Context, v interface{}) (EditPrescriptionSet, error) {
+	return ec.unmarshalInputEditPrescriptionSet(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNEditWorkout2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditWorkout(ctx context.Context, v interface{}) (EditWorkout, error) {

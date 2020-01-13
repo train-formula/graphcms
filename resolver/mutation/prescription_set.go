@@ -21,6 +21,16 @@ func (r *MutationResolver) CreatePrescriptionSet(ctx context.Context, request ge
 	return nil, nil
 }
 
+func (r *MutationResolver) EditPrescriptionSet(ctx context.Context, request generated.EditPrescriptionSet) (*workout.PrescriptionSet, error) {
+	call := workoutcall.NewEditPrescriptionSet(request, r.logger, r.db)
+
+	if validation.ValidationChain(ctx, call.Validate(ctx)...) {
+		return call.Call(ctx)
+	}
+
+	return nil, nil
+}
+
 func (r *MutationResolver) DeletePrescriptionSet(ctx context.Context, request uuid.UUID) (*uuid.UUID, error) {
 	call := workoutcall.NewDeletePrescriptionSet(request, r.logger, r.db)
 
