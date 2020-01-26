@@ -6,6 +6,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
+	"github.com/train-formula/graphcms/database/plandb"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/database/trainerdb"
 	"github.com/train-formula/graphcms/database/workoutdb"
@@ -99,6 +100,25 @@ func PrescriptionExists(ctx context.Context, conn database.Conn, prescriptionID 
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Prescription id %s does not exist", prescriptionID)
+			}
+			return gqlerror.Errorf(err.Error())
+		}
+
+		return nil
+	}
+
+}
+
+// Validates that a plan id exists in the database
+func PlanExists(ctx context.Context, conn database.Conn, planID uuid.UUID) ValidatorFunc {
+
+	return func() *gqlerror.Error {
+
+		_, err := plandb.GetPlan(ctx, conn, planID)
+
+		if err != nil {
+			if err == pg.ErrNoRows {
+				return gqlerror.Errorf("Plan id %s does not exist", planID)
 			}
 			return gqlerror.Errorf(err.Error())
 		}

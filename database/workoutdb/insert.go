@@ -16,7 +16,7 @@ type ExercisePrescription struct {
 }
 
 // Insert a new workout program
-func InsertWorkoutProgram(ctx context.Context, conn database.Conn, new workout.WorkoutProgram) (*workout.WorkoutProgram, error) {
+func InsertWorkoutProgram(ctx context.Context, conn database.Tx, new workout.WorkoutProgram) (*workout.WorkoutProgram, error) {
 
 	newModel := &new
 
@@ -29,7 +29,7 @@ func InsertWorkoutProgram(ctx context.Context, conn database.Conn, new workout.W
 }
 
 // Insert a new workout category
-func InsertWorkoutCategory(ctx context.Context, conn database.Conn, new workout.WorkoutCategory) (*workout.WorkoutCategory, error) {
+func InsertWorkoutCategory(ctx context.Context, conn database.Tx, new workout.WorkoutCategory) (*workout.WorkoutCategory, error) {
 
 	newModel := &new
 
@@ -42,7 +42,7 @@ func InsertWorkoutCategory(ctx context.Context, conn database.Conn, new workout.
 }
 
 // Insert a new workout
-func InsertWorkout(ctx context.Context, conn database.Conn, new workout.Workout) (*workout.Workout, error) {
+func InsertWorkout(ctx context.Context, conn database.Tx, new workout.Workout) (*workout.Workout, error) {
 
 	newModel := &new
 
@@ -55,7 +55,7 @@ func InsertWorkout(ctx context.Context, conn database.Conn, new workout.Workout)
 }
 
 // Insert a new workout block
-func InsertWorkoutBlock(ctx context.Context, conn database.Conn, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
+func InsertWorkoutBlock(ctx context.Context, conn database.Tx, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
 
 	newModel := &new
 
@@ -68,7 +68,7 @@ func InsertWorkoutBlock(ctx context.Context, conn database.Conn, new workout.Wor
 }
 
 // Insert a new exercise
-func InsertExercise(ctx context.Context, conn database.Conn, new workout.Exercise) (*workout.Exercise, error) {
+func InsertExercise(ctx context.Context, conn database.Tx, new workout.Exercise) (*workout.Exercise, error) {
 
 	newModel := &new
 
@@ -81,7 +81,7 @@ func InsertExercise(ctx context.Context, conn database.Conn, new workout.Exercis
 }
 
 // Insert a new prescription
-func InsertPrescription(ctx context.Context, conn database.Conn, new workout.Prescription) (*workout.Prescription, error) {
+func InsertPrescription(ctx context.Context, conn database.Tx, new workout.Prescription) (*workout.Prescription, error) {
 
 	newModel := &new
 
@@ -94,7 +94,7 @@ func InsertPrescription(ctx context.Context, conn database.Conn, new workout.Pre
 }
 
 // Insert a new prescription set
-func InsertPrescriptionSet(ctx context.Context, conn database.Conn, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
+func InsertPrescriptionSet(ctx context.Context, conn database.Tx, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
 
 	newModel := &new
 
@@ -108,7 +108,7 @@ func InsertPrescriptionSet(ctx context.Context, conn database.Conn, new workout.
 
 // Remove all workout categories from a workout, and set a new list
 // The order of the categories will be the order they appear in the list
-func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, workoutID uuid.UUID, workoutCategoryIDs []uuid.UUID) error {
+func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Tx, workoutID uuid.UUID, workoutCategoryIDs []uuid.UUID) error {
 
 	if len(workoutCategoryIDs) <= 0 {
 		return errors.New("must specify at least one workout category id to set onto workout")
@@ -146,7 +146,7 @@ func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, workou
 
 // Remove all BlockExercise's from a workout block, and set a new list
 // The order of the BlockExercises will be the order they appear in the list
-func SetWorkoutBlockBlockExercises(ctx context.Context, conn database.Conn, workoutBlockID uuid.UUID, exercisePrescriptions []ExercisePrescription) error {
+func SetWorkoutBlockBlockExercises(ctx context.Context, conn database.Tx, workoutBlockID uuid.UUID, exercisePrescriptions []ExercisePrescription) error {
 
 	if len(exercisePrescriptions) <= 0 {
 		return errors.New("must specify at least exercise + prescription id to set onto workout block")

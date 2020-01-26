@@ -20,6 +20,8 @@ autobind:
   - github.com/train-formula/graphcms/models/workout
   - github.com/train-formula/graphcms/models/trainer
   - github.com/train-formula/graphcms/models/tag
+  - github.com/train-formula/graphcms/models/plan
+  - github.com/train-formula/graphcms/models/interval
 models:
   ID:
     model:
@@ -39,3 +41,6 @@ models:
   ExerciseEdge:
     model:
       - github.com/train-formula/graphcms/models/workout.Exercise
+  PlanEdge:
+    model:
+      - github.com/train-formula/graphcms/models/plan.Plan

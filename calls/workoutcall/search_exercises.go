@@ -47,7 +47,7 @@ func (s SearchExercises) genQuery(count bool) (string, []interface{}) {
 	if len(s.request.TagUUIDs) > 0 {
 		query += ` FROM ` + database.TableName(workout.Exercise{}) + ` e ` +
 			` INNER JOIN ` + database.TableName(tag.Tagged{}) + ` t ` +
-			` ON e.id = t.tagged_id WHERE e.trainer_organization_id = ? AND `
+			` ON (e.id = t.tagged_id AND t.tag_type = 'EXERCISE') WHERE e.trainer_organization_id = ? AND `
 
 		params = []interface{}{s.request.TrainerOrganizationID}
 

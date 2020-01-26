@@ -16,7 +16,7 @@ func CheckCreatePrescriptionSetData(ctx context.Context, conn database.Conn, req
 	buildMessage := func(message string) string {
 
 		if idx != nil {
-			return message + fmt.Sprintf(" (at index %d)", *idx)
+			return fmt.Sprintf("%s (at index %d)", message, *idx)
 		}
 
 		return message

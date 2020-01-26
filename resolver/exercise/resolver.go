@@ -20,7 +20,7 @@ type ExerciseResolver struct {
 func NewExerciseResolver(db *pg.DB, logger *zap.Logger) *ExerciseResolver {
 	return &ExerciseResolver{
 		db:     db,
-		logger: logger,
+		logger: logger.Named("ExerciseResolver"),
 	}
 }
 

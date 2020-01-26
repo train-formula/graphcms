@@ -9,8 +9,16 @@ import (
 
 type ValidatorFunc func() *gqlerror.Error
 
+// A ValidatorFunc that returns nothing
 func EmptyValidatorFunc() *gqlerror.Error {
 	return nil
+}
+
+// Generates a ValidatorFunc that always return the given message as an error
+func ImmediateErrorValidator(message string, args ...interface{}) ValidatorFunc {
+	return func() *gqlerror.Error {
+		return gqlerror.Errorf(message, args...)
+	}
 }
 
 func ValidationChain(ctx context.Context, funcs ...ValidatorFunc) bool {

@@ -17,16 +17,16 @@ import (
 	"github.com/train-formula/graphcms/validation"
 )
 
+type WorkoutProgramResolver struct {
+	db     *pg.DB
+	logger *zap.Logger
+}
+
 func NewWorkoutProgramResolver(db *pg.DB, logger *zap.Logger) *WorkoutProgramResolver {
 	return &WorkoutProgramResolver{
 		db:     db,
 		logger: logger.Named("WorkoutProgramResolver"),
 	}
-}
-
-type WorkoutProgramResolver struct {
-	db     *pg.DB
-	logger *zap.Logger
 }
 
 func (r *WorkoutProgramResolver) TrainerOrganization(ctx context.Context, obj *workout.WorkoutProgram) (*trainer.Organization, error) {

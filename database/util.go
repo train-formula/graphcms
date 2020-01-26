@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -63,7 +64,8 @@ func BasicCursorPaginationQuery(query string, prefix string, after cursor.Cursor
 	return query, params, nil
 }
 
-func ReflectValue(s interface{}) reflect.Value {
+// Reflects a struct value and resolves pointers. Panics if input is not a struct
+func ReflectStructValue(s interface{}) reflect.Value {
 	v := reflect.ValueOf(s)
 
 	// if pointer get the underlying element≤
@@ -78,11 +80,10 @@ func ReflectValue(s interface{}) reflect.Value {
 	return v
 }
 
-func StructColumns(v reflect.Value, prefix string) []string {
+// Get a list of columns from the fields on the specified struct, with the specified prefix added to column names
+func StructColumns(s interface{}, prefix string) []string {
 
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
+	v := ReflectStructValue(s)
 
 	t := v.Type()
 
@@ -91,7 +92,7 @@ func StructColumns(v reflect.Value, prefix string) []string {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
-		if unicode.IsUpper(rune(field.Name[0])) {
+		if unicode.IsUpper(rune(field.Name[0])) && !shouldIgnoreColumn(field.Name) {
 			results = append(results, PGPrefixedColumn(strcase.ToSnake(field.Name), prefix))
 		}
 
@@ -99,4 +100,74 @@ func StructColumns(v reflect.Value, prefix string) []string {
 
 	return results
 
+}
+
+// Return value for StructColumnValues
+type StructColumnValue struct {
+	Column string
+	Value  interface{}
+}
+
+// Get a list of columns + values from the fields in the specified struct, with the specified prefix added to column names
+func StructColumnValues(s interface{}, prefix string) []StructColumnValue {
+
+	var results []StructColumnValue
+
+	v := ReflectStructValue(s)
+	t := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		fieldVal := v.Field(i)
+		field := t.Field(i)
+
+		if unicode.IsUpper(rune(field.Name[0])) && !shouldIgnoreColumn(field.Name) {
+			results = append(results, StructColumnValue{
+				Column: PGPrefixedColumn(strcase.ToSnake(field.Name), prefix),
+				Value:  fieldVal.Interface(),
+			})
+		}
+	}
+
+	return results
+}
+
+// Generate a basic insert statement (INSERT INTO ... (...) VALUES (...) from the specified struct
+// Also returns necessary list of params
+// Does NOT include a ; at the end of the query to allow for easy extension (e.g. adding a ON CONFLICT)
+func StructInsertStatement(s TableModel, prefix string) (string, []interface{}, error) {
+
+	columnValues := StructColumnValues(s, prefix)
+
+	if len(columnValues) <= 0 {
+		return "", nil, errors.New("cannot generate insert statement for struct without columns")
+	}
+
+	cols := ""
+	vals := ""
+	var params []interface{}
+
+	for idx, c := range columnValues {
+
+		cols += c.Column
+		vals += "?"
+		params = append(params, c.Value)
+
+		if idx < len(columnValues)-1 {
+			cols += ", "
+			vals += ", "
+		}
+	}
+
+	return fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", TableName(s), cols, vals), params, nil
+}
+
+// Columns to ignore when extracting columns from structs programmatically
+var columnsToIgnore = map[string]struct{}{
+	"CreatedAt": {},
+	"UpdatedAt": {},
+}
+
+func shouldIgnoreColumn(col string) bool {
+	_, ignore := columnsToIgnore[col]
+	return ignore
 }

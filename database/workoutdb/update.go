@@ -8,7 +8,7 @@ import (
 )
 
 // Update workout program, replace all fields with new row
-func UpdateWorkoutProgram(ctx context.Context, conn database.Conn, new workout.WorkoutProgram) (*workout.WorkoutProgram, error) {
+func UpdateWorkoutProgram(ctx context.Context, conn database.Tx, new workout.WorkoutProgram) (*workout.WorkoutProgram, error) {
 
 	newModel := &new
 
@@ -21,7 +21,7 @@ func UpdateWorkoutProgram(ctx context.Context, conn database.Conn, new workout.W
 }
 
 // Update workout category, replace all fields with new row
-func UpdateWorkoutCategory(ctx context.Context, conn database.Conn, new workout.WorkoutCategory) (*workout.WorkoutCategory, error) {
+func UpdateWorkoutCategory(ctx context.Context, conn database.Tx, new workout.WorkoutCategory) (*workout.WorkoutCategory, error) {
 
 	newModel := &new
 
@@ -34,7 +34,7 @@ func UpdateWorkoutCategory(ctx context.Context, conn database.Conn, new workout.
 }
 
 // Update workout, replace all fields with new row
-func UpdateWorkout(ctx context.Context, conn database.Conn, new workout.Workout) (*workout.Workout, error) {
+func UpdateWorkout(ctx context.Context, conn database.Tx, new workout.Workout) (*workout.Workout, error) {
 
 	newModel := &new
 
@@ -47,7 +47,7 @@ func UpdateWorkout(ctx context.Context, conn database.Conn, new workout.Workout)
 }
 
 // Update workout block, replace all fields with new row
-func UpdateWorkoutBlock(ctx context.Context, conn database.Conn, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
+func UpdateWorkoutBlock(ctx context.Context, conn database.Tx, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
 
 	newModel := &new
 
@@ -60,7 +60,7 @@ func UpdateWorkoutBlock(ctx context.Context, conn database.Conn, new workout.Wor
 }
 
 // Update exercise, replace all fields with new row
-func UpdateExercise(ctx context.Context, conn database.Conn, new workout.Exercise) (*workout.Exercise, error) {
+func UpdateExercise(ctx context.Context, conn database.Tx, new workout.Exercise) (*workout.Exercise, error) {
 
 	newModel := &new
 
@@ -73,7 +73,7 @@ func UpdateExercise(ctx context.Context, conn database.Conn, new workout.Exercis
 }
 
 // Update prescription, replace all fields with new row
-func UpdatePrescription(ctx context.Context, conn database.Conn, new workout.Prescription) (*workout.Prescription, error) {
+func UpdatePrescription(ctx context.Context, conn database.Tx, new workout.Prescription) (*workout.Prescription, error) {
 
 	newModel := &new
 
@@ -86,7 +86,7 @@ func UpdatePrescription(ctx context.Context, conn database.Conn, new workout.Pre
 }
 
 // Update prescription set, replace all fields with new row
-func UpdatePrescriptionSet(ctx context.Context, conn database.Conn, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
+func UpdatePrescriptionSet(ctx context.Context, conn database.Tx, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
 
 	newModel := &new
 

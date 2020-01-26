@@ -56,7 +56,7 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 
 	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		workoutBlock, err := workoutdb.GetWorkoutBlockForUpdate(ctx, c.db, c.request.ID)
+		workoutBlock, err := workoutdb.GetWorkoutBlockForUpdate(ctx, t, c.request.ID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout block does not exist")
@@ -103,7 +103,7 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 			return gqlerror.Errorf("If round numeral is set, round unit id must also be set")
 		}
 
-		finalWorkoutBlock, err = workoutdb.UpdateWorkoutBlock(ctx, c.db, workoutBlock)
+		finalWorkoutBlock, err = workoutdb.UpdateWorkoutBlock(ctx, t, workoutBlock)
 		if err != nil {
 			c.logger.Error("Error updating workout block", zap.Error(err),
 				logging.UUID("workoutBlockID", c.request.ID))

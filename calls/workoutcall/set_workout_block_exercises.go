@@ -37,7 +37,7 @@ func (c SetWorkoutBlockExercises) Call(ctx context.Context) (*workout.WorkoutBlo
 	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
 		var err error
-		wrkout, err := workoutdb.GetWorkoutBlockForUpdate(ctx, c.db, c.request.WorkoutBlockID)
+		wrkout, err := workoutdb.GetWorkoutBlockForUpdate(ctx, t, c.request.WorkoutBlockID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout block does not exist")

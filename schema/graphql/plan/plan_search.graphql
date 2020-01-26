@@ -1,0 +1,18 @@
+extend type Query {
+
+    planSearch(request: PlanSearchRequest!, first: Int!, after: String): PlanSearchResults
+}
+
+
+input PlanSearchRequest {
+    trainerOrganizationID: ID!
+    tagUUIDs: [ID!]
+}
+
+
+type PlanSearchResults {
+
+    tag_facet: TagFacet
+
+    results: PlanConnection!
+}

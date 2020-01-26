@@ -11,6 +11,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/models"
 	"github.com/train-formula/graphcms/models/connections"
+	"github.com/train-formula/graphcms/models/interval"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 )
@@ -32,6 +33,28 @@ type CreateExercise struct {
 	Description           string      `json:"description"`
 	VideoURL              *string     `json:"videoURL"`
 	Tags                  []uuid.UUID `json:"tags"`
+}
+
+type CreatePlan struct {
+	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
+	Name                  string      `json:"name"`
+	Description           *string     `json:"description"`
+	RegistrationAvailable bool        `json:"registrationAvailable"`
+	Inventory             *int        `json:"inventory"`
+	Tags                  []uuid.UUID `json:"tags"`
+}
+
+type CreatePlanSchedule struct {
+	TrainerOrganizationID uuid.UUID             `json:"trainerOrganizationID"`
+	PlanID                uuid.UUID             `json:"planID"`
+	Name                  *string               `json:"name"`
+	Description           *string               `json:"description"`
+	PaymentInterval       *DiurnalIntervalInput `json:"paymentInterval"`
+	PricePerInterval      int                   `json:"pricePerInterval"`
+	PriceMarkedDownFrom   *int                  `json:"priceMarkedDownFrom"`
+	DurationInterval      *DiurnalIntervalInput `json:"durationInterval"`
+	RegistrationAvailable bool                  `json:"registrationAvailable"`
+	Inventory             *int                  `json:"inventory"`
 }
 
 type CreatePrescription struct {
@@ -93,11 +116,31 @@ type CreateWorkoutProgram struct {
 	Tags                     []uuid.UUID `json:"tags"`
 }
 
+type DiurnalIntervalInput struct {
+	Interval *interval.DiurnalIntervalInterval `json:"interval"`
+	Count    int                               `json:"count"`
+}
+
 type EditExercise struct {
 	ID          uuid.UUID                    `json:"id"`
 	Name        *string                      `json:"name"`
 	Description *string                      `json:"description"`
 	VideoURL    *models.NullableStringEditor `json:"videoURL"`
+}
+
+type EditPlan struct {
+	ID                    uuid.UUID                    `json:"id"`
+	Name                  *string                      `json:"name"`
+	Description           *models.NullableStringEditor `json:"description"`
+	RegistrationAvailable *bool                        `json:"registrationAvailable"`
+}
+
+type EditPlanSchedule struct {
+	ID                    uuid.UUID                    `json:"id"`
+	Name                  *models.NullableStringEditor `json:"name"`
+	Description           *models.NullableStringEditor `json:"description"`
+	PriceMarkedDownFrom   *models.NullableIntEditor    `json:"priceMarkedDownFrom"`
+	RegistrationAvailable *bool                        `json:"registrationAvailable"`
 }
 
 type EditPrescription struct {
@@ -148,6 +191,16 @@ type ExerciseSearchResults struct {
 
 type NullableAttachUnitData struct {
 	Value *AttachUnitData `json:"value"`
+}
+
+type PlanSearchRequest struct {
+	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
+	TagUUIDs              []uuid.UUID `json:"tagUUIDs"`
+}
+
+type PlanSearchResults struct {
+	TagFacet *TagFacet                   `json:"tag_facet"`
+	Results  *connections.PlanConnection `json:"results"`
 }
 
 type PrescriptionSearchRequest struct {

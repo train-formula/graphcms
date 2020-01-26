@@ -1,0 +1,55 @@
+
+extend type Mutation {
+
+    createPlanSchedule(request: CreatePlanSchedule!): PlanSchedule
+    editPlanSchedule(request: EditPlanSchedule!): PlanSchedule
+
+    # Archive a plan schedule. Cannot archive a plan schedule until it has no active users.
+    archivePlanSchedule(request: ID!): PlanSchedule
+}
+
+
+###########################
+## CREATE PLAN SCHEDULE ###
+###########################
+input CreatePlanSchedule {
+
+    trainerOrganizationID: ID!
+    planID: ID!
+
+    name: String
+    description: String
+
+    # Once created cannot be modified
+    paymentInterval: DiurnalIntervalInput!
+
+    # Cents. Price per payment interval
+    # Once created cannot be modified
+    pricePerInterval: Int!
+    # Cents. Pure display the value to show the customer e.g. "$75 down from $100"
+    priceMarkedDownFrom: Int
+
+    # Once created cannot be modified
+    durationInterval: DiurnalIntervalInput
+
+    registrationAvailable: Boolean!
+
+    # Optional inventory for schedule to start with.
+    inventory: Int
+}
+
+###########################
+#### EDIT PLAN SCHEDULE ###
+###########################
+input EditPlanSchedule {
+
+    id: ID!
+
+    name: NullableStringEditor
+    description: NullableStringEditor
+
+    # Cents. Pure display the value to show the customer e.g. "$75 down from $100"
+    priceMarkedDownFrom: NullableIntEditor
+
+    registrationAvailable: Boolean
+}

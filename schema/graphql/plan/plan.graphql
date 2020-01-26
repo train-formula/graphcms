@@ -1,0 +1,38 @@
+
+extend type Query {
+    plan(id: ID!): Plan
+}
+
+
+type Plan {
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String
+
+    registrationAvailable: Boolean!
+
+    archived: Boolean!
+
+    # Fetchers
+    schedules: [PlanSchedule!]
+    tags: [Tag!]
+}
+
+# Connection for a plan
+type PlanConnection {
+    totalCount: Int!
+    edges: [PlanEdge!]!
+    pageInfo: PageInfo!
+}
+
+# Edge for a plan connection
+type PlanEdge {
+    cursor: String!
+    node: Plan!
+}

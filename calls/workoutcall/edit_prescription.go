@@ -48,7 +48,7 @@ func (c EditPrescription) Call(ctx context.Context) (*workout.Prescription, erro
 
 	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		prescription, err := workoutdb.GetPrescriptionForUpdate(ctx, c.db, c.request.ID)
+		prescription, err := workoutdb.GetPrescriptionForUpdate(ctx, t, c.request.ID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Prescription does not exist")
@@ -71,7 +71,7 @@ func (c EditPrescription) Call(ctx context.Context) (*workout.Prescription, erro
 			prescription.DurationSeconds = c.request.DurationSeconds.Value
 		}
 
-		finalPrescription, err = workoutdb.UpdatePrescription(ctx, c.db, prescription)
+		finalPrescription, err = workoutdb.UpdatePrescription(ctx, t, prescription)
 		if err != nil {
 			c.kogger.Error("Error updating prescription", zap.Error(err),
 				logging.UUID("prescriptionID", c.request.ID))

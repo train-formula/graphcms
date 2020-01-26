@@ -7,6 +7,8 @@ import (
 	"github.com/train-formula/graphcms/resolver/blockexercise"
 	"github.com/train-formula/graphcms/resolver/exercise"
 	"github.com/train-formula/graphcms/resolver/mutation"
+	"github.com/train-formula/graphcms/resolver/plan"
+	"github.com/train-formula/graphcms/resolver/planschedule"
 	"github.com/train-formula/graphcms/resolver/prescription"
 	"github.com/train-formula/graphcms/resolver/prescriptionset"
 	"github.com/train-formula/graphcms/resolver/query"
@@ -29,6 +31,8 @@ type Resolver struct {
 	db     *pg.DB
 	logger *zap.Logger
 }
+
+var _ generated.ResolverRoot = (*Resolver)(nil)
 
 func (r *Resolver) Mutation() generated.MutationResolver {
 	return mutation.NewMutationResolver(r.db, r.logger)
@@ -70,6 +74,14 @@ func (r *Resolver) UnitData() generated.UnitDataResolver {
 	return unitdata.NewUnitDataResolver(r.db, r.logger)
 }
 
+func (r *Resolver) Plan() generated.PlanResolver {
+	return plan.NewPlanResolver(r.db, r.logger)
+}
+
+func (r *Resolver) PlanSchedule() generated.PlanScheduleResolver {
+	return planschedule.NewPlanScheduleResolver(r.db, r.logger)
+}
+
 func (r *Resolver) WorkoutProgramConnection() generated.WorkoutProgramConnectionResolver {
 	return &connections.WorkoutProgramConnection{}
 }
@@ -88,4 +100,7 @@ func (r *Resolver) ExerciseConnection() generated.ExerciseConnectionResolver {
 
 func (r *Resolver) PrescriptionConnection() generated.PrescriptionConnectionResolver {
 	return &connections.PrescriptionConnection{}
+}
+func (r *Resolver) PlanConnection() generated.PlanConnectionResolver {
+	return &connections.PlanConnection{}
 }

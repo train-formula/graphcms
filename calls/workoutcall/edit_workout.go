@@ -40,7 +40,7 @@ func (c EditWorkout) Call(ctx context.Context) (*workout.Workout, error) {
 
 	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		wrkout, err := workoutdb.GetWorkoutForUpdate(ctx, c.db, c.request.ID)
+		wrkout, err := workoutdb.GetWorkoutForUpdate(ctx, t, c.request.ID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Workout does not exist")
@@ -59,7 +59,7 @@ func (c EditWorkout) Call(ctx context.Context) (*workout.Workout, error) {
 			wrkout.Description = *c.request.Description
 		}
 
-		finalWorkout, err = workoutdb.UpdateWorkout(ctx, c.db, wrkout)
+		finalWorkout, err = workoutdb.UpdateWorkout(ctx, t, wrkout)
 		if err != nil {
 			c.logger.Error("Error updating workout", zap.Error(err),
 				logging.UUID("workoutID", c.request.ID))

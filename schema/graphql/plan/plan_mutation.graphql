@@ -1,0 +1,43 @@
+
+extend type Mutation {
+    createPlan(request: CreatePlan!): Plan
+    editPlan(request: EditPlan!): Plan
+
+    # Archive a plan. Cannot archive a plan until it has no active users.
+    archivePlan(request: ID!): Plan
+}
+
+
+
+
+###########################
+####### CREATE PLAN #######
+###########################
+input CreatePlan {
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String
+
+    registrationAvailable: Boolean!
+
+    # Optional inventory for plan to start with.
+    inventory: Int
+
+    tags: [ID!]
+}
+
+
+###########################
+######## EDIT PLAN ########
+###########################
+input EditPlan {
+
+    id: ID!
+
+    name: String
+    description: NullableStringEditor
+
+    registrationAvailable: Boolean
+}

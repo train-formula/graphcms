@@ -1,0 +1,36 @@
+
+extend type Query {
+    planSchedule(id: ID!): PlanSchedule
+
+}
+
+
+type PlanSchedule {
+
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+    planID: ID!
+
+    name: String
+    description: String
+
+    # Interval at which the customer pays
+    paymentInterval: DiurnalInterval!
+
+    # Cents. Price per payment interval
+    pricePerInterval: Int!
+    # Cents. Pure display the value to show the customer e.g. "$75 down from $100"
+    priceMarkedDownFrom: Int
+
+    # Interval that the plan lasts for (e.g. 3 months).
+    durationInterval: DiurnalInterval
+
+    registrationAvailable: Boolean!
+
+    # Fetchers
+    plan: Plan
+}

@@ -49,7 +49,7 @@ func (c EditPrescriptionSet) Call(ctx context.Context) (*workout.PrescriptionSet
 
 	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		prescriptionSet, err := workoutdb.GetPrescriptionSetForUpdate(ctx, c.db, c.request.ID)
+		prescriptionSet, err := workoutdb.GetPrescriptionSetForUpdate(ctx, t, c.request.ID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Prescription set does not exist")
@@ -86,7 +86,7 @@ func (c EditPrescriptionSet) Call(ctx context.Context) (*workout.PrescriptionSet
 			prescriptionSet.SecondaryParameterUnitID = secondaryUnitID
 		}
 
-		finalPrescriptionSet, err = workoutdb.UpdatePrescriptionSet(ctx, c.db, prescriptionSet)
+		finalPrescriptionSet, err = workoutdb.UpdatePrescriptionSet(ctx, t, prescriptionSet)
 		if err != nil {
 			c.kogger.Error("Error updating prescription set", zap.Error(err),
 				logging.UUID("prescriptionSetID", c.request.ID))

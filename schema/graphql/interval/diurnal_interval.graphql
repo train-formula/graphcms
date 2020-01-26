@@ -1,0 +1,19 @@
+
+enum DiurnalIntervalInterval {
+    DAY
+    WEEK
+    MONTH
+    YEAR
+}
+
+# An interval where we don't consider smaller units of time then a day
+type DiurnalInterval {
+    interval: DiurnalIntervalInterval
+    count: Int!
+}
+
+# Input for a DiurnalInterval
+input DiurnalIntervalInput {
+    interval: DiurnalIntervalInterval
+    count: Int!
+}

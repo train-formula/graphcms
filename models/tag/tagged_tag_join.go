@@ -33,9 +33,7 @@ func (t *TaggedTagJoin) Tag() *Tag {
 // Extract the columns to use in a SELECT statement
 func (t TaggedTagJoin) SelectColumns(tagTablePrefix, taggedTablePrefix string) string {
 
-	valued := database.ReflectValue(Tag{})
-
-	columns := database.StructColumns(valued, tagTablePrefix)
+	columns := database.StructColumns(Tag{}, tagTablePrefix)
 	columns = append(columns, database.PGPrefixedColumn("tagged_id", taggedTablePrefix))
 	columns = append(columns, database.PGPrefixedColumn("tag_type", taggedTablePrefix))
 

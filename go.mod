@@ -25,6 +25,7 @@ require (
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/prometheus/client_model v0.0.0-20191202183732-d1d2010b5bee // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
+	github.com/stripe/stripe-go v68.11.0+incompatible // indirect
 	github.com/train-formula/october v0.0.0-20191203065510-6cd07cb49287
 	github.com/vektah/dataloaden v0.3.0
 	github.com/vektah/gqlparser v1.2.0

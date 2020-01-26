@@ -16,6 +16,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/models"
 	"github.com/train-formula/graphcms/models/connections"
+	"github.com/train-formula/graphcms/models/interval"
+	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/trainer"
 	"github.com/train-formula/graphcms/models/workout"
@@ -45,6 +47,9 @@ type ResolverRoot interface {
 	Exercise() ExerciseResolver
 	ExerciseConnection() ExerciseConnectionResolver
 	Mutation() MutationResolver
+	Plan() PlanResolver
+	PlanConnection() PlanConnectionResolver
+	PlanSchedule() PlanScheduleResolver
 	Prescription() PrescriptionResolver
 	PrescriptionConnection() PrescriptionConnectionResolver
 	PrescriptionSet() PrescriptionSetResolver
@@ -75,6 +80,11 @@ type ComplexityRoot struct {
 		UpdatedAt      func(childComplexity int) int
 	}
 
+	DiurnalInterval struct {
+		Count    func(childComplexity int) int
+		Interval func(childComplexity int) int
+	}
+
 	Exercise struct {
 		CreatedAt             func(childComplexity int) int
 		Description           func(childComplexity int) int
@@ -103,7 +113,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		ArchivePlan                 func(childComplexity int, request uuid.UUID) int
+		ArchivePlanSchedule         func(childComplexity int, request uuid.UUID) int
 		CreateExercise              func(childComplexity int, request CreateExercise) int
+		CreatePlan                  func(childComplexity int, request CreatePlan) int
+		CreatePlanSchedule          func(childComplexity int, request CreatePlanSchedule) int
 		CreatePrescription          func(childComplexity int, request CreatePrescription) int
 		CreatePrescriptionSet       func(childComplexity int, request CreatePrescriptionSet) int
 		CreateTag                   func(childComplexity int, request CreateTag) int
@@ -117,6 +131,8 @@ type ComplexityRoot struct {
 		DeleteWorkout               func(childComplexity int, request uuid.UUID) int
 		DeleteWorkoutBlock          func(childComplexity int, request uuid.UUID) int
 		EditExercise                func(childComplexity int, request EditExercise) int
+		EditPlan                    func(childComplexity int, request EditPlan) int
+		EditPlanSchedule            func(childComplexity int, request EditPlanSchedule) int
 		EditPrescription            func(childComplexity int, request EditPrescription) int
 		EditPrescriptionSet         func(childComplexity int, request EditPrescriptionSet) int
 		EditWorkout                 func(childComplexity int, request EditWorkout) int
@@ -139,6 +155,51 @@ type ComplexityRoot struct {
 		EndCursor   func(childComplexity int) int
 		HasNextPage func(childComplexity int) int
 		StartCursor func(childComplexity int) int
+	}
+
+	Plan struct {
+		Archived              func(childComplexity int) int
+		CreatedAt             func(childComplexity int) int
+		Description           func(childComplexity int) int
+		ID                    func(childComplexity int) int
+		Name                  func(childComplexity int) int
+		RegistrationAvailable func(childComplexity int) int
+		Schedules             func(childComplexity int) int
+		Tags                  func(childComplexity int) int
+		TrainerOrganizationID func(childComplexity int) int
+		UpdatedAt             func(childComplexity int) int
+	}
+
+	PlanConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	PlanEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
+	PlanSchedule struct {
+		CreatedAt             func(childComplexity int) int
+		Description           func(childComplexity int) int
+		DurationInterval      func(childComplexity int) int
+		ID                    func(childComplexity int) int
+		Name                  func(childComplexity int) int
+		PaymentInterval       func(childComplexity int) int
+		Plan                  func(childComplexity int) int
+		PlanID                func(childComplexity int) int
+		PriceMarkedDownFrom   func(childComplexity int) int
+		PricePerInterval      func(childComplexity int) int
+		RegistrationAvailable func(childComplexity int) int
+		TrainerOrganizationID func(childComplexity int) int
+		UpdatedAt             func(childComplexity int) int
+	}
+
+	PlanSearchResults struct {
+		Results  func(childComplexity int) int
+		TagFacet func(childComplexity int) int
 	}
 
 	Prescription struct {
@@ -187,6 +248,9 @@ type ComplexityRoot struct {
 		Health                    func(childComplexity int) int
 		Organization              func(childComplexity int, id uuid.UUID) int
 		OrganizationAvailableTags func(childComplexity int, id uuid.UUID, first int, after *string) int
+		Plan                      func(childComplexity int, id uuid.UUID) int
+		PlanSchedule              func(childComplexity int, id uuid.UUID) int
+		PlanSearch                func(childComplexity int, request PlanSearchRequest, first int, after *string) int
 		Prescription              func(childComplexity int, id uuid.UUID) int
 		PrescriptionSearch        func(childComplexity int, request PrescriptionSearchRequest, first int, after *string) int
 		Tag                       func(childComplexity int, id uuid.UUID) int
@@ -358,6 +422,12 @@ type MutationResolver interface {
 	CreateExercise(ctx context.Context, request CreateExercise) (*workout.Exercise, error)
 	EditExercise(ctx context.Context, request EditExercise) (*workout.Exercise, error)
 	DeleteExercise(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
+	CreatePlan(ctx context.Context, request CreatePlan) (*plan.Plan, error)
+	EditPlan(ctx context.Context, request EditPlan) (*plan.Plan, error)
+	ArchivePlan(ctx context.Context, request uuid.UUID) (*plan.Plan, error)
+	CreatePlanSchedule(ctx context.Context, request CreatePlanSchedule) (*plan.PlanSchedule, error)
+	EditPlanSchedule(ctx context.Context, request EditPlanSchedule) (*plan.PlanSchedule, error)
+	ArchivePlanSchedule(ctx context.Context, request uuid.UUID) (*plan.PlanSchedule, error)
 	CreatePrescription(ctx context.Context, request CreatePrescription) (*workout.Prescription, error)
 	EditPrescription(ctx context.Context, request EditPrescription) (*workout.Prescription, error)
 	DeletePrescription(ctx context.Context, request uuid.UUID) (*uuid.UUID, error)
@@ -376,6 +446,22 @@ type MutationResolver interface {
 	CreateWorkoutCategory(ctx context.Context, request CreateWorkoutCategory) (*workout.WorkoutCategory, error)
 	EditWorkoutCategory(ctx context.Context, request EditWorkoutCategory) (*workout.WorkoutCategory, error)
 	CreateWorkoutProgram(ctx context.Context, request CreateWorkoutProgram) (*workout.WorkoutProgram, error)
+}
+type PlanResolver interface {
+	Schedules(ctx context.Context, obj *plan.Plan) ([]*plan.PlanSchedule, error)
+	Tags(ctx context.Context, obj *plan.Plan) ([]*tag.Tag, error)
+}
+type PlanConnectionResolver interface {
+	TotalCount(ctx context.Context, obj *connections.PlanConnection) (int, error)
+
+	PageInfo(ctx context.Context, obj *connections.PlanConnection) (*models.PageInfo, error)
+}
+type PlanScheduleResolver interface {
+	PaymentInterval(ctx context.Context, obj *plan.PlanSchedule) (*interval.DiurnalInterval, error)
+
+	DurationInterval(ctx context.Context, obj *plan.PlanSchedule) (*interval.DiurnalInterval, error)
+
+	Plan(ctx context.Context, obj *plan.PlanSchedule) (*plan.Plan, error)
 }
 type PrescriptionResolver interface {
 	Sets(ctx context.Context, obj *workout.Prescription) ([]*workout.PrescriptionSet, error)
@@ -397,6 +483,9 @@ type QueryResolver interface {
 	ExerciseSearch(ctx context.Context, request ExerciseSearchRequest, first int, after *string) (*ExerciseSearchResults, error)
 	Organization(ctx context.Context, id uuid.UUID) (*trainer.Organization, error)
 	OrganizationAvailableTags(ctx context.Context, id uuid.UUID, first int, after *string) (*connections.TagConnection, error)
+	Plan(ctx context.Context, id uuid.UUID) (*plan.Plan, error)
+	PlanSearch(ctx context.Context, request PlanSearchRequest, first int, after *string) (*PlanSearchResults, error)
+	PlanSchedule(ctx context.Context, id uuid.UUID) (*plan.PlanSchedule, error)
 	Prescription(ctx context.Context, id uuid.UUID) (*workout.Prescription, error)
 	PrescriptionSearch(ctx context.Context, request PrescriptionSearchRequest, first int, after *string) (*PrescriptionSearchResults, error)
 	Tag(ctx context.Context, id uuid.UUID) (*tag.Tag, error)
@@ -526,6 +615,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BlockExercise.UpdatedAt(childComplexity), true
 
+	case "DiurnalInterval.count":
+		if e.complexity.DiurnalInterval.Count == nil {
+			break
+		}
+
+		return e.complexity.DiurnalInterval.Count(childComplexity), true
+
+	case "DiurnalInterval.interval":
+		if e.complexity.DiurnalInterval.Interval == nil {
+			break
+		}
+
+		return e.complexity.DiurnalInterval.Interval(childComplexity), true
+
 	case "Exercise.createdAt":
 		if e.complexity.Exercise.CreatedAt == nil {
 			break
@@ -631,6 +734,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ExerciseSearchResults.TagFacet(childComplexity), true
 
+	case "Mutation.archivePlan":
+		if e.complexity.Mutation.ArchivePlan == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_archivePlan_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ArchivePlan(childComplexity, args["request"].(uuid.UUID)), true
+
+	case "Mutation.archivePlanSchedule":
+		if e.complexity.Mutation.ArchivePlanSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_archivePlanSchedule_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ArchivePlanSchedule(childComplexity, args["request"].(uuid.UUID)), true
+
 	case "Mutation.createExercise":
 		if e.complexity.Mutation.CreateExercise == nil {
 			break
@@ -642,6 +769,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateExercise(childComplexity, args["request"].(CreateExercise)), true
+
+	case "Mutation.createPlan":
+		if e.complexity.Mutation.CreatePlan == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createPlan_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreatePlan(childComplexity, args["request"].(CreatePlan)), true
+
+	case "Mutation.createPlanSchedule":
+		if e.complexity.Mutation.CreatePlanSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createPlanSchedule_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreatePlanSchedule(childComplexity, args["request"].(CreatePlanSchedule)), true
 
 	case "Mutation.createPrescription":
 		if e.complexity.Mutation.CreatePrescription == nil {
@@ -799,6 +950,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EditExercise(childComplexity, args["request"].(EditExercise)), true
 
+	case "Mutation.editPlan":
+		if e.complexity.Mutation.EditPlan == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editPlan_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditPlan(childComplexity, args["request"].(EditPlan)), true
+
+	case "Mutation.editPlanSchedule":
+		if e.complexity.Mutation.EditPlanSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editPlanSchedule_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditPlanSchedule(childComplexity, args["request"].(EditPlanSchedule)), true
+
 	case "Mutation.editPrescription":
 		if e.complexity.Mutation.EditPrescription == nil {
 			break
@@ -945,6 +1120,216 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PageInfo.StartCursor(childComplexity), true
+
+	case "Plan.archived":
+		if e.complexity.Plan.Archived == nil {
+			break
+		}
+
+		return e.complexity.Plan.Archived(childComplexity), true
+
+	case "Plan.createdAt":
+		if e.complexity.Plan.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Plan.CreatedAt(childComplexity), true
+
+	case "Plan.description":
+		if e.complexity.Plan.Description == nil {
+			break
+		}
+
+		return e.complexity.Plan.Description(childComplexity), true
+
+	case "Plan.id":
+		if e.complexity.Plan.ID == nil {
+			break
+		}
+
+		return e.complexity.Plan.ID(childComplexity), true
+
+	case "Plan.name":
+		if e.complexity.Plan.Name == nil {
+			break
+		}
+
+		return e.complexity.Plan.Name(childComplexity), true
+
+	case "Plan.registrationAvailable":
+		if e.complexity.Plan.RegistrationAvailable == nil {
+			break
+		}
+
+		return e.complexity.Plan.RegistrationAvailable(childComplexity), true
+
+	case "Plan.schedules":
+		if e.complexity.Plan.Schedules == nil {
+			break
+		}
+
+		return e.complexity.Plan.Schedules(childComplexity), true
+
+	case "Plan.tags":
+		if e.complexity.Plan.Tags == nil {
+			break
+		}
+
+		return e.complexity.Plan.Tags(childComplexity), true
+
+	case "Plan.trainerOrganizationID":
+		if e.complexity.Plan.TrainerOrganizationID == nil {
+			break
+		}
+
+		return e.complexity.Plan.TrainerOrganizationID(childComplexity), true
+
+	case "Plan.updatedAt":
+		if e.complexity.Plan.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Plan.UpdatedAt(childComplexity), true
+
+	case "PlanConnection.edges":
+		if e.complexity.PlanConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.PlanConnection.Edges(childComplexity), true
+
+	case "PlanConnection.pageInfo":
+		if e.complexity.PlanConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.PlanConnection.PageInfo(childComplexity), true
+
+	case "PlanConnection.totalCount":
+		if e.complexity.PlanConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.PlanConnection.TotalCount(childComplexity), true
+
+	case "PlanEdge.cursor":
+		if e.complexity.PlanEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.PlanEdge.Cursor(childComplexity), true
+
+	case "PlanEdge.node":
+		if e.complexity.PlanEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.PlanEdge.Node(childComplexity), true
+
+	case "PlanSchedule.createdAt":
+		if e.complexity.PlanSchedule.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.CreatedAt(childComplexity), true
+
+	case "PlanSchedule.description":
+		if e.complexity.PlanSchedule.Description == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.Description(childComplexity), true
+
+	case "PlanSchedule.durationInterval":
+		if e.complexity.PlanSchedule.DurationInterval == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.DurationInterval(childComplexity), true
+
+	case "PlanSchedule.id":
+		if e.complexity.PlanSchedule.ID == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.ID(childComplexity), true
+
+	case "PlanSchedule.name":
+		if e.complexity.PlanSchedule.Name == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.Name(childComplexity), true
+
+	case "PlanSchedule.paymentInterval":
+		if e.complexity.PlanSchedule.PaymentInterval == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.PaymentInterval(childComplexity), true
+
+	case "PlanSchedule.plan":
+		if e.complexity.PlanSchedule.Plan == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.Plan(childComplexity), true
+
+	case "PlanSchedule.planID":
+		if e.complexity.PlanSchedule.PlanID == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.PlanID(childComplexity), true
+
+	case "PlanSchedule.priceMarkedDownFrom":
+		if e.complexity.PlanSchedule.PriceMarkedDownFrom == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.PriceMarkedDownFrom(childComplexity), true
+
+	case "PlanSchedule.pricePerInterval":
+		if e.complexity.PlanSchedule.PricePerInterval == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.PricePerInterval(childComplexity), true
+
+	case "PlanSchedule.registrationAvailable":
+		if e.complexity.PlanSchedule.RegistrationAvailable == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.RegistrationAvailable(childComplexity), true
+
+	case "PlanSchedule.trainerOrganizationID":
+		if e.complexity.PlanSchedule.TrainerOrganizationID == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.TrainerOrganizationID(childComplexity), true
+
+	case "PlanSchedule.updatedAt":
+		if e.complexity.PlanSchedule.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PlanSchedule.UpdatedAt(childComplexity), true
+
+	case "PlanSearchResults.results":
+		if e.complexity.PlanSearchResults.Results == nil {
+			break
+		}
+
+		return e.complexity.PlanSearchResults.Results(childComplexity), true
+
+	case "PlanSearchResults.tag_facet":
+		if e.complexity.PlanSearchResults.TagFacet == nil {
+			break
+		}
+
+		return e.complexity.PlanSearchResults.TagFacet(childComplexity), true
 
 	case "Prescription.createdAt":
 		if e.complexity.Prescription.CreatedAt == nil {
@@ -1175,6 +1560,42 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.OrganizationAvailableTags(childComplexity, args["id"].(uuid.UUID), args["first"].(int), args["after"].(*string)), true
+
+	case "Query.plan":
+		if e.complexity.Query.Plan == nil {
+			break
+		}
+
+		args, err := ec.field_Query_plan_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Plan(childComplexity, args["id"].(uuid.UUID)), true
+
+	case "Query.planSchedule":
+		if e.complexity.Query.PlanSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Query_planSchedule_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PlanSchedule(childComplexity, args["id"].(uuid.UUID)), true
+
+	case "Query.planSearch":
+		if e.complexity.Query.PlanSearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_planSearch_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PlanSearch(childComplexity, args["request"].(PlanSearchRequest), args["first"].(int), args["after"].(*string)), true
 
 	case "Query.prescription":
 		if e.complexity.Query.Prescription == nil {
@@ -2066,6 +2487,25 @@ type ExerciseSearchResults {
 
     results: ExerciseConnection!
 }`},
+	&ast.Source{Name: "schema/graphql/interval/diurnal_interval.graphql", Input: `
+enum DiurnalIntervalInterval {
+    DAY
+    WEEK
+    MONTH
+    YEAR
+}
+
+# An interval where we don't consider smaller units of time then a day
+type DiurnalInterval {
+    interval: DiurnalIntervalInterval
+    count: Int!
+}
+
+# Input for a DiurnalInterval
+input DiurnalIntervalInput {
+    interval: DiurnalIntervalInterval
+    count: Int!
+}`},
 	&ast.Source{Name: "schema/graphql/organization/organization.graphql", Input: `extend type Query {
     organization(id: ID!): Organization
 
@@ -2083,6 +2523,197 @@ type Organization {
     description: String
 
 }`},
+	&ast.Source{Name: "schema/graphql/plan/plan.graphql", Input: `
+extend type Query {
+    plan(id: ID!): Plan
+}
+
+
+type Plan {
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String
+
+    registrationAvailable: Boolean!
+
+    archived: Boolean!
+
+    # Fetchers
+    schedules: [PlanSchedule!]
+    tags: [Tag!]
+}
+
+# Connection for a plan
+type PlanConnection {
+    totalCount: Int!
+    edges: [PlanEdge!]!
+    pageInfo: PageInfo!
+}
+
+# Edge for a plan connection
+type PlanEdge {
+    cursor: String!
+    node: Plan!
+}`},
+	&ast.Source{Name: "schema/graphql/plan/plan_mutation.graphql", Input: `
+extend type Mutation {
+    createPlan(request: CreatePlan!): Plan
+    editPlan(request: EditPlan!): Plan
+
+    # Archive a plan. Cannot archive a plan until it has no active users.
+    archivePlan(request: ID!): Plan
+}
+
+
+
+
+###########################
+####### CREATE PLAN #######
+###########################
+input CreatePlan {
+
+    trainerOrganizationID: ID!
+
+    name: String!
+    description: String
+
+    registrationAvailable: Boolean!
+
+    # Optional inventory for plan to start with.
+    inventory: Int
+
+    tags: [ID!]
+}
+
+
+###########################
+######## EDIT PLAN ########
+###########################
+input EditPlan {
+
+    id: ID!
+
+    name: String
+    description: NullableStringEditor
+
+    registrationAvailable: Boolean
+}`},
+	&ast.Source{Name: "schema/graphql/plan/plan_search.graphql", Input: `extend type Query {
+
+    planSearch(request: PlanSearchRequest!, first: Int!, after: String): PlanSearchResults
+}
+
+
+input PlanSearchRequest {
+    trainerOrganizationID: ID!
+    tagUUIDs: [ID!]
+}
+
+
+type PlanSearchResults {
+
+    tag_facet: TagFacet
+
+    results: PlanConnection!
+}`},
+	&ast.Source{Name: "schema/graphql/plan_schedule/plan_schedule.graphql", Input: `
+extend type Query {
+    planSchedule(id: ID!): PlanSchedule
+
+}
+
+
+type PlanSchedule {
+
+    id: ID!
+
+    createdAt: Time!
+    updatedAt: Time!
+
+    trainerOrganizationID: ID!
+    planID: ID!
+
+    name: String
+    description: String
+
+    # Interval at which the customer pays
+    paymentInterval: DiurnalInterval!
+
+    # Cents. Price per payment interval
+    pricePerInterval: Int!
+    # Cents. Pure display the value to show the customer e.g. "$75 down from $100"
+    priceMarkedDownFrom: Int
+
+    # Interval that the plan lasts for (e.g. 3 months).
+    durationInterval: DiurnalInterval
+
+    registrationAvailable: Boolean!
+
+    # Fetchers
+    plan: Plan
+}`},
+	&ast.Source{Name: "schema/graphql/plan_schedule/plan_schedule_mutation.graphql", Input: `
+extend type Mutation {
+
+    createPlanSchedule(request: CreatePlanSchedule!): PlanSchedule
+    editPlanSchedule(request: EditPlanSchedule!): PlanSchedule
+
+    # Archive a plan schedule. Cannot archive a plan schedule until it has no active users.
+    archivePlanSchedule(request: ID!): PlanSchedule
+}
+
+
+###########################
+## CREATE PLAN SCHEDULE ###
+###########################
+input CreatePlanSchedule {
+
+    trainerOrganizationID: ID!
+    planID: ID!
+
+    name: String
+    description: String
+
+    # Once created cannot be modified
+    paymentInterval: DiurnalIntervalInput!
+
+    # Cents. Price per payment interval
+    # Once created cannot be modified
+    pricePerInterval: Int!
+    # Cents. Pure display the value to show the customer e.g. "$75 down from $100"
+    priceMarkedDownFrom: Int
+
+    # Once created cannot be modified
+    durationInterval: DiurnalIntervalInput
+
+    registrationAvailable: Boolean!
+
+    # Optional inventory for schedule to start with.
+    inventory: Int
+}
+
+###########################
+#### EDIT PLAN SCHEDULE ###
+###########################
+input EditPlanSchedule {
+
+    id: ID!
+
+    name: NullableStringEditor
+    description: NullableStringEditor
+
+    # Cents. Pure display the value to show the customer e.g. "$75 down from $100"
+    priceMarkedDownFrom: NullableIntEditor
+
+    registrationAvailable: Boolean
+}
+`},
 	&ast.Source{Name: "schema/graphql/prescription/prescription.graphql", Input: `
 extend type Query {
     prescription(id: ID!): Prescription
@@ -2772,12 +3403,68 @@ type WorkoutProgramSearchResults {
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_archivePlanSchedule_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_archivePlan_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createExercise_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 CreateExercise
 	if tmp, ok := rawArgs["request"]; ok {
 		arg0, err = ec.unmarshalNCreateExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreateExercise(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createPlanSchedule_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 CreatePlanSchedule
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNCreatePlanSchedule2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePlanSchedule(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createPlan_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 CreatePlan
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNCreatePlan2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePlan(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2960,6 +3647,34 @@ func (ec *executionContext) field_Mutation_editExercise_args(ctx context.Context
 	var arg0 EditExercise
 	if tmp, ok := rawArgs["request"]; ok {
 		arg0, err = ec.unmarshalNEditExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditExercise(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editPlanSchedule_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 EditPlanSchedule
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNEditPlanSchedule2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditPlanSchedule(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_editPlan_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 EditPlan
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNEditPlan2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditPlan(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3155,6 +3870,64 @@ func (ec *executionContext) field_Query_organizationAvailableTags_args(ctx conte
 }
 
 func (ec *executionContext) field_Query_organization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_planSchedule_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_planSearch_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 PlanSearchRequest
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNPlanSearchRequest2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐPlanSearchRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["first"]; ok {
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_plan_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 uuid.UUID
@@ -3747,6 +4520,77 @@ func (ec *executionContext) _BlockExercise_prescription(ctx context.Context, fie
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOPrescription2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DiurnalInterval_interval(ctx context.Context, field graphql.CollectedField, obj *interval.DiurnalInterval) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "DiurnalInterval",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Interval, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(interval.DiurnalIntervalInterval)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalODiurnalIntervalInterval2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalIntervalInterval(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DiurnalInterval_count(ctx context.Context, field graphql.CollectedField, obj *interval.DiurnalInterval) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "DiurnalInterval",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Exercise_id(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
@@ -4453,6 +5297,252 @@ func (ec *executionContext) _Mutation_deleteExercise(ctx context.Context, field 
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOID2ᚖgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createPlan(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createPlan_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreatePlan(rctx, args["request"].(CreatePlan))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.Plan)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlan2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_editPlan(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_editPlan_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditPlan(rctx, args["request"].(EditPlan))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.Plan)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlan2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_archivePlan(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_archivePlan_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ArchivePlan(rctx, args["request"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.Plan)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlan2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createPlanSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createPlanSchedule_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreatePlanSchedule(rctx, args["request"].(CreatePlanSchedule))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.PlanSchedule)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlanSchedule2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_editPlanSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_editPlanSchedule_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditPlanSchedule(rctx, args["request"].(EditPlanSchedule))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.PlanSchedule)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlanSchedule2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_archivePlanSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_archivePlanSchedule_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ArchivePlanSchedule(rctx, args["request"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.PlanSchedule)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlanSchedule2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createPrescription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5484,6 +6574,1089 @@ func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field gra
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_id(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_createdAt(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_updatedAt(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_trainerOrganizationID(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TrainerOrganizationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_name(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_description(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_registrationAvailable(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RegistrationAvailable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_archived(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Archived, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_schedules(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Plan().Schedules(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*plan.PlanSchedule)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlanSchedule2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanScheduleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Plan_tags(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Plan",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Plan().Tags(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*tag.Tag)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *connections.PlanConnection) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanConnection",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PlanConnection().TotalCount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanConnection_edges(ctx context.Context, field graphql.CollectedField, obj *connections.PlanConnection) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanConnection",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*plan.Plan)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPlanEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *connections.PlanConnection) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanConnection",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PlanConnection().PageInfo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.PageInfo)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPageInfo2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanEdge",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanEdge_node(ctx context.Context, field graphql.CollectedField, obj *plan.Plan) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanEdge",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node(), nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*plan.Plan)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPlan2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_id(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_createdAt(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_updatedAt(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_trainerOrganizationID(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TrainerOrganizationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_planID(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PlanID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_name(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_description(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_paymentInterval(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PlanSchedule().PaymentInterval(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*interval.DiurnalInterval)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNDiurnalInterval2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalInterval(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_pricePerInterval(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PricePerInterval, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_priceMarkedDownFrom(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PriceMarkedDownFrom, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_durationInterval(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PlanSchedule().DurationInterval(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*interval.DiurnalInterval)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalODiurnalInterval2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalInterval(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_registrationAvailable(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RegistrationAvailable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSchedule_plan(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSchedule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PlanSchedule().Plan(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.Plan)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlan2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSearchResults_tag_facet(ctx context.Context, field graphql.CollectedField, obj *PlanSearchResults) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSearchResults",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TagFacet, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*TagFacet)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTagFacet2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐTagFacet(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PlanSearchResults_results(ctx context.Context, field graphql.CollectedField, obj *PlanSearchResults) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "PlanSearchResults",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Results, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*connections.PlanConnection)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPlanConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐPlanConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Prescription_id(ctx context.Context, field graphql.CollectedField, obj *workout.Prescription) (ret graphql.Marshaler) {
@@ -6555,6 +8728,129 @@ func (ec *executionContext) _Query_organizationAvailableTags(ctx context.Context
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOTagConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐTagConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_plan(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_plan_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Plan(rctx, args["id"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.Plan)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlan2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_planSearch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_planSearch_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PlanSearch(rctx, args["request"].(PlanSearchRequest), args["first"].(int), args["after"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*PlanSearchResults)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlanSearchResults2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐPlanSearchResults(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_planSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_planSchedule_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PlanSchedule(rctx, args["id"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*plan.PlanSchedule)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOPlanSchedule2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_prescription(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -11483,6 +13779,126 @@ func (ec *executionContext) unmarshalInputCreateExercise(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreatePlan(ctx context.Context, obj interface{}) (CreatePlan, error) {
+	var it CreatePlan
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "trainerOrganizationID":
+			var err error
+			it.TrainerOrganizationID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "registrationAvailable":
+			var err error
+			it.RegistrationAvailable, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "inventory":
+			var err error
+			it.Inventory, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tags":
+			var err error
+			it.Tags, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreatePlanSchedule(ctx context.Context, obj interface{}) (CreatePlanSchedule, error) {
+	var it CreatePlanSchedule
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "trainerOrganizationID":
+			var err error
+			it.TrainerOrganizationID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "planID":
+			var err error
+			it.PlanID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "paymentInterval":
+			var err error
+			it.PaymentInterval, err = ec.unmarshalNDiurnalIntervalInput2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐDiurnalIntervalInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "pricePerInterval":
+			var err error
+			it.PricePerInterval, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "priceMarkedDownFrom":
+			var err error
+			it.PriceMarkedDownFrom, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "durationInterval":
+			var err error
+			it.DurationInterval, err = ec.unmarshalODiurnalIntervalInput2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐDiurnalIntervalInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "registrationAvailable":
+			var err error
+			it.RegistrationAvailable, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "inventory":
+			var err error
+			it.Inventory, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreatePrescription(ctx context.Context, obj interface{}) (CreatePrescription, error) {
 	var it CreatePrescription
 	var asMap = obj.(map[string]interface{})
@@ -11789,6 +14205,30 @@ func (ec *executionContext) unmarshalInputCreateWorkoutProgram(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputDiurnalIntervalInput(ctx context.Context, obj interface{}) (DiurnalIntervalInput, error) {
+	var it DiurnalIntervalInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "interval":
+			var err error
+			it.Interval, err = ec.unmarshalODiurnalIntervalInterval2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalIntervalInterval(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "count":
+			var err error
+			it.Count, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditExercise(ctx context.Context, obj interface{}) (EditExercise, error) {
 	var it EditExercise
 	var asMap = obj.(map[string]interface{})
@@ -11816,6 +14256,84 @@ func (ec *executionContext) unmarshalInputEditExercise(ctx context.Context, obj 
 		case "videoURL":
 			var err error
 			it.VideoURL, err = ec.unmarshalONullableStringEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputEditPlan(ctx context.Context, obj interface{}) (EditPlan, error) {
+	var it EditPlan
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+			it.Description, err = ec.unmarshalONullableStringEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "registrationAvailable":
+			var err error
+			it.RegistrationAvailable, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputEditPlanSchedule(ctx context.Context, obj interface{}) (EditPlanSchedule, error) {
+	var it EditPlanSchedule
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalONullableStringEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+			it.Description, err = ec.unmarshalONullableStringEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableStringEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "priceMarkedDownFrom":
+			var err error
+			it.PriceMarkedDownFrom, err = ec.unmarshalONullableIntEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIntEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "registrationAvailable":
+			var err error
+			it.RegistrationAvailable, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -12107,6 +14625,30 @@ func (ec *executionContext) unmarshalInputNullableStringEditor(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputPlanSearchRequest(ctx context.Context, obj interface{}) (PlanSearchRequest, error) {
+	var it PlanSearchRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "trainerOrganizationID":
+			var err error
+			it.TrainerOrganizationID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tagUUIDs":
+			var err error
+			it.TagUUIDs, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPrescriptionSearchRequest(ctx context.Context, obj interface{}) (PrescriptionSearchRequest, error) {
 	var it PrescriptionSearchRequest
 	var asMap = obj.(map[string]interface{})
@@ -12303,6 +14845,35 @@ func (ec *executionContext) _BlockExercise(ctx context.Context, sel ast.Selectio
 				res = ec._BlockExercise_prescription(ctx, field, obj)
 				return res
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var diurnalIntervalImplementors = []string{"DiurnalInterval"}
+
+func (ec *executionContext) _DiurnalInterval(ctx context.Context, sel ast.SelectionSet, obj *interval.DiurnalInterval) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, diurnalIntervalImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DiurnalInterval")
+		case "interval":
+			out.Values[i] = ec._DiurnalInterval_interval(ctx, field, obj)
+		case "count":
+			out.Values[i] = ec._DiurnalInterval_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12521,6 +15092,18 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_editExercise(ctx, field)
 		case "deleteExercise":
 			out.Values[i] = ec._Mutation_deleteExercise(ctx, field)
+		case "createPlan":
+			out.Values[i] = ec._Mutation_createPlan(ctx, field)
+		case "editPlan":
+			out.Values[i] = ec._Mutation_editPlan(ctx, field)
+		case "archivePlan":
+			out.Values[i] = ec._Mutation_archivePlan(ctx, field)
+		case "createPlanSchedule":
+			out.Values[i] = ec._Mutation_createPlanSchedule(ctx, field)
+		case "editPlanSchedule":
+			out.Values[i] = ec._Mutation_editPlanSchedule(ctx, field)
+		case "archivePlanSchedule":
+			out.Values[i] = ec._Mutation_archivePlanSchedule(ctx, field)
 		case "createPrescription":
 			out.Values[i] = ec._Mutation_createPrescription(ctx, field)
 		case "editPrescription":
@@ -12635,6 +15218,302 @@ func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "hasNextPage":
 			out.Values[i] = ec._PageInfo_hasNextPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var planImplementors = []string{"Plan"}
+
+func (ec *executionContext) _Plan(ctx context.Context, sel ast.SelectionSet, obj *plan.Plan) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, planImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Plan")
+		case "id":
+			out.Values[i] = ec._Plan_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "createdAt":
+			out.Values[i] = ec._Plan_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Plan_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "trainerOrganizationID":
+			out.Values[i] = ec._Plan_trainerOrganizationID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._Plan_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "description":
+			out.Values[i] = ec._Plan_description(ctx, field, obj)
+		case "registrationAvailable":
+			out.Values[i] = ec._Plan_registrationAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "archived":
+			out.Values[i] = ec._Plan_archived(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "schedules":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Plan_schedules(ctx, field, obj)
+				return res
+			})
+		case "tags":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Plan_tags(ctx, field, obj)
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var planConnectionImplementors = []string{"PlanConnection"}
+
+func (ec *executionContext) _PlanConnection(ctx context.Context, sel ast.SelectionSet, obj *connections.PlanConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, planConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PlanConnection")
+		case "totalCount":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlanConnection_totalCount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "edges":
+			out.Values[i] = ec._PlanConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "pageInfo":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlanConnection_pageInfo(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var planEdgeImplementors = []string{"PlanEdge"}
+
+func (ec *executionContext) _PlanEdge(ctx context.Context, sel ast.SelectionSet, obj *plan.Plan) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, planEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PlanEdge")
+		case "cursor":
+			out.Values[i] = ec._PlanEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "node":
+			out.Values[i] = ec._PlanEdge_node(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var planScheduleImplementors = []string{"PlanSchedule"}
+
+func (ec *executionContext) _PlanSchedule(ctx context.Context, sel ast.SelectionSet, obj *plan.PlanSchedule) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, planScheduleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PlanSchedule")
+		case "id":
+			out.Values[i] = ec._PlanSchedule_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "createdAt":
+			out.Values[i] = ec._PlanSchedule_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._PlanSchedule_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "trainerOrganizationID":
+			out.Values[i] = ec._PlanSchedule_trainerOrganizationID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "planID":
+			out.Values[i] = ec._PlanSchedule_planID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._PlanSchedule_name(ctx, field, obj)
+		case "description":
+			out.Values[i] = ec._PlanSchedule_description(ctx, field, obj)
+		case "paymentInterval":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlanSchedule_paymentInterval(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "pricePerInterval":
+			out.Values[i] = ec._PlanSchedule_pricePerInterval(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "priceMarkedDownFrom":
+			out.Values[i] = ec._PlanSchedule_priceMarkedDownFrom(ctx, field, obj)
+		case "durationInterval":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlanSchedule_durationInterval(ctx, field, obj)
+				return res
+			})
+		case "registrationAvailable":
+			out.Values[i] = ec._PlanSchedule_registrationAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "plan":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PlanSchedule_plan(ctx, field, obj)
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var planSearchResultsImplementors = []string{"PlanSearchResults"}
+
+func (ec *executionContext) _PlanSearchResults(ctx context.Context, sel ast.SelectionSet, obj *PlanSearchResults) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, planSearchResultsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PlanSearchResults")
+		case "tag_facet":
+			out.Values[i] = ec._PlanSearchResults_tag_facet(ctx, field, obj)
+		case "results":
+			out.Values[i] = ec._PlanSearchResults_results(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -12995,6 +15874,39 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_organizationAvailableTags(ctx, field)
+				return res
+			})
+		case "plan":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_plan(ctx, field)
+				return res
+			})
+		case "planSearch":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_planSearch(ctx, field)
+				return res
+			})
+		case "planSchedule":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_planSchedule(ctx, field)
 				return res
 			})
 		case "prescription":
@@ -14361,6 +17273,14 @@ func (ec *executionContext) unmarshalNCreateExercise2githubᚗcomᚋtrainᚑform
 	return ec.unmarshalInputCreateExercise(ctx, v)
 }
 
+func (ec *executionContext) unmarshalNCreatePlan2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePlan(ctx context.Context, v interface{}) (CreatePlan, error) {
+	return ec.unmarshalInputCreatePlan(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNCreatePlanSchedule2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePlanSchedule(ctx context.Context, v interface{}) (CreatePlanSchedule, error) {
+	return ec.unmarshalInputCreatePlanSchedule(ctx, v)
+}
+
 func (ec *executionContext) unmarshalNCreatePrescription2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐCreatePrescription(ctx context.Context, v interface{}) (CreatePrescription, error) {
 	return ec.unmarshalInputCreatePrescription(ctx, v)
 }
@@ -14401,8 +17321,42 @@ func (ec *executionContext) unmarshalNCreateWorkoutProgram2githubᚗcomᚋtrain�
 	return ec.unmarshalInputCreateWorkoutProgram(ctx, v)
 }
 
+func (ec *executionContext) marshalNDiurnalInterval2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalInterval(ctx context.Context, sel ast.SelectionSet, v interval.DiurnalInterval) graphql.Marshaler {
+	return ec._DiurnalInterval(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDiurnalInterval2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalInterval(ctx context.Context, sel ast.SelectionSet, v *interval.DiurnalInterval) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._DiurnalInterval(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNDiurnalIntervalInput2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐDiurnalIntervalInput(ctx context.Context, v interface{}) (DiurnalIntervalInput, error) {
+	return ec.unmarshalInputDiurnalIntervalInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNDiurnalIntervalInput2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐDiurnalIntervalInput(ctx context.Context, v interface{}) (*DiurnalIntervalInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNDiurnalIntervalInput2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐDiurnalIntervalInput(ctx, v)
+	return &res, err
+}
+
 func (ec *executionContext) unmarshalNEditExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditExercise(ctx context.Context, v interface{}) (EditExercise, error) {
 	return ec.unmarshalInputEditExercise(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNEditPlan2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditPlan(ctx context.Context, v interface{}) (EditPlan, error) {
+	return ec.unmarshalInputEditPlan(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNEditPlanSchedule2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditPlanSchedule(ctx context.Context, v interface{}) (EditPlanSchedule, error) {
+	return ec.unmarshalInputEditPlanSchedule(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNEditPrescription2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐEditPrescription(ctx context.Context, v interface{}) (EditPrescription, error) {
@@ -14548,6 +17502,103 @@ func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋtrainᚑformula�
 		return graphql.Null
 	}
 	return ec._PageInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPlan2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx context.Context, sel ast.SelectionSet, v plan.Plan) graphql.Marshaler {
+	return ec._Plan(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPlan2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx context.Context, sel ast.SelectionSet, v *plan.Plan) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Plan(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPlanConnection2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐPlanConnection(ctx context.Context, sel ast.SelectionSet, v connections.PlanConnection) graphql.Marshaler {
+	return ec._PlanConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPlanConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐPlanConnection(ctx context.Context, sel ast.SelectionSet, v *connections.PlanConnection) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PlanConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPlanEdge2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx context.Context, sel ast.SelectionSet, v plan.Plan) graphql.Marshaler {
+	return ec._PlanEdge(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPlanEdge2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanᚄ(ctx context.Context, sel ast.SelectionSet, v []*plan.Plan) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPlanEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNPlanEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx context.Context, sel ast.SelectionSet, v *plan.Plan) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PlanEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPlanSchedule2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx context.Context, sel ast.SelectionSet, v plan.PlanSchedule) graphql.Marshaler {
+	return ec._PlanSchedule(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPlanSchedule2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx context.Context, sel ast.SelectionSet, v *plan.PlanSchedule) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PlanSchedule(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNPlanSearchRequest2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐPlanSearchRequest(ctx context.Context, v interface{}) (PlanSearchRequest, error) {
+	return ec.unmarshalInputPlanSearchRequest(ctx, v)
 }
 
 func (ec *executionContext) marshalNPrescription2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx context.Context, sel ast.SelectionSet, v workout.Prescription) graphql.Marshaler {
@@ -15376,6 +18427,53 @@ func (ec *executionContext) unmarshalOCreatePrescriptionSetData2ᚕᚖgithubᚗc
 	return res, nil
 }
 
+func (ec *executionContext) marshalODiurnalInterval2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalInterval(ctx context.Context, sel ast.SelectionSet, v interval.DiurnalInterval) graphql.Marshaler {
+	return ec._DiurnalInterval(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalODiurnalInterval2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalInterval(ctx context.Context, sel ast.SelectionSet, v *interval.DiurnalInterval) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DiurnalInterval(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalODiurnalIntervalInput2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐDiurnalIntervalInput(ctx context.Context, v interface{}) (DiurnalIntervalInput, error) {
+	return ec.unmarshalInputDiurnalIntervalInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalODiurnalIntervalInput2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐDiurnalIntervalInput(ctx context.Context, v interface{}) (*DiurnalIntervalInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalODiurnalIntervalInput2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐDiurnalIntervalInput(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) unmarshalODiurnalIntervalInterval2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalIntervalInterval(ctx context.Context, v interface{}) (interval.DiurnalIntervalInterval, error) {
+	var res interval.DiurnalIntervalInterval
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalODiurnalIntervalInterval2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalIntervalInterval(ctx context.Context, sel ast.SelectionSet, v interval.DiurnalIntervalInterval) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalODiurnalIntervalInterval2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalIntervalInterval(ctx context.Context, v interface{}) (*interval.DiurnalIntervalInterval, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalODiurnalIntervalInterval2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalIntervalInterval(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalODiurnalIntervalInterval2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋintervalᚐDiurnalIntervalInterval(ctx context.Context, sel ast.SelectionSet, v *interval.DiurnalIntervalInterval) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalOExercise2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐExercise(ctx context.Context, sel ast.SelectionSet, v workout.Exercise) graphql.Marshaler {
 	return ec._Exercise(ctx, sel, &v)
 }
@@ -15521,6 +18619,79 @@ func (ec *executionContext) marshalOOrganization2ᚖgithubᚗcomᚋtrainᚑformu
 		return graphql.Null
 	}
 	return ec._Organization(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPlan2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx context.Context, sel ast.SelectionSet, v plan.Plan) graphql.Marshaler {
+	return ec._Plan(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOPlan2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlan(ctx context.Context, sel ast.SelectionSet, v *plan.Plan) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Plan(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPlanSchedule2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx context.Context, sel ast.SelectionSet, v plan.PlanSchedule) graphql.Marshaler {
+	return ec._PlanSchedule(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOPlanSchedule2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanScheduleᚄ(ctx context.Context, sel ast.SelectionSet, v []*plan.PlanSchedule) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPlanSchedule2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalOPlanSchedule2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋplanᚐPlanSchedule(ctx context.Context, sel ast.SelectionSet, v *plan.PlanSchedule) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PlanSchedule(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPlanSearchResults2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐPlanSearchResults(ctx context.Context, sel ast.SelectionSet, v PlanSearchResults) graphql.Marshaler {
+	return ec._PlanSearchResults(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOPlanSearchResults2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐPlanSearchResults(ctx context.Context, sel ast.SelectionSet, v *PlanSearchResults) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PlanSearchResults(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOPrescription2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐPrescription(ctx context.Context, sel ast.SelectionSet, v workout.Prescription) graphql.Marshaler {

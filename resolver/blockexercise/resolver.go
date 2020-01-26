@@ -18,7 +18,7 @@ type BlockExerciseResolver struct {
 func NewBlockExerciseResolver(db *pg.DB, logger *zap.Logger) *BlockExerciseResolver {
 	return &BlockExerciseResolver{
 		db:     db,
-		logger: logger,
+		logger: logger.Named("BlockExerciseResolver"),
 	}
 }
 

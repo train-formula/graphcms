@@ -44,43 +44,53 @@ func (g CreateTag) Call(ctx context.Context) (*tag.Tag, error) {
 		return nil, err
 	}
 
-	_, err = trainerdb.GetOrganization(ctx, g.db, g.request.TrainerOrganizationID)
+	var finalTag *tag.Tag
 
-	if err != nil {
-		if err == pg.ErrNoRows {
-			return nil, gqlerror.Errorf("Organization does not exist")
+	err = g.db.RunInTransaction(func(t *pg.Tx) error {
+		_, err = trainerdb.GetOrganization(ctx, t, g.request.TrainerOrganizationID)
+
+		if err != nil {
+			if err == pg.ErrNoRows {
+				return gqlerror.Errorf("Organization does not exist")
+			}
+			g.logger.Error("Failed to get organization", zap.Error(err))
+			return err
 		}
-		g.logger.Error("Failed to get organization", zap.Error(err))
-		return nil, err
-	}
 
-	_, err = tagdb.GetTagByTag(ctx, g.db, tagdb.TagByTag{
-		Tag:                   g.request.Tag,
-		TrainerOrganizationID: g.request.TrainerOrganizationID,
+		_, err = tagdb.GetTagByTag(ctx, t, tagdb.TagByTag{
+			Tag:                   g.request.Tag,
+			TrainerOrganizationID: g.request.TrainerOrganizationID,
+		})
+
+		// Retrieving means tag already exists
+		// If its ErrNoRows no tag exists
+		if err == nil {
+			return gqlerror.Errorf("tag '" + g.request.Tag + "' already exists")
+
+		} else if err != nil && err != pg.ErrNoRows {
+			g.logger.Error("Failed to check if tag already exists", zap.Error(err))
+			return err
+		}
+
+		newTag := tag.Tag{
+			ID:                    newUuid,
+			Tag:                   g.request.Tag,
+			TrainerOrganizationID: g.request.TrainerOrganizationID,
+		}
+
+		finalTag, err = tagdb.InsertTag(ctx, t, newTag)
+
+		if err != nil {
+			g.logger.Error("Failed to insert tag", zap.Error(err))
+			return err
+		}
+
+		return nil
 	})
 
-	// Retrieving means tag already exists
-	// If its ErrNoRows no tag exists
-	if err == nil {
-		return nil, gqlerror.Errorf("tag '" + g.request.Tag + "' already exists")
-
-	} else if err != nil && err != pg.ErrNoRows {
-		g.logger.Error("Failed to check if tag already exists", zap.Error(err))
-		return nil, err
-	}
-
-	new := tag.Tag{
-		ID:                    newUuid,
-		Tag:                   g.request.Tag,
-		TrainerOrganizationID: g.request.TrainerOrganizationID,
-	}
-
-	final, err := tagdb.InsertTag(ctx, g.db, new)
-
 	if err != nil {
-		g.logger.Error("Failed to insert tag", zap.Error(err))
 		return nil, err
 	}
 
-	return final, nil
+	return finalTag, nil
 }

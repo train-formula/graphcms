@@ -28,6 +28,12 @@ type Conn interface {
 	ExecContext(c context.Context, query interface{}, params ...interface{}) (orm.Result, error)
 }
 
+type Tx interface {
+	Conn
+	Commit() error
+	Rollback() error
+}
+
 type TableModel interface {
 	TableName() string
 }

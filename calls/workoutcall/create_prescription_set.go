@@ -9,7 +9,6 @@ import (
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
-	"github.com/vektah/gqlparser/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -32,9 +31,7 @@ func (c CreatePrescriptionSet) Validate(ctx context.Context) []validation.Valida
 	var funcs []validation.ValidatorFunc
 
 	if c.request.Data == nil {
-		funcs = append(funcs, func() *gqlerror.Error {
-			return gqlerror.Errorf("Data is required")
-		})
+		funcs = append(funcs, validation.ImmediateErrorValidator("Data is required"))
 	} else {
 		funcs = append(funcs, validation.CheckCreatePrescriptionSetData(ctx, c.db, *c.request.Data, nil)...)
 	}

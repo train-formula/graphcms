@@ -9,7 +9,7 @@ import (
 )
 
 // Delete a workout, and un-link all of the workout categories associated
-func DeleteWorkout(ctx context.Context, conn database.Conn, workoutID uuid.UUID) error {
+func DeleteWorkout(ctx context.Context, conn database.Tx, workoutID uuid.UUID) error {
 
 	err := ClearWorkoutWorkoutCategories(ctx, conn, workoutID)
 	if err != nil {
@@ -26,7 +26,7 @@ func DeleteWorkout(ctx context.Context, conn database.Conn, workoutID uuid.UUID)
 }
 
 // Remove all workout categories from a workout
-func ClearWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, workoutID uuid.UUID) error {
+func ClearWorkoutWorkoutCategories(ctx context.Context, conn database.Tx, workoutID uuid.UUID) error {
 	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.WorkoutWorkoutCategory{})+" WHERE workout_id = ?", workoutID)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func ClearWorkoutWorkoutCategories(ctx context.Context, conn database.Conn, work
 }
 
 // Delete a workout block, and un-link all of the exercises associated
-func DeleteWorkoutBlock(ctx context.Context, conn database.Conn, workoutBlockID uuid.UUID) error {
+func DeleteWorkoutBlock(ctx context.Context, conn database.Tx, workoutBlockID uuid.UUID) error {
 
 	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.WorkoutBlock{})+" WHERE id = ?", workoutBlockID)
 
@@ -48,7 +48,7 @@ func DeleteWorkoutBlock(ctx context.Context, conn database.Conn, workoutBlockID 
 }
 
 // Delete an exercise
-func DeleteExercise(ctx context.Context, conn database.Conn, exerciseID uuid.UUID) error {
+func DeleteExercise(ctx context.Context, conn database.Tx, exerciseID uuid.UUID) error {
 
 	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.Exercise{})+" WHERE id = ?", exerciseID)
 
@@ -60,7 +60,7 @@ func DeleteExercise(ctx context.Context, conn database.Conn, exerciseID uuid.UUI
 }
 
 // Remove all block exercises from a workout block
-func ClearWorkoutBlockBlockExercises(ctx context.Context, conn database.Conn, workoutBlockID uuid.UUID) error {
+func ClearWorkoutBlockBlockExercises(ctx context.Context, conn database.Tx, workoutBlockID uuid.UUID) error {
 	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.BlockExercise{})+" WHERE block_id = ?", workoutBlockID)
 	if err != nil {
 		return err
@@ -70,7 +70,7 @@ func ClearWorkoutBlockBlockExercises(ctx context.Context, conn database.Conn, wo
 }
 
 // Delete all prescription sets that are attached to a prescription
-func DeleteAllSetsFromPrescription(ctx context.Context, conn database.Conn, prescriptionID uuid.UUID) error {
+func DeleteAllSetsFromPrescription(ctx context.Context, conn database.Tx, prescriptionID uuid.UUID) error {
 
 	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.PrescriptionSet{})+" WHERE prescription_id = ?", prescriptionID)
 
@@ -83,7 +83,7 @@ func DeleteAllSetsFromPrescription(ctx context.Context, conn database.Conn, pres
 }
 
 // Delete a prescription and all attached prescription sets
-func DeletePrescription(ctx context.Context, conn database.Conn, prescriptionID uuid.UUID) error {
+func DeletePrescription(ctx context.Context, conn database.Tx, prescriptionID uuid.UUID) error {
 
 	err := DeleteAllSetsFromPrescription(ctx, conn, prescriptionID)
 
@@ -101,7 +101,7 @@ func DeletePrescription(ctx context.Context, conn database.Conn, prescriptionID 
 }
 
 // Delete a prescription set
-func DeletePrescriptionSet(ctx context.Context, conn database.Conn, prescriptionSetID uuid.UUID) error {
+func DeletePrescriptionSet(ctx context.Context, conn database.Tx, prescriptionSetID uuid.UUID) error {
 
 	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.PrescriptionSet{})+" WHERE id = ?", prescriptionSetID)
 

@@ -48,7 +48,7 @@ func (c EditExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 
 	err := c.db.RunInTransaction(func(t *pg.Tx) error {
 
-		exercise, err := workoutdb.GetExerciseForUpdate(ctx, c.db, c.request.ID)
+		exercise, err := workoutdb.GetExerciseForUpdate(ctx, t, c.request.ID)
 		if err != nil {
 			if err == pg.ErrNoRows {
 				return gqlerror.Errorf("Exercise does not exist")
@@ -71,7 +71,7 @@ func (c EditExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 			exercise.VideoURL = c.request.VideoURL.Value
 		}
 
-		finalExercise, err = workoutdb.UpdateExercise(ctx, c.db, exercise)
+		finalExercise, err = workoutdb.UpdateExercise(ctx, t, exercise)
 		if err != nil {
 			c.kogger.Error("Error updating exercise", zap.Error(err),
 				logging.UUID("exerciseID", c.request.ID))

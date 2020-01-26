@@ -8,7 +8,7 @@ import (
 	"github.com/train-formula/graphcms/models/tag"
 )
 
-func InsertTag(ctx context.Context, conn database.Conn, new tag.Tag) (*tag.Tag, error) {
+func InsertTag(ctx context.Context, conn database.Tx, new tag.Tag) (*tag.Tag, error) {
 
 	newModel := &new
 
@@ -20,7 +20,7 @@ func InsertTag(ctx context.Context, conn database.Conn, new tag.Tag) (*tag.Tag, 
 	return newModel, nil
 }
 
-func TagObject(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainerOrganizationID uuid.UUID, objectID uuid.UUID, tagType tag.TagType) (*tag.Tagged, error) {
+func TagObject(ctx context.Context, conn database.Tx, tagID uuid.UUID, trainerOrganizationID uuid.UUID, objectID uuid.UUID, tagType tag.TagType) (*tag.Tagged, error) {
 
 	newUUID, err := uuid.NewV4()
 	if err != nil {
@@ -43,22 +43,26 @@ func TagObject(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainer
 	return newTag, nil
 }
 
-func TagWorkoutProgram(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutProgramID uuid.UUID) (*tag.Tagged, error) {
+func TagWorkoutProgram(ctx context.Context, conn database.Tx, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutProgramID uuid.UUID) (*tag.Tagged, error) {
 	return TagObject(ctx, conn, tagID, trainerOrganizationID, workoutProgramID, tag.WorkoutProgramTagType)
 }
 
-func TagWorkoutCategory(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutCategoryID uuid.UUID) (*tag.Tagged, error) {
+func TagWorkoutCategory(ctx context.Context, conn database.Tx, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutCategoryID uuid.UUID) (*tag.Tagged, error) {
 	return TagObject(ctx, conn, tagID, trainerOrganizationID, workoutCategoryID, tag.WorkoutCategoryTagType)
 }
 
-func TagWorkout(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutID uuid.UUID) (*tag.Tagged, error) {
+func TagWorkout(ctx context.Context, conn database.Tx, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutID uuid.UUID) (*tag.Tagged, error) {
 	return TagObject(ctx, conn, tagID, trainerOrganizationID, workoutID, tag.WorkoutTagType)
 }
 
-func TagExercise(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainerOrganizationID uuid.UUID, exerciseID uuid.UUID) (*tag.Tagged, error) {
+func TagExercise(ctx context.Context, conn database.Tx, tagID uuid.UUID, trainerOrganizationID uuid.UUID, exerciseID uuid.UUID) (*tag.Tagged, error) {
 	return TagObject(ctx, conn, tagID, trainerOrganizationID, exerciseID, tag.ExerciseTagType)
 }
 
-func TagPrescription(ctx context.Context, conn database.Conn, tagID uuid.UUID, trainerOrganizationID uuid.UUID, prescriptionID uuid.UUID) (*tag.Tagged, error) {
+func TagPrescription(ctx context.Context, conn database.Tx, tagID uuid.UUID, trainerOrganizationID uuid.UUID, prescriptionID uuid.UUID) (*tag.Tagged, error) {
 	return TagObject(ctx, conn, tagID, trainerOrganizationID, prescriptionID, tag.PrescriptionTagType)
+}
+
+func TagPlan(ctx context.Context, conn database.Tx, tagID uuid.UUID, trainerOrganizationID uuid.UUID, planID uuid.UUID) (*tag.Tagged, error) {
+	return TagObject(ctx, conn, tagID, trainerOrganizationID, planID, tag.PlanTagType)
 }
