@@ -22,6 +22,8 @@ input CreateWorkoutProgram {
     numberOfDays: Int
 
     tags: [ID!]
+
+    programLevel: ProgramLevel!
 }
 
 

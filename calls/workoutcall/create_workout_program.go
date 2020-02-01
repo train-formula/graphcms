@@ -69,6 +69,7 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 			ExactStartDate:           c.request.ExactStartDate,
 			StartsWhenCustomerStarts: c.request.StartsWhenCustomerStarts,
 			NumberOfDays:             c.request.NumberOfDays,
+			ProgramLevel:             c.request.ProgramLevel,
 		}
 
 		finalProgram, err = workoutdb.InsertWorkoutProgram(ctx, t, new)

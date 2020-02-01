@@ -380,6 +380,7 @@ type ComplexityRoot struct {
 		ID                       func(childComplexity int) int
 		Name                     func(childComplexity int) int
 		NumberOfDays             func(childComplexity int) int
+		ProgramLevel             func(childComplexity int) int
 		StartsWhenCustomerStarts func(childComplexity int) int
 		Tags                     func(childComplexity int) int
 		TrainerOrganization      func(childComplexity int) int
@@ -2235,6 +2236,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.WorkoutProgram.NumberOfDays(childComplexity), true
 
+	case "WorkoutProgram.programLevel":
+		if e.complexity.WorkoutProgram.ProgramLevel == nil {
+			break
+		}
+
+		return e.complexity.WorkoutProgram.ProgramLevel(childComplexity), true
+
 	case "WorkoutProgram.startsWhenCustomerStarts":
 		if e.complexity.WorkoutProgram.StartsWhenCustomerStarts == nil {
 			break
@@ -3314,7 +3322,7 @@ type WorkoutProgram {
 
     name: String!
     description: String
-    #programLevel: ProgramLevel
+    programLevel: ProgramLevel
 
     # Optional, means the workout programs starts at this specific timestamp UTC
     exactStartDate: Time
@@ -3367,6 +3375,8 @@ input CreateWorkoutProgram {
     numberOfDays: Int
 
     tags: [ID!]
+
+    programLevel: ProgramLevel!
 }
 
 
@@ -12059,6 +12069,40 @@ func (ec *executionContext) _WorkoutProgram_description(ctx context.Context, fie
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _WorkoutProgram_programLevel(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutProgram) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "WorkoutProgram",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProgramLevel, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(workout.ProgramLevel)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOProgramLevel2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐProgramLevel(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _WorkoutProgram_exactStartDate(ctx context.Context, field graphql.CollectedField, obj *workout.WorkoutProgram) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -14196,6 +14240,12 @@ func (ec *executionContext) unmarshalInputCreateWorkoutProgram(ctx context.Conte
 		case "tags":
 			var err error
 			it.Tags, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "programLevel":
+			var err error
+			it.ProgramLevel, err = ec.unmarshalNProgramLevel2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐProgramLevel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16800,6 +16850,8 @@ func (ec *executionContext) _WorkoutProgram(ctx context.Context, sel ast.Selecti
 			}
 		case "description":
 			out.Values[i] = ec._WorkoutProgram_description(ctx, field, obj)
+		case "programLevel":
+			out.Values[i] = ec._WorkoutProgram_programLevel(ctx, field, obj)
 		case "exactStartDate":
 			out.Values[i] = ec._WorkoutProgram_exactStartDate(ctx, field, obj)
 		case "startsWhenCustomerStarts":
@@ -17696,6 +17748,15 @@ func (ec *executionContext) marshalNPrescriptionSet2ᚖgithubᚗcomᚋtrainᚑfo
 		return graphql.Null
 	}
 	return ec._PrescriptionSet(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNProgramLevel2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐProgramLevel(ctx context.Context, v interface{}) (workout.ProgramLevel, error) {
+	var res workout.ProgramLevel
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNProgramLevel2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐProgramLevel(ctx context.Context, sel ast.SelectionSet, v workout.ProgramLevel) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNSetWorkoutBlockExercises2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐSetWorkoutBlockExercises(ctx context.Context, v interface{}) (SetWorkoutBlockExercises, error) {
@@ -18765,6 +18826,15 @@ func (ec *executionContext) marshalOPrescriptionSet2ᚖgithubᚗcomᚋtrainᚑfo
 		return graphql.Null
 	}
 	return ec._PrescriptionSet(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOProgramLevel2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐProgramLevel(ctx context.Context, v interface{}) (workout.ProgramLevel, error) {
+	var res workout.ProgramLevel
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOProgramLevel2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐProgramLevel(ctx context.Context, sel ast.SelectionSet, v workout.ProgramLevel) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

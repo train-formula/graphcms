@@ -26,7 +26,7 @@ type WorkoutProgram {
 
     name: String!
     description: String
-    #programLevel: ProgramLevel
+    programLevel: ProgramLevel
 
     # Optional, means the workout programs starts at this specific timestamp UTC
     exactStartDate: Time
