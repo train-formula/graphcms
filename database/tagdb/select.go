@@ -121,7 +121,7 @@ func GetTagsByObject(ctx context.Context, conn database.Conn, byObject []TagsByO
 
 	for _, bo := range byObject {
 		query += "(tg.tagged_id = ? AND tag_type = ?) OR "
-		params = append(params, bo.ObjectUUID, bo.ObjectType)
+		params = append(params, bo.ObjectUUID, bo.ObjectType.String())
 	}
 
 	query = strings.TrimSuffix(query, " OR ")
