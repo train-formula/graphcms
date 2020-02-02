@@ -225,6 +225,14 @@ type TagFacet struct {
 	Tags []*tag.Tag `json:"tags"`
 }
 
+type TagSearchRequest struct {
+	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
+}
+
+type TagSearchResults struct {
+	Results *connections.TagConnection `json:"results"`
+}
+
 type WorkoutCategorySearchRequest struct {
 	TrainerOrganizationID uuid.UUID   `json:"trainerOrganizationID"`
 	TagUUIDs              []uuid.UUID `json:"tagUUIDs"`

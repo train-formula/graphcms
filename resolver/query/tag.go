@@ -5,8 +5,11 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/calls/tagcall"
+	"github.com/train-formula/graphcms/database/cursor"
+	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/validation"
+	"go.uber.org/zap"
 )
 
 func (r *QueryResolver) Tag(ctx context.Context, id uuid.UUID) (*tag.Tag, error) {
@@ -33,11 +36,20 @@ func (r *QueryResolver) TagByTag(ctx context.Context, tag string, trainerOrganiz
 
 }
 
-/*func (r *QueryResolver) tag(ctx context.Context, id uuid.UUID) (*tag, error) {
+func (r *QueryResolver) TagSearch(ctx context.Context, request generated.TagSearchRequest, first int, after *string) (*generated.TagSearchResults, error) {
 
-}*/
+	curse, err := cursor.DeserializeCursor(after)
+	if err != nil {
+		r.logger.Error("Failed to deserialize cursor", zap.Error(err))
+		return nil, err
+	}
 
-/*
-tag(ctx context.Context, id uuid.UUID) (*tag, error)
-	TagByTag(ctx context.Context, tag string) (*tag, error)
-*/
+	s := tagcall.NewSearchTags(request, first, curse, r.logger, r.db)
+
+	if validation.ValidationChain(ctx, s.Validate(ctx)...) {
+
+		return s.Call(ctx)
+	}
+
+	return nil, nil
+}

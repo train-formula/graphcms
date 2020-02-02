@@ -1,0 +1,15 @@
+extend type Query {
+
+    tagSearch(request: TagSearchRequest!, first: Int!, after: String): TagSearchResults
+}
+
+
+input TagSearchRequest {
+    trainerOrganizationID: ID!
+}
+
+
+type TagSearchResults {
+
+    results: TagConnection!
+}

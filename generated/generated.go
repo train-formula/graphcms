@@ -255,6 +255,7 @@ type ComplexityRoot struct {
 		PrescriptionSearch        func(childComplexity int, request PrescriptionSearchRequest, first int, after *string) int
 		Tag                       func(childComplexity int, id uuid.UUID) int
 		TagByTag                  func(childComplexity int, tag string, trainerOrganizationID uuid.UUID) int
+		TagSearch                 func(childComplexity int, request TagSearchRequest, first int, after *string) int
 		Workout                   func(childComplexity int, id uuid.UUID) int
 		WorkoutBlock              func(childComplexity int, id uuid.UUID) int
 		WorkoutCategory           func(childComplexity int, id uuid.UUID) int
@@ -284,6 +285,10 @@ type ComplexityRoot struct {
 
 	TagFacet struct {
 		Tags func(childComplexity int) int
+	}
+
+	TagSearchResults struct {
+		Results func(childComplexity int) int
 	}
 
 	Unit struct {
@@ -491,6 +496,7 @@ type QueryResolver interface {
 	PrescriptionSearch(ctx context.Context, request PrescriptionSearchRequest, first int, after *string) (*PrescriptionSearchResults, error)
 	Tag(ctx context.Context, id uuid.UUID) (*tag.Tag, error)
 	TagByTag(ctx context.Context, tag string, trainerOrganizationID uuid.UUID) (*tag.Tag, error)
+	TagSearch(ctx context.Context, request TagSearchRequest, first int, after *string) (*TagSearchResults, error)
 	AvailableUnits(ctx context.Context) ([]*workout.Unit, error)
 	Workout(ctx context.Context, id uuid.UUID) (*workout.Workout, error)
 	WorkoutBlock(ctx context.Context, id uuid.UUID) (*workout.WorkoutBlock, error)
@@ -1646,6 +1652,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.TagByTag(childComplexity, args["tag"].(string), args["trainerOrganizationID"].(uuid.UUID)), true
 
+	case "Query.tagSearch":
+		if e.complexity.Query.TagSearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_tagSearch_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TagSearch(childComplexity, args["request"].(TagSearchRequest), args["first"].(int), args["after"].(*string)), true
+
 	case "Query.workout":
 		if e.complexity.Query.Workout == nil {
 			break
@@ -1794,6 +1812,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TagFacet.Tags(childComplexity), true
+
+	case "TagSearchResults.results":
+		if e.complexity.TagSearchResults.Results == nil {
+			break
+		}
+
+		return e.complexity.TagSearchResults.Results(childComplexity), true
 
 	case "Unit.createdAt":
 		if e.complexity.Unit.CreatedAt == nil {
@@ -2971,6 +2996,21 @@ input CreateTag {
     tag: String!
     trainerOrganizationID: ID!
 }`},
+	&ast.Source{Name: "schema/graphql/tag/tag_search.graphql", Input: `extend type Query {
+
+    tagSearch(request: TagSearchRequest!, first: Int!, after: String): TagSearchResults
+}
+
+
+input TagSearchRequest {
+    trainerOrganizationID: ID!
+}
+
+
+type TagSearchResults {
+
+    results: TagConnection!
+}`},
 	&ast.Source{Name: "schema/graphql/unit/unit.graphql", Input: `
 extend type Query {
 
@@ -4014,6 +4054,36 @@ func (ec *executionContext) field_Query_tagByTag_args(ctx context.Context, rawAr
 		}
 	}
 	args["trainerOrganizationID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_tagSearch_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 TagSearchRequest
+	if tmp, ok := rawArgs["request"]; ok {
+		arg0, err = ec.unmarshalNTagSearchRequest2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐTagSearchRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["first"]; ok {
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["after"]; ok {
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["after"] = arg2
 	return args, nil
 }
 
@@ -9027,6 +9097,47 @@ func (ec *executionContext) _Query_tagByTag(ctx context.Context, field graphql.C
 	return ec.marshalOTag2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_tagSearch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_tagSearch_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TagSearch(rctx, args["request"].(TagSearchRequest), args["first"].(int), args["after"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*TagSearchResults)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTagSearchResults2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐTagSearchResults(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_availableUnits(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -9784,6 +9895,43 @@ func (ec *executionContext) _TagFacet_tags(ctx context.Context, field graphql.Co
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TagSearchResults_results(ctx context.Context, field graphql.CollectedField, obj *TagSearchResults) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TagSearchResults",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Results, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*connections.TagConnection)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTagConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐTagConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Unit_id(ctx context.Context, field graphql.CollectedField, obj *workout.Unit) (ret graphql.Marshaler) {
@@ -14771,6 +14919,24 @@ func (ec *executionContext) unmarshalInputSetWorkoutWorkoutCategories(ctx contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTagSearchRequest(ctx context.Context, obj interface{}) (TagSearchRequest, error) {
+	var it TagSearchRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "trainerOrganizationID":
+			var err error
+			it.TrainerOrganizationID, err = ec.unmarshalNID2githubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputWorkoutCategorySearchRequest(ctx context.Context, obj interface{}) (WorkoutCategorySearchRequest, error) {
 	var it WorkoutCategorySearchRequest
 	var asMap = obj.(map[string]interface{})
@@ -16003,6 +16169,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_tagByTag(ctx, field)
 				return res
 			})
+		case "tagSearch":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tagSearch(ctx, field)
+				return res
+			})
 		case "availableUnits":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -16242,6 +16419,33 @@ func (ec *executionContext) _TagFacet(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = graphql.MarshalString("TagFacet")
 		case "tags":
 			out.Values[i] = ec._TagFacet_tags(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var tagSearchResultsImplementors = []string{"TagSearchResults"}
+
+func (ec *executionContext) _TagSearchResults(ctx context.Context, sel ast.SelectionSet, obj *TagSearchResults) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, tagSearchResultsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TagSearchResults")
+		case "results":
+			out.Values[i] = ec._TagSearchResults_results(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17795,6 +17999,20 @@ func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋtrainᚑformulaᚋgrap
 	return ec._Tag(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNTagConnection2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐTagConnection(ctx context.Context, sel ast.SelectionSet, v connections.TagConnection) graphql.Marshaler {
+	return ec._TagConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTagConnection2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋconnectionsᚐTagConnection(ctx context.Context, sel ast.SelectionSet, v *connections.TagConnection) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TagConnection(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNTagEdge2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋtagᚐTag(ctx context.Context, sel ast.SelectionSet, v tag.Tag) graphql.Marshaler {
 	return ec._TagEdge(ctx, sel, &v)
 }
@@ -17844,6 +18062,10 @@ func (ec *executionContext) marshalNTagEdge2ᚖgithubᚗcomᚋtrainᚑformulaᚋ
 		return graphql.Null
 	}
 	return ec._TagEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTagSearchRequest2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐTagSearchRequest(ctx context.Context, v interface{}) (TagSearchRequest, error) {
+	return ec.unmarshalInputTagSearchRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
@@ -18931,6 +19153,17 @@ func (ec *executionContext) marshalOTagFacet2ᚖgithubᚗcomᚋtrainᚑformula�
 		return graphql.Null
 	}
 	return ec._TagFacet(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOTagSearchResults2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐTagSearchResults(ctx context.Context, sel ast.SelectionSet, v TagSearchResults) graphql.Marshaler {
+	return ec._TagSearchResults(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOTagSearchResults2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐTagSearchResults(ctx context.Context, sel ast.SelectionSet, v *TagSearchResults) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TagSearchResults(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
