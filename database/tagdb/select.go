@@ -114,7 +114,7 @@ func GetTagsByObject(ctx context.Context, conn database.Conn, byObject []TagsByO
 
 	query := "SELECT " + (tag.TaggedTagJoin{}).SelectColumns("t", "tg") +
 		" FROM " + database.TableName(tag.Tagged{}) + " tg " +
-		" INNER JOIN " + database.TableName(tag.Tag{}) + " t ON tg.tag_uuid = t.id " +
+		" INNER JOIN " + database.TableName(tag.Tag{}) + " t ON tg.tag_id = t.id " +
 		" WHERE "
 
 	var params []interface{}
