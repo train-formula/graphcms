@@ -1,11 +1,11 @@
 package mutation
 
 import (
-	"github.com/go-pg/pg/v9"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewMutationResolver(db *pg.DB, logger *zap.Logger) *MutationResolver {
+func NewMutationResolver(db pgxload.PgxLoader, logger *zap.Logger) *MutationResolver {
 	return &MutationResolver{
 		db:     db,
 		logger: logger.Named("MutationResolver"),
@@ -13,6 +13,6 @@ func NewMutationResolver(db *pg.DB, logger *zap.Logger) *MutationResolver {
 }
 
 type MutationResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }

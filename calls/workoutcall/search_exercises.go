@@ -3,7 +3,6 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
@@ -11,10 +10,11 @@ import (
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewSearchExercises(request generated.ExerciseSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db *pg.DB) *SearchExercises {
+func NewSearchExercises(request generated.ExerciseSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db pgxload.PgxLoader) *SearchExercises {
 	return &SearchExercises{
 		request: request,
 		first:   first,
@@ -28,7 +28,7 @@ type SearchExercises struct {
 	request generated.ExerciseSearchRequest
 	first   int
 	after   cursor.Cursor
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -86,10 +86,17 @@ func (s SearchExercises) Call(ctx context.Context) (*generated.ExerciseSearchRes
 		return nil, err
 	}*/
 
-	_, err := s.db.QueryContext(ctx, &exercises, query, params...)
+	rows, err := s.db.Query(ctx, pgxload.RebindPositional(query), params...)
 
 	if err != nil {
 		s.logger.Error("Failed to search exercises", zap.Error(err))
+
+		return nil, err
+	}
+
+	err = s.db.Scanner(rows).Scan(&exercises)
+	if err != nil {
+		s.logger.Error("Failed to scan exercises", zap.Error(err))
 
 		return nil, err
 	}
@@ -102,9 +109,16 @@ func (s SearchExercises) Call(ctx context.Context) (*generated.ExerciseSearchRes
 
 				var count int
 
-				_, err := s.db.QueryContext(ctx, pg.Scan(&count), query, params...)
+				_, err := s.db.Query(ctx, query, params...)
 				if err != nil {
 					s.logger.Error("Failed to count exercises", zap.Error(err))
+
+					return -1, err
+				}
+
+				err = s.db.Scanner(rows).Scan(&count)
+				if err != nil {
+					s.logger.Error("Failed to scan exercises count", zap.Error(err))
 
 					return -1, err
 				}

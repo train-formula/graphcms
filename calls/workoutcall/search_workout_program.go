@@ -3,17 +3,17 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewSearchWorkoutProgram(request generated.WorkoutProgramSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db *pg.DB) *SearchWorkoutProgram {
+func NewSearchWorkoutProgram(request generated.WorkoutProgramSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db pgxload.PgxLoader) *SearchWorkoutProgram {
 	return &SearchWorkoutProgram{
 		request: request,
 		first:   first,
@@ -27,7 +27,7 @@ type SearchWorkoutProgram struct {
 	request generated.WorkoutProgramSearchRequest
 	first   int
 	after   cursor.Cursor
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -67,10 +67,17 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 		return nil, err
 	}*/
 
-	_, err := s.db.QueryContext(ctx, &programs, query, params...)
+	rows, err := s.db.Query(ctx, pgxload.RebindPositional(query), params...)
 
 	if err != nil {
 		s.logger.Error("Failed to search workout programs", zap.Error(err))
+
+		return nil, err
+	}
+
+	err = s.db.Scanner(rows).Scan(&programs)
+	if err != nil {
+		s.logger.Error("Failed to scan workout programs", zap.Error(err))
 
 		return nil, err
 	}
@@ -83,9 +90,16 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 
 				var count int
 
-				_, err := s.db.QueryContext(ctx, pg.Scan(&count), query, params...)
+				_, err := s.db.Query(ctx, query, params...)
 				if err != nil {
 					s.logger.Error("Failed to count workout programs", zap.Error(err))
+
+					return -1, err
+				}
+
+				err = s.db.Scanner(rows).Scan(&count)
+				if err != nil {
+					s.logger.Error("Failed to scan workout programs count", zap.Error(err))
 
 					return -1, err
 				}

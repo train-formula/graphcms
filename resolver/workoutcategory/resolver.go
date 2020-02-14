@@ -3,10 +3,10 @@ package workoutcategory
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/tagcall"
 	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/database/tagdb"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 
 	"github.com/train-formula/graphcms/calls/organizationcall"
@@ -17,11 +17,11 @@ import (
 )
 
 type WorkoutCategoryResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 
-func NewWorkoutCategoryResolver(db *pg.DB, logger *zap.Logger) *WorkoutCategoryResolver {
+func NewWorkoutCategoryResolver(db pgxload.PgxLoader, logger *zap.Logger) *WorkoutCategoryResolver {
 	return &WorkoutCategoryResolver{
 		db:     db,
 		logger: logger.Named("WorkoutCategoryResolver"),

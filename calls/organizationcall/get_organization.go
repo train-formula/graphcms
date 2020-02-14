@@ -3,17 +3,17 @@ package organizationcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/dataloader/organizationid"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/trainer"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewGetOrganization(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetOrganization {
+func NewGetOrganization(id uuid.UUID, logger *zap.Logger, db pgxload.PgxLoader) *GetOrganization {
 	return &GetOrganization{
 		id:     id,
 		db:     db,
@@ -23,7 +23,7 @@ func NewGetOrganization(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetOrganiz
 
 type GetOrganization struct {
 	id     uuid.UUID
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 

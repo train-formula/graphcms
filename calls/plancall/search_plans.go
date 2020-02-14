@@ -3,7 +3,6 @@ package plancall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
@@ -11,10 +10,11 @@ import (
 	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewSearchPlans(request generated.PlanSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db *pg.DB) *SearchPlans {
+func NewSearchPlans(request generated.PlanSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db pgxload.PgxLoader) *SearchPlans {
 	return &SearchPlans{
 		request: request,
 		first:   first,
@@ -28,7 +28,7 @@ type SearchPlans struct {
 	request generated.PlanSearchRequest
 	first   int
 	after   cursor.Cursor
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -86,10 +86,17 @@ func (s SearchPlans) Call(ctx context.Context) (*generated.PlanSearchResults, er
 		return nil, err
 	}*/
 
-	_, err := s.db.QueryContext(ctx, &plans, query, params...)
+	rows, err := s.db.Query(ctx, pgxload.RebindPositional(query), params...)
 
 	if err != nil {
 		s.logger.Error("Failed to search plans", zap.Error(err))
+
+		return nil, err
+	}
+
+	err = s.db.Scanner(rows).Scan(&plans)
+	if err != nil {
+		s.logger.Error("Failed to scan plans", zap.Error(err))
 
 		return nil, err
 	}
@@ -102,11 +109,18 @@ func (s SearchPlans) Call(ctx context.Context) (*generated.PlanSearchResults, er
 
 				var count int
 
-				_, err := s.db.QueryContext(ctx, pg.Scan(&count), query, params...)
+				_, err := s.db.Query(ctx, query, params...)
 				if err != nil {
 					s.logger.Error("Failed to count plans", zap.Error(err))
 
 					return -1, err
+				}
+
+				err = s.db.Scanner(rows).Scan(&count)
+				if err != nil {
+					s.logger.Error("Failed to scan plan count", zap.Error(err))
+
+					return 01, err
 				}
 
 				return count, nil

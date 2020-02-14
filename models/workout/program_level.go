@@ -1,13 +1,13 @@
 package workout
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
-
-	"github.com/go-pg/pg/v9/types"
 )
 
 type ProgramLevel uint8
@@ -48,41 +48,39 @@ func ParseProgramLevel(s string) ProgramLevel {
 	return UnknownProgramLevel
 }
 
-var _ types.ValueAppender = (*ProgramLevel)(nil)
-var _ types.ValueScanner = (*ProgramLevel)(nil)
+var _ sql.Scanner = (*ProgramLevel)(nil)
+var _ driver.Valuer = UnknownProgramLevel
 
-func (t *ProgramLevel) AppendValue(b []byte, flags int) ([]byte, error) {
+func (t ProgramLevel) Value() (driver.Value, error) {
 
-	if flags == 1 {
-		b = append(b, '\'')
-	}
-	b = append(b, t.String()...)
-	if flags == 1 {
-		b = append(b, '\'')
-	}
-
-	return b, nil
+	return t.String(), nil
 }
 
-func (t *ProgramLevel) ScanValue(rd types.Reader, n int) error {
-	if n <= 0 {
+func (t *ProgramLevel) Scan(src interface{}) error {
+	if src == nil {
 		return nil
 	}
 
-	tmp, err := rd.ReadFull()
-	if err != nil {
-		return err
+	switch src.(type) {
+	case string:
+		parsed := ParseProgramLevel(src.(string))
+		if parsed == UnknownProgramLevel {
+			return errors.New("Unknown program level")
+		}
+		*t = parsed
+		return nil
+	case []byte:
+		srcCopy := make([]byte, len(src.([]byte)))
+		copy(srcCopy, src.([]byte))
+		parsed := ParseProgramLevel(string(srcCopy))
+		if parsed == UnknownProgramLevel {
+			return errors.New("Unknown program level")
+		}
+		*t = parsed
+		return nil
 	}
 
-	parsed := ParseProgramLevel(string(tmp))
-
-	if parsed == UnknownProgramLevel {
-		return errors.New("Unknown program level")
-	}
-
-	*t = parsed
-
-	return nil
+	return fmt.Errorf("cannot scan %T", src)
 }
 
 func (e *ProgramLevel) UnmarshalGQL(v interface{}) error {

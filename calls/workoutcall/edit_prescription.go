@@ -4,17 +4,18 @@ import (
 	"context"
 	"strings"
 
-	"github.com/go-pg/pg/v9"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewEditPrescription(request generated.EditPrescription, logger *zap.Logger, db *pg.DB) *EditPrescription {
+func NewEditPrescription(request generated.EditPrescription, logger *zap.Logger, db pgxload.PgxLoader) *EditPrescription {
 	return &EditPrescription{
 		request: request,
 		db:      db,
@@ -24,7 +25,7 @@ func NewEditPrescription(request generated.EditPrescription, logger *zap.Logger,
 
 type EditPrescription struct {
 	request generated.EditPrescription
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	kogger  *zap.Logger
 }
 
@@ -46,11 +47,11 @@ func (c EditPrescription) Call(ctx context.Context) (*workout.Prescription, erro
 
 	var finalPrescription *workout.Prescription
 
-	err := c.db.RunInTransaction(func(t *pg.Tx) error {
+	err := pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		prescription, err := workoutdb.GetPrescriptionForUpdate(ctx, t, c.request.ID)
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Prescription does not exist")
 			}
 

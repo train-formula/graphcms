@@ -3,21 +3,21 @@ package prescriptionset
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
 type PrescriptionSetResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 
-func NewPrescriptionSetResolver(db *pg.DB, logger *zap.Logger) *PrescriptionSetResolver {
+func NewPrescriptionSetResolver(db pgxload.PgxLoader, logger *zap.Logger) *PrescriptionSetResolver {
 	return &PrescriptionSetResolver{
 		db:     db,
 		logger: logger.Named("PrescriptionSetResolver"),

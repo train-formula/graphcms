@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/database/trainerdb"
 	"github.com/train-formula/graphcms/database/workoutdb"
@@ -13,11 +13,12 @@ import (
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 )
 
 type CreateWorkoutCategory struct {
 	Request generated.CreateWorkoutCategory
-	DB      *pg.DB
+	DB      pgxload.PgxLoader
 }
 
 func (c CreateWorkoutCategory) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -65,11 +66,12 @@ func (c CreateWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCatego
 
 	var finalCategory *workout.WorkoutCategory
 
-	err = c.DB.RunInTransaction(func(t *pg.Tx) error {
+	err = pgxload.RunInTransaction(ctx, c.DB, func(ctx context.Context, t pgxload.PgxTxLoader) error {
+
 		_, err = trainerdb.GetOrganization(ctx, t, c.Request.TrainerOrganizationID)
 
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Organization does not exist")
 			}
 			return err

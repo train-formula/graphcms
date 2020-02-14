@@ -3,10 +3,10 @@ package tagcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/tag"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 
 	"github.com/train-formula/graphcms/dataloader/tagid"
@@ -14,7 +14,7 @@ import (
 	"github.com/vektah/gqlparser/gqlerror"
 )
 
-func NewGetTag(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetTag {
+func NewGetTag(id uuid.UUID, logger *zap.Logger, db pgxload.PgxLoader) *GetTag {
 	return &GetTag{
 		id:     id,
 		db:     db,
@@ -24,7 +24,7 @@ func NewGetTag(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetTag {
 
 type GetTag struct {
 	id     uuid.UUID
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 

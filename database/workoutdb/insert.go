@@ -7,6 +7,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/willtrking/pgxload"
 )
 
 // Combined exercise + prescription id used, for example, to create BlockExercises
@@ -16,99 +17,176 @@ type ExercisePrescription struct {
 }
 
 // Insert a new workout program
-func InsertWorkoutProgram(ctx context.Context, conn database.Tx, new workout.WorkoutProgram) (*workout.WorkoutProgram, error) {
+func InsertWorkoutProgram(ctx context.Context, conn pgxload.PgxTxLoader, new workout.WorkoutProgram) (*workout.WorkoutProgram, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.WorkoutProgram
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Insert a new workout category
-func InsertWorkoutCategory(ctx context.Context, conn database.Tx, new workout.WorkoutCategory) (*workout.WorkoutCategory, error) {
+func InsertWorkoutCategory(ctx context.Context, conn pgxload.PgxTxLoader, new workout.WorkoutCategory) (*workout.WorkoutCategory, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.WorkoutCategory
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Insert a new workout
-func InsertWorkout(ctx context.Context, conn database.Tx, new workout.Workout) (*workout.Workout, error) {
+func InsertWorkout(ctx context.Context, conn pgxload.PgxTxLoader, new workout.Workout) (*workout.Workout, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.Workout
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Insert a new workout block
-func InsertWorkoutBlock(ctx context.Context, conn database.Tx, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
+func InsertWorkoutBlock(ctx context.Context, conn pgxload.PgxTxLoader, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.WorkoutBlock
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Insert a new exercise
-func InsertExercise(ctx context.Context, conn database.Tx, new workout.Exercise) (*workout.Exercise, error) {
+func InsertExercise(ctx context.Context, conn pgxload.PgxTxLoader, new workout.Exercise) (*workout.Exercise, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.Exercise
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Insert a new prescription
-func InsertPrescription(ctx context.Context, conn database.Tx, new workout.Prescription) (*workout.Prescription, error) {
+func InsertPrescription(ctx context.Context, conn pgxload.PgxTxLoader, new workout.Prescription) (*workout.Prescription, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.Prescription
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Insert a new prescription set
-func InsertPrescriptionSet(ctx context.Context, conn database.Tx, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
+func InsertPrescriptionSet(ctx context.Context, conn pgxload.PgxTxLoader, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.PrescriptionSet
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Remove all workout categories from a workout, and set a new list
 // The order of the categories will be the order they appear in the list
-func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Tx, workoutID uuid.UUID, workoutCategoryIDs []uuid.UUID) error {
+func SetWorkoutWorkoutCategories(ctx context.Context, conn pgxload.PgxTxLoader, workoutID uuid.UUID, workoutCategoryIDs []uuid.UUID) error {
 
 	if len(workoutCategoryIDs) <= 0 {
 		return errors.New("must specify at least one workout category id to set onto workout")
@@ -119,7 +197,7 @@ func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Tx, workoutI
 		return err
 	}
 
-	var toInsert []*workout.WorkoutWorkoutCategory
+	var toInsert []interface{}
 
 	for idx, categoryID := range workoutCategoryIDs {
 		newUuid, err := uuid.NewV4()
@@ -135,7 +213,14 @@ func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Tx, workoutI
 		})
 	}
 
-	_, err = conn.ModelContext(ctx, &toInsert).Insert()
+	ins := pgxload.NewStructInsert(database.TableName(workout.WorkoutWorkoutCategory{}), toInsert...)
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(ctx, insStmt, insParams...)
 	if err != nil {
 		return err
 	}
@@ -146,7 +231,7 @@ func SetWorkoutWorkoutCategories(ctx context.Context, conn database.Tx, workoutI
 
 // Remove all BlockExercise's from a workout block, and set a new list
 // The order of the BlockExercises will be the order they appear in the list
-func SetWorkoutBlockBlockExercises(ctx context.Context, conn database.Tx, workoutBlockID uuid.UUID, exercisePrescriptions []ExercisePrescription) error {
+func SetWorkoutBlockBlockExercises(ctx context.Context, conn pgxload.PgxTxLoader, workoutBlockID uuid.UUID, exercisePrescriptions []ExercisePrescription) error {
 
 	if len(exercisePrescriptions) <= 0 {
 		return errors.New("must specify at least exercise + prescription id to set onto workout block")
@@ -157,7 +242,7 @@ func SetWorkoutBlockBlockExercises(ctx context.Context, conn database.Tx, workou
 		return err
 	}
 
-	var toInsert []*workout.BlockExercise
+	var toInsert []interface{}
 
 	for idx, exercisePrescription := range exercisePrescriptions {
 
@@ -174,7 +259,15 @@ func SetWorkoutBlockBlockExercises(ctx context.Context, conn database.Tx, workou
 			Order:          idx,
 		})
 	}
-	_, err = conn.ModelContext(ctx, &toInsert).Insert()
+
+	ins := pgxload.NewStructInsert(database.TableName(workout.BlockExercise{}), toInsert...)
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(ctx, insStmt, insParams...)
 	if err != nil {
 		return err
 	}

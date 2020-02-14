@@ -3,7 +3,7 @@ package plancall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/plandb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
@@ -11,10 +11,11 @@ import (
 	"github.com/train-formula/graphcms/util"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewEditPlanSchedule(request generated.EditPlanSchedule, logger *zap.Logger, db *pg.DB) *EditPlanSchedule {
+func NewEditPlanSchedule(request generated.EditPlanSchedule, logger *zap.Logger, db pgxload.PgxLoader) *EditPlanSchedule {
 	return &EditPlanSchedule{
 		request: request,
 		db:      db,
@@ -24,11 +25,11 @@ func NewEditPlanSchedule(request generated.EditPlanSchedule, logger *zap.Logger,
 
 type EditPlanSchedule struct {
 	request generated.EditPlanSchedule
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
-func (g EditPlanSchedule) Validate(ctx context.Context) []validation.ValidatorFunc {
+func (g *EditPlanSchedule) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	var funcs []validation.ValidatorFunc
 
@@ -43,15 +44,15 @@ func (g EditPlanSchedule) Validate(ctx context.Context) []validation.ValidatorFu
 	return funcs
 }
 
-func (g EditPlanSchedule) Call(ctx context.Context) (*plan.PlanSchedule, error) {
+func (g *EditPlanSchedule) Call(ctx context.Context) (*plan.PlanSchedule, error) {
 
 	var finalPlanSchedule *plan.PlanSchedule
 
-	err := g.db.RunInTransaction(func(t *pg.Tx) error {
+	err := pgxload.RunInTransaction(ctx, g.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		planSchedule, err := plandb.GetPlanScheduleForUpdate(ctx, t, g.request.ID)
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Plan schedule does not exist")
 			}
 

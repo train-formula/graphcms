@@ -4,14 +4,14 @@ package workoutblocksbycategory
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/dataloader"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/willtrking/pgxload"
 )
 
-func NewLoader(ctx context.Context, db *pg.DB) *WorkoutBlocksByCategoryLoader {
+func NewLoader(ctx context.Context, db pgxload.PgxLoader) *WorkoutBlocksByCategoryLoader {
 
 	return NewWorkoutBlocksByCategoryLoader(WorkoutBlocksByCategoryLoaderConfig{
 		Wait:     dataloader.DefaultWaitTime,

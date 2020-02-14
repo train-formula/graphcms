@@ -10,10 +10,10 @@ type Organization struct {
 	tableName struct{} `pg:",discard_unknown_columns"`
 
 	ID          uuid.UUID `json:"id"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	CreatedAt   time.Time `pgxload:"omitZero"`
+	UpdatedAt   time.Time `pgxload:"omitZero"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
 }
 
 func (o Organization) TableName() string {

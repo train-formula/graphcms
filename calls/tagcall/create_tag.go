@@ -3,9 +3,10 @@ package tagcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/tagdb"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 
 	"github.com/train-formula/graphcms/database/trainerdb"
@@ -15,7 +16,7 @@ import (
 	"github.com/vektah/gqlparser/gqlerror"
 )
 
-func NewCreateTag(request generated.CreateTag, logger *zap.Logger, db *pg.DB) *CreateTag {
+func NewCreateTag(request generated.CreateTag, logger *zap.Logger, db pgxload.PgxLoader) *CreateTag {
 	return &CreateTag{
 		request: request,
 		db:      db,
@@ -25,7 +26,7 @@ func NewCreateTag(request generated.CreateTag, logger *zap.Logger, db *pg.DB) *C
 
 type CreateTag struct {
 	request generated.CreateTag
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -46,11 +47,11 @@ func (g CreateTag) Call(ctx context.Context) (*tag.Tag, error) {
 
 	var finalTag *tag.Tag
 
-	err = g.db.RunInTransaction(func(t *pg.Tx) error {
+	err = pgxload.RunInTransaction(ctx, g.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 		_, err = trainerdb.GetOrganization(ctx, t, g.request.TrainerOrganizationID)
 
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Organization does not exist")
 			}
 			g.logger.Error("Failed to get organization", zap.Error(err))
@@ -67,7 +68,7 @@ func (g CreateTag) Call(ctx context.Context) (*tag.Tag, error) {
 		if err == nil {
 			return gqlerror.Errorf("tag '" + g.request.Tag + "' already exists")
 
-		} else if err != nil && err != pg.ErrNoRows {
+		} else if err != nil && err != pgx.ErrNoRows {
 			g.logger.Error("Failed to check if tag already exists", zap.Error(err))
 			return err
 		}

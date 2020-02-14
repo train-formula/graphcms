@@ -4,14 +4,14 @@ package planschedulesbyplan
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/plandb"
 	"github.com/train-formula/graphcms/dataloader"
 	"github.com/train-formula/graphcms/models/plan"
+	"github.com/willtrking/pgxload"
 )
 
-func NewLoader(ctx context.Context, db *pg.DB) *PlanSchedulesByPlanLoader {
+func NewLoader(ctx context.Context, db pgxload.PgxLoader) *PlanSchedulesByPlanLoader {
 
 	return NewPlanSchedulesByPlanLoader(PlanSchedulesByPlanLoaderConfig{
 		Wait:     dataloader.DefaultWaitTime,

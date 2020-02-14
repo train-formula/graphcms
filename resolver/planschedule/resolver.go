@@ -3,22 +3,22 @@ package planschedule
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/plancall"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/interval"
 	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
 type PlanScheduleResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 
-func NewPlanScheduleResolver(db *pg.DB, logger *zap.Logger) *PlanScheduleResolver {
+func NewPlanScheduleResolver(db pgxload.PgxLoader, logger *zap.Logger) *PlanScheduleResolver {
 	return &PlanScheduleResolver{
 		db:     db,
 		logger: logger.Named("PlanScheduleResolver"),

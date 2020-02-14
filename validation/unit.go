@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 )
 
-func CheckUnitDataValid(ctx context.Context, conn database.Conn, data generated.AttachUnitData, unitName string) ValidatorFunc {
+func CheckUnitDataValid(ctx context.Context, conn pgxload.PgxLoader, data generated.AttachUnitData, unitName string) ValidatorFunc {
 
 	return func() *gqlerror.Error {
 
@@ -23,7 +23,7 @@ func CheckUnitDataValid(ctx context.Context, conn database.Conn, data generated.
 
 }
 
-func CheckUnitDataValidAndNotNil(ctx context.Context, conn database.Conn, data *generated.AttachUnitData, unitName string) ValidatorFunc {
+func CheckUnitDataValidAndNotNil(ctx context.Context, conn pgxload.PgxLoader, data *generated.AttachUnitData, unitName string) ValidatorFunc {
 
 	if data == nil {
 		return func() *gqlerror.Error {
@@ -34,7 +34,7 @@ func CheckUnitDataValidAndNotNil(ctx context.Context, conn database.Conn, data *
 	return CheckUnitDataValid(ctx, conn, *data, unitName)
 }
 
-func CheckUnitDataValidOrNil(ctx context.Context, conn database.Conn, data *generated.AttachUnitData, unitName string) ValidatorFunc {
+func CheckUnitDataValidOrNil(ctx context.Context, conn pgxload.PgxLoader, data *generated.AttachUnitData, unitName string) ValidatorFunc {
 	if data == nil {
 		return EmptyValidatorFunc
 	}

@@ -5,14 +5,14 @@ package organizationid
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/trainerdb"
 	"github.com/train-formula/graphcms/dataloader"
 	"github.com/train-formula/graphcms/models/trainer"
+	"github.com/willtrking/pgxload"
 )
 
-func NewLoader(ctx context.Context, db *pg.DB) *OrganizationIDLoader {
+func NewLoader(ctx context.Context, db pgxload.PgxLoader) *OrganizationIDLoader {
 
 	return NewOrganizationIDLoader(OrganizationIDLoaderConfig{
 		Wait:     dataloader.DefaultWaitTime,

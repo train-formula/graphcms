@@ -3,17 +3,18 @@ package plancall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/plandb"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewArchivePlanSchedule(request uuid.UUID, logger *zap.Logger, db *pg.DB) *ArchivePlanSchedule {
+func NewArchivePlanSchedule(request uuid.UUID, logger *zap.Logger, db pgxload.PgxLoader) *ArchivePlanSchedule {
 	return &ArchivePlanSchedule{
 		request: request,
 		db:      db,
@@ -23,7 +24,7 @@ func NewArchivePlanSchedule(request uuid.UUID, logger *zap.Logger, db *pg.DB) *A
 
 type ArchivePlanSchedule struct {
 	request uuid.UUID
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -36,11 +37,11 @@ func (c ArchivePlanSchedule) Call(ctx context.Context) (*plan.PlanSchedule, erro
 
 	var finalPlanSchedule *plan.PlanSchedule
 
-	err := c.db.RunInTransaction(func(t *pg.Tx) error {
+	err := pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		plan, err := plandb.GetPlanScheduleForUpdate(ctx, t, c.request)
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Plan schedule does not exist")
 			}
 

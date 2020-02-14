@@ -4,18 +4,19 @@ import (
 	"context"
 	"strings"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewCreateWorkout(request generated.CreateWorkout, logger *zap.Logger, db *pg.DB) *CreateWorkout {
+func NewCreateWorkout(request generated.CreateWorkout, logger *zap.Logger, db pgxload.PgxLoader) *CreateWorkout {
 	return &CreateWorkout{
 		request: request,
 		db:      db,
@@ -25,7 +26,7 @@ func NewCreateWorkout(request generated.CreateWorkout, logger *zap.Logger, db *p
 
 type CreateWorkout struct {
 	request generated.CreateWorkout
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -46,11 +47,12 @@ func (c CreateWorkout) Call(ctx context.Context) (*workout.Workout, error) {
 
 	var finalWorkout *workout.Workout
 
-	err = c.db.RunInTransaction(func(t *pg.Tx) error {
+	err = pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
+
 		program, err := workoutdb.GetWorkoutProgram(ctx, t, c.request.WorkoutProgramID)
 
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Workout program does not exist")
 			}
 			c.logger.Error("Failed to retrieve workout program", zap.Error(err))

@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/plandb"
 	"github.com/train-formula/graphcms/database/tagdb"
@@ -12,10 +11,11 @@ import (
 	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/util"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewCreatePlan(request generated.CreatePlan, logger *zap.Logger, db *pg.DB) *CreatePlan {
+func NewCreatePlan(request generated.CreatePlan, logger *zap.Logger, db pgxload.PgxLoader) *CreatePlan {
 	return &CreatePlan{
 		request: request,
 		db:      db,
@@ -25,7 +25,7 @@ func NewCreatePlan(request generated.CreatePlan, logger *zap.Logger, db *pg.DB) 
 
 type CreatePlan struct {
 	request generated.CreatePlan
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -47,7 +47,7 @@ func (g CreatePlan) Call(ctx context.Context) (*plan.Plan, error) {
 
 	var finalPlan *plan.Plan
 
-	err = g.db.RunInTransaction(func(t *pg.Tx) error {
+	err = pgxload.RunInTransaction(ctx, g.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		err = validation.TagsAllExistForTrainer(ctx, t, g.request.TrainerOrganizationID, g.request.Tags)
 		if err != nil {

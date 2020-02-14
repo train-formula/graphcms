@@ -3,7 +3,6 @@ package organizationcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/cursor"
@@ -11,10 +10,11 @@ import (
 	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewGetOrganizationAvailableTags(trainerOrganizationID uuid.UUID, first int, after cursor.Cursor, logger *zap.Logger, db *pg.DB) *GetOrganizationAvailableTags {
+func NewGetOrganizationAvailableTags(trainerOrganizationID uuid.UUID, first int, after cursor.Cursor, logger *zap.Logger, db pgxload.PgxLoader) *GetOrganizationAvailableTags {
 	return &GetOrganizationAvailableTags{
 		trainerOrganizationID: trainerOrganizationID,
 		first:                 first,
@@ -29,7 +29,7 @@ type GetOrganizationAvailableTags struct {
 	trainerOrganizationID uuid.UUID
 	first                 int
 	after                 cursor.Cursor
-	db                    *pg.DB
+	db                    pgxload.PgxLoader
 	logger                *zap.Logger
 }
 
@@ -68,10 +68,19 @@ func (g GetOrganizationAvailableTags) Call(ctx context.Context) (*connections.Ta
 		return nil, err
 	}*/
 
-	_, err := g.db.QueryContext(ctx, &tags, query, params...)
+	rows, err := g.db.Query(ctx, pgxload.RebindPositional(query), params...)
 
 	if err != nil {
 		g.logger.Error("Failed to load organization tags", zap.Error(err),
+			logging.UUID("trainerOrganizationID", g.trainerOrganizationID), zap.Int("first", g.first),
+			logging.Cursor("after", g.after))
+
+		return nil, err
+	}
+
+	err = g.db.Scanner(rows).Scan(&tags)
+	if err != nil {
+		g.logger.Error("Failed to scan organization tags", zap.Error(err),
 			logging.UUID("trainerOrganizationID", g.trainerOrganizationID), zap.Int("first", g.first),
 			logging.Cursor("after", g.after))
 
@@ -84,9 +93,18 @@ func (g GetOrganizationAvailableTags) Call(ctx context.Context) (*connections.Ta
 
 			var count int
 
-			_, err := g.db.QueryContext(ctx, pg.Scan(&count), query, params...)
+			_, err := g.db.Query(ctx, query, params...)
 			if err != nil {
 				g.logger.Error("Failed to count organization tags", zap.Error(err),
+					logging.UUID("trainerOrganizationID", g.trainerOrganizationID), zap.Int("first", g.first),
+					logging.Cursor("after", g.after))
+
+				return -1, err
+			}
+
+			err = g.db.Scanner(rows).Scan(&count)
+			if err != nil {
+				g.logger.Error("Failed to scan organization tag count", zap.Error(err),
 					logging.UUID("trainerOrganizationID", g.trainerOrganizationID), zap.Int("first", g.first),
 					logging.Cursor("after", g.after))
 

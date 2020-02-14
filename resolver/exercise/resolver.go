@@ -3,21 +3,21 @@ package exercise
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/tagcall"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
 type ExerciseResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 
-func NewExerciseResolver(db *pg.DB, logger *zap.Logger) *ExerciseResolver {
+func NewExerciseResolver(db pgxload.PgxLoader, logger *zap.Logger) *ExerciseResolver {
 	return &ExerciseResolver{
 		db:     db,
 		logger: logger.Named("ExerciseResolver"),

@@ -2,39 +2,61 @@ package plandb
 
 import (
 	"context"
-	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/plan"
+	"github.com/willtrking/pgxload"
 )
 
-func InsertPlan(ctx context.Context, conn database.Tx, new plan.Plan) (*plan.Plan, error) {
+func InsertPlan(ctx context.Context, conn pgxload.PgxTxLoader, new plan.Plan) (*plan.Plan, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result plan.Plan
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
-func InsertPlanSchedule(ctx context.Context, conn database.Tx, new plan.PlanSchedule) (*plan.PlanSchedule, error) {
+func InsertPlanSchedule(ctx context.Context, conn pgxload.PgxTxLoader, new plan.PlanSchedule) (*plan.PlanSchedule, error) {
 
-	newModel := &new
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Insert()
+	ins = ins.WithReturning("*")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result plan.PlanSchedule
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Set the total amount of inventory on a plan
-func SetPlanTotalInventory(ctx context.Context, conn database.Tx, planID uuid.UUID, count int) error {
+func SetPlanTotalInventory(ctx context.Context, conn pgxload.PgxTxLoader, planID uuid.UUID, count int) error {
 
 	invUuid, err := uuid.NewV4()
 	if err != nil {
@@ -57,7 +79,7 @@ func SetPlanTotalInventory(ctx context.Context, conn database.Tx, planID uuid.UU
 }
 
 // Set the total amount of inventory on a plan schedule
-func SetPlanScheduleTotalInventory(ctx context.Context, conn database.Tx, planID uuid.UUID, planScheduleID uuid.UUID, count int) error {
+func SetPlanScheduleTotalInventory(ctx context.Context, conn pgxload.PgxTxLoader, planID uuid.UUID, planScheduleID uuid.UUID, count int) error {
 
 	invUuid, err := uuid.NewV4()
 	if err != nil {
@@ -81,24 +103,26 @@ func SetPlanScheduleTotalInventory(ctx context.Context, conn database.Tx, planID
 
 // Will either insert a PlanInventory row with the specified plan + plan schedule ID, or update the values in the row
 // Should be done in a transaction
-func InsertOrUpdatePlanInventory(ctx context.Context, conn database.Tx, new plan.PlanInventory) (*plan.PlanInventory, error) {
+func InsertOrUpdatePlanInventory(ctx context.Context, conn pgxload.PgxTxLoader, new plan.PlanInventory) (*plan.PlanInventory, error) {
 
-	query, params, err := database.StructInsertStatement(new, "")
+	ins := pgxload.NewStructInsert(database.TableName(new), new)
 
+	ins = ins.WithReturning("*").WithConflict("(\"plan_id\",COALESCE(\"plan_schedule_id\", '00000000-0000-0000-0000-000000000000'::uuid)) DO UPDATE SET total_inventory = EXCLUDED.total_inventory")
+
+	insStmt, insParams, err := ins.GenerateInsert(conn.Mapper())
 	if err != nil {
 		return nil, err
 	}
 
-	query += " ON CONFLICT (\"plan_id\",COALESCE(\"plan_schedule_id\", '00000000-0000-0000-0000-000000000000'::uuid))"
-	query += " DO UPDATE SET total_inventory = EXCLUDED.total_inventory"
-	query += " RETURNING " + strings.Join(database.StructColumns(new, ""), ", ")
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
 
 	var result plan.PlanInventory
 
-	_, err = conn.QueryContext(ctx, query, &result, params...)
-	if err != nil {
-		return nil, err
-	}
+	err = conn.Scanner(rows).Scan(&result)
 
-	return &result, nil
+	return &result, err
+
 }

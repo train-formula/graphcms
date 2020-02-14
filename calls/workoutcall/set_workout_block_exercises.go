@@ -3,16 +3,17 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewSetWorkoutBlockExercises(request generated.SetWorkoutBlockExercises, logger *zap.Logger, db *pg.DB) *SetWorkoutBlockExercises {
+func NewSetWorkoutBlockExercises(request generated.SetWorkoutBlockExercises, logger *zap.Logger, db pgxload.PgxLoader) *SetWorkoutBlockExercises {
 	return &SetWorkoutBlockExercises{
 		request: request,
 		db:      db,
@@ -22,7 +23,7 @@ func NewSetWorkoutBlockExercises(request generated.SetWorkoutBlockExercises, log
 
 type SetWorkoutBlockExercises struct {
 	request generated.SetWorkoutBlockExercises
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -34,12 +35,12 @@ func (c SetWorkoutBlockExercises) Validate(ctx context.Context) []validation.Val
 func (c SetWorkoutBlockExercises) Call(ctx context.Context) (*workout.WorkoutBlock, error) {
 
 	var finalWorkout *workout.WorkoutBlock
-	err := c.db.RunInTransaction(func(t *pg.Tx) error {
+	err := pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		var err error
 		wrkout, err := workoutdb.GetWorkoutBlockForUpdate(ctx, t, c.request.WorkoutBlockID)
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Workout block does not exist")
 			}
 

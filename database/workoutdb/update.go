@@ -5,95 +5,174 @@ import (
 
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/willtrking/pgxload"
 )
 
 // Update workout program, replace all fields with new row
-func UpdateWorkoutProgram(ctx context.Context, conn database.Tx, new workout.WorkoutProgram) (*workout.WorkoutProgram, error) {
+func UpdateWorkoutProgram(ctx context.Context, conn pgxload.PgxTxLoader, new workout.WorkoutProgram) (*workout.WorkoutProgram, error) {
 
-	newModel := &new
+	upd := pgxload.NewStructUpdate(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	upd = upd.WithReturning("*")
+
+	insStmt, insParams, err := upd.GenerateExactUpdate(conn.Mapper(), "id")
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.WorkoutProgram
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
+
 }
 
 // Update workout category, replace all fields with new row
-func UpdateWorkoutCategory(ctx context.Context, conn database.Tx, new workout.WorkoutCategory) (*workout.WorkoutCategory, error) {
+func UpdateWorkoutCategory(ctx context.Context, conn pgxload.PgxTxLoader, new workout.WorkoutCategory) (*workout.WorkoutCategory, error) {
 
-	newModel := &new
+	upd := pgxload.NewStructUpdate(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	upd = upd.WithReturning("*")
+
+	insStmt, insParams, err := upd.GenerateExactUpdate(conn.Mapper(), "id")
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.WorkoutCategory
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Update workout, replace all fields with new row
-func UpdateWorkout(ctx context.Context, conn database.Tx, new workout.Workout) (*workout.Workout, error) {
+func UpdateWorkout(ctx context.Context, conn pgxload.PgxTxLoader, new workout.Workout) (*workout.Workout, error) {
 
-	newModel := &new
+	upd := pgxload.NewStructUpdate(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	upd = upd.WithReturning("*")
+
+	insStmt, insParams, err := upd.GenerateExactUpdate(conn.Mapper(), "id")
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.Workout
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Update workout block, replace all fields with new row
-func UpdateWorkoutBlock(ctx context.Context, conn database.Tx, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
+func UpdateWorkoutBlock(ctx context.Context, conn pgxload.PgxTxLoader, new workout.WorkoutBlock) (*workout.WorkoutBlock, error) {
 
-	newModel := &new
+	upd := pgxload.NewStructUpdate(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	upd = upd.WithReturning("*")
+
+	insStmt, insParams, err := upd.GenerateExactUpdate(conn.Mapper(), "id")
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.WorkoutBlock
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Update exercise, replace all fields with new row
-func UpdateExercise(ctx context.Context, conn database.Tx, new workout.Exercise) (*workout.Exercise, error) {
+func UpdateExercise(ctx context.Context, conn pgxload.PgxTxLoader, new workout.Exercise) (*workout.Exercise, error) {
 
-	newModel := &new
+	upd := pgxload.NewStructUpdate(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	upd = upd.WithReturning("*")
+
+	insStmt, insParams, err := upd.GenerateExactUpdate(conn.Mapper(), "id")
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.Exercise
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Update prescription, replace all fields with new row
-func UpdatePrescription(ctx context.Context, conn database.Tx, new workout.Prescription) (*workout.Prescription, error) {
+func UpdatePrescription(ctx context.Context, conn pgxload.PgxTxLoader, new workout.Prescription) (*workout.Prescription, error) {
 
-	newModel := &new
+	upd := pgxload.NewStructUpdate(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	upd = upd.WithReturning("*")
+
+	insStmt, insParams, err := upd.GenerateExactUpdate(conn.Mapper(), "id")
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.Prescription
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }
 
 // Update prescription set, replace all fields with new row
-func UpdatePrescriptionSet(ctx context.Context, conn database.Tx, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
+func UpdatePrescriptionSet(ctx context.Context, conn pgxload.PgxTxLoader, new workout.PrescriptionSet) (*workout.PrescriptionSet, error) {
 
-	newModel := &new
+	upd := pgxload.NewStructUpdate(database.TableName(new), new)
 
-	_, err := conn.ModelContext(ctx, newModel).Returning("*").Update()
+	upd = upd.WithReturning("*")
+
+	insStmt, insParams, err := upd.GenerateExactUpdate(conn.Mapper(), "id")
 	if err != nil {
 		return nil, err
 	}
 
-	return newModel, nil
+	rows, err := conn.Query(ctx, insStmt, insParams...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result workout.PrescriptionSet
+
+	err = conn.Scanner(rows).Scan(&result)
+
+	return &result, err
 }

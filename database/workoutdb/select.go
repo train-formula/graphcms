@@ -4,26 +4,31 @@ import (
 	"context"
 	"strings"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/willtrking/pgxload"
 )
 
 // Retrieve's all workout unit's from the database
-func GetAllUnits(ctx context.Context, conn database.Conn) ([]*workout.Unit, error) {
+func GetAllUnits(ctx context.Context, conn pgxload.PgxLoader) ([]*workout.Unit, error) {
 
 	var result []*workout.Unit
 
 	query := "SELECT * FROM " + database.TableName(workout.Unit{})
 
-	_, err := conn.QueryContext(ctx, &result, query)
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves individual workout unit's by their IDs
-func GetUnits(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Unit, error) {
+func GetUnits(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*workout.Unit, error) {
 
 	if len(ids) <= 0 {
 		return nil, nil
@@ -42,43 +47,66 @@ func GetUnits(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*work
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
+	if err != nil {
+		return nil, err
+	}
 
 	return result, err
 }
 
 // Retrieves an workout category by its id
-func GetUnit(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Unit, error) {
+func GetUnit(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.Unit, error) {
 
 	var result workout.Unit
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ?"), id)
+	if err != nil {
+		return workout.Unit{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves an workout category by its id
-func GetWorkoutCategory(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutCategory, error) {
+func GetWorkoutCategory(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.WorkoutCategory, error) {
 
 	var result workout.WorkoutCategory
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(workout.WorkoutCategory{})+" WHERE id = ?"), id)
+	if err != nil {
+		return workout.WorkoutCategory{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves an workout category by its id, and locks the row
-func GetWorkoutCategoryForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutCategory, error) {
+func GetWorkoutCategoryForUpdate(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.WorkoutCategory, error) {
 
 	var result workout.WorkoutCategory
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE"), id)
+	if err != nil {
+		return workout.WorkoutCategory{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves individual workout categories by their IDs
-func GetWorkoutCategories(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.WorkoutCategory, error) {
+func GetWorkoutCategories(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*workout.WorkoutCategory, error) {
 
 	if len(ids) <= 0 {
 		return nil, nil
@@ -97,42 +125,65 @@ func GetWorkoutCategories(ctx context.Context, conn database.Conn, ids []uuid.UU
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
+	if err != nil {
+		return nil, err
+	}
 
 	return result, err
 }
 
 // Retrieve a prescription by it's id
-func GetPrescription(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Prescription, error) {
+func GetPrescription(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.Prescription, error) {
 	var result workout.Prescription
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ?"), id)
+	if err != nil {
+		return workout.Prescription{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves a prescription by its id, and locks the row
-func GetPrescriptionForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Prescription, error) {
+func GetPrescriptionForUpdate(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.Prescription, error) {
 
 	var result workout.Prescription
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE"), id)
+	if err != nil {
+		return workout.Prescription{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves a prescription set by its id, and locks the row
-func GetPrescriptionSetForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.PrescriptionSet, error) {
+func GetPrescriptionSetForUpdate(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.PrescriptionSet, error) {
 
 	var result workout.PrescriptionSet
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE"), id)
+	if err != nil {
+		return workout.PrescriptionSet{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves individual prescription's by their IDs
-func GetPrescriptions(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Prescription, error) {
+func GetPrescriptions(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*workout.Prescription, error) {
 
 	if len(ids) <= 0 {
 		return nil, nil
@@ -151,13 +202,18 @@ func GetPrescriptions(ctx context.Context, conn database.Conn, ids []uuid.UUID) 
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieves individual workout blocks's by their IDs
-func GetWorkoutBlocks(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.WorkoutBlock, error) {
+func GetWorkoutBlocks(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*workout.WorkoutBlock, error) {
 
 	if len(ids) <= 0 {
 		return nil, nil
@@ -176,13 +232,21 @@ func GetWorkoutBlocks(ctx context.Context, conn database.Conn, ids []uuid.UUID) 
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
+	if err != nil {
+		return nil, err
+	}
 
 	return result, err
 }
 
 // Retrieves workout blocks by workout category IDs
-func GetWorkoutCategoryBlocks(ctx context.Context, conn database.Conn, workoutCategoryIDs []uuid.UUID) (map[uuid.UUID][]*workout.WorkoutBlock, error) {
+func GetWorkoutCategoryBlocks(ctx context.Context, conn pgxload.PgxLoader, workoutCategoryIDs []uuid.UUID) (map[uuid.UUID][]*workout.WorkoutBlock, error) {
 
 	results := make(map[uuid.UUID][]*workout.WorkoutBlock)
 
@@ -203,8 +267,12 @@ func GetWorkoutCategoryBlocks(ctx context.Context, conn database.Conn, workoutCa
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
 
+	err = conn.Scanner(rows).Scan(&queryResults)
 	if err != nil {
 		return nil, err
 	}
@@ -217,27 +285,37 @@ func GetWorkoutCategoryBlocks(ctx context.Context, conn database.Conn, workoutCa
 }
 
 // Retrieves a workout block by its id, and locks the row
-func GetWorkoutBlockForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutBlock, error) {
+func GetWorkoutBlockForUpdate(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.WorkoutBlock, error) {
 
 	var result workout.WorkoutBlock
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE"), id)
+	if err != nil {
+		return workout.WorkoutBlock{}, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieves a workout by its id, and locks the row
-func GetWorkoutForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Workout, error) {
+func GetWorkoutForUpdate(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.Workout, error) {
 
 	var result workout.Workout
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE"), id)
+	if err != nil {
+		return workout.Workout{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves individual workouts by their IDs
-func GetWorkouts(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Workout, error) {
+func GetWorkouts(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*workout.Workout, error) {
 	if len(ids) <= 0 {
 		return nil, nil
 	}
@@ -255,22 +333,32 @@ func GetWorkouts(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*w
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieve a workout program by it's id
-func GetWorkoutProgram(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.WorkoutProgram, error) {
+func GetWorkoutProgram(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.WorkoutProgram, error) {
 	var result workout.WorkoutProgram
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ?"), id)
+	if err != nil {
+		return workout.WorkoutProgram{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves individual workout programs by their IDs
-func GetWorkoutPrograms(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.WorkoutProgram, error) {
+func GetWorkoutPrograms(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*workout.WorkoutProgram, error) {
 	if len(ids) <= 0 {
 		return nil, nil
 	}
@@ -288,13 +376,21 @@ func GetWorkoutPrograms(ctx context.Context, conn database.Conn, ids []uuid.UUID
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
+	if err != nil {
+		return nil, err
+	}
 
 	return result, err
 }
 
 // Retrieves workout categories by workout IDs
-func GetWorkoutCategoriesByWorkout(ctx context.Context, conn database.Conn, workoutIDs []uuid.UUID) (map[uuid.UUID][]*workout.WorkoutCategory, error) {
+func GetWorkoutCategoriesByWorkout(ctx context.Context, conn pgxload.PgxLoader, workoutIDs []uuid.UUID) (map[uuid.UUID][]*workout.WorkoutCategory, error) {
 
 	results := make(map[uuid.UUID][]*workout.WorkoutCategory)
 
@@ -318,8 +414,12 @@ func GetWorkoutCategoriesByWorkout(ctx context.Context, conn database.Conn, work
 
 	query = strings.TrimSuffix(query, " OR ") + " ORDER BY wwc.order ASC"
 
-	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
 
+	err = conn.Scanner(rows).Scan(&queryResults)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +433,7 @@ func GetWorkoutCategoriesByWorkout(ctx context.Context, conn database.Conn, work
 }
 
 // Retrieves individual exercises by their IDs
-func GetExercises(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*workout.Exercise, error) {
+func GetExercises(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*workout.Exercise, error) {
 	if len(ids) <= 0 {
 		return nil, nil
 	}
@@ -351,29 +451,45 @@ func GetExercises(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieves an exercise by its id, and locks the row
-func GetExerciseForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (workout.Exercise, error) {
+func GetExerciseForUpdate(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (workout.Exercise, error) {
 
 	var result workout.Exercise
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE"), id)
+	if err != nil {
+		return workout.Exercise{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Check if an exercise is connected to any blocks
-func ExerciseConnectedToBlocks(ctx context.Context, conn database.Conn, id uuid.UUID) (bool, error) {
+func ExerciseConnectedToBlocks(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (bool, error) {
 
-	query := "SELECT COUNT(1) FROM " + database.TableName(workout.BlockExercise{}) + " WHERE exercise_id = ?"
+	query := pgxload.RebindPositional("SELECT COUNT(1) FROM " + database.TableName(workout.BlockExercise{}) + " WHERE exercise_id = ?")
 
 	var count int
 
-	_, err := conn.QueryContext(ctx, pg.Scan(&count), query, id)
+	rows, err := conn.Query(ctx, query, id)
+	if err != nil {
+
+		return false, err
+	}
+
+	err = conn.Scanner(rows).Scan(&count)
 	if err != nil {
 
 		return false, err
@@ -384,13 +500,19 @@ func ExerciseConnectedToBlocks(ctx context.Context, conn database.Conn, id uuid.
 }
 
 // Check if an prescription is connected to any blocks
-func PrescriptionConnectedToBlocks(ctx context.Context, conn database.Conn, id uuid.UUID) (bool, error) {
+func PrescriptionConnectedToBlocks(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (bool, error) {
 
-	query := "SELECT COUNT(1) FROM " + database.TableName(workout.BlockExercise{}) + " WHERE prescription_id = ?"
+	query := pgxload.RebindPositional("SELECT COUNT(1) FROM " + database.TableName(workout.BlockExercise{}) + " WHERE prescription_id = ?")
 
 	var count int
 
-	_, err := conn.QueryContext(ctx, pg.Scan(&count), query, id)
+	rows, err := conn.Query(ctx, query, id)
+	if err != nil {
+
+		return false, err
+	}
+
+	err = conn.Scanner(rows).Scan(&count)
 	if err != nil {
 
 		return false, err
@@ -401,7 +523,7 @@ func PrescriptionConnectedToBlocks(ctx context.Context, conn database.Conn, id u
 }
 
 // Retrieves workout block exercise + prescription combinations by block id
-func GetBlockExercisesByBlock(ctx context.Context, conn database.Conn, blockIDs []uuid.UUID) (map[uuid.UUID][]*workout.BlockExercise, error) {
+func GetBlockExercisesByBlock(ctx context.Context, conn pgxload.PgxLoader, blockIDs []uuid.UUID) (map[uuid.UUID][]*workout.BlockExercise, error) {
 
 	results := make(map[uuid.UUID][]*workout.BlockExercise)
 
@@ -422,8 +544,12 @@ func GetBlockExercisesByBlock(ctx context.Context, conn database.Conn, blockIDs 
 
 	query = strings.TrimSuffix(query, " OR ") + " ORDER BY order ASC"
 
-	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+	rows, err := conn.Query(ctx, query, params...)
+	if err != nil {
+		return nil, err
+	}
 
+	err = conn.Scanner(rows).Scan(&queryResults)
 	if err != nil {
 		return nil, err
 	}
@@ -437,7 +563,7 @@ func GetBlockExercisesByBlock(ctx context.Context, conn database.Conn, blockIDs 
 }
 
 // Retrieves PrescriptionSet's by their Prescription.
-func GetPrescriptionSetsByPrescription(ctx context.Context, conn database.Conn, prescriptionIDs []uuid.UUID) (map[uuid.UUID][]*workout.PrescriptionSet, error) {
+func GetPrescriptionSetsByPrescription(ctx context.Context, conn pgxload.PgxLoader, prescriptionIDs []uuid.UUID) (map[uuid.UUID][]*workout.PrescriptionSet, error) {
 
 	results := make(map[uuid.UUID][]*workout.PrescriptionSet)
 
@@ -457,8 +583,12 @@ func GetPrescriptionSetsByPrescription(ctx context.Context, conn database.Conn, 
 
 	query = strings.TrimSuffix(query, " OR ") + " ORDER BY set_number ASC"
 
-	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
 
+	err = conn.Scanner(rows).Scan(&queryResults)
 	if err != nil {
 		return nil, err
 	}

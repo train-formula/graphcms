@@ -3,17 +3,17 @@ package plancall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/plandb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/util"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewCreatePlanSchedule(request generated.CreatePlanSchedule, logger *zap.Logger, db *pg.DB) *CreatePlanSchedule {
+func NewCreatePlanSchedule(request generated.CreatePlanSchedule, logger *zap.Logger, db pgxload.PgxLoader) *CreatePlanSchedule {
 	return &CreatePlanSchedule{
 		request: request,
 		db:      db,
@@ -23,7 +23,7 @@ func NewCreatePlanSchedule(request generated.CreatePlanSchedule, logger *zap.Log
 
 type CreatePlanSchedule struct {
 	request generated.CreatePlanSchedule
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -62,7 +62,7 @@ func (g CreatePlanSchedule) Call(ctx context.Context) (*plan.PlanSchedule, error
 
 	var finalPlanSchedule *plan.PlanSchedule
 
-	err = g.db.RunInTransaction(func(t *pg.Tx) error {
+	err = pgxload.RunInTransaction(ctx, g.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		newSchedule := plan.PlanSchedule{
 			ID: newUuid,

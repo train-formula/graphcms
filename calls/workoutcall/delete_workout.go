@@ -3,16 +3,17 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewDeleteWorkout(request uuid.UUID, logger *zap.Logger, db *pg.DB) *DeleteWorkout {
+func NewDeleteWorkout(request uuid.UUID, logger *zap.Logger, db pgxload.PgxLoader) *DeleteWorkout {
 	return &DeleteWorkout{
 		request: request,
 		db:      db,
@@ -22,7 +23,7 @@ func NewDeleteWorkout(request uuid.UUID, logger *zap.Logger, db *pg.DB) *DeleteW
 
 type DeleteWorkout struct {
 	request uuid.UUID
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -33,11 +34,11 @@ func (c DeleteWorkout) Validate(ctx context.Context) []validation.ValidatorFunc 
 
 func (c DeleteWorkout) Call(ctx context.Context) (*uuid.UUID, error) {
 
-	err := c.db.RunInTransaction(func(t *pg.Tx) error {
+	err := pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		_, err := workoutdb.GetWorkoutForUpdate(ctx, t, c.request)
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Workout does not exist")
 			}
 

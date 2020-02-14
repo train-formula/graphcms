@@ -3,17 +3,17 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/dataloader/prescriptionsetsbyprescription"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewGetPrescriptionPrescriptionSets(prescriptionID uuid.UUID, logger *zap.Logger, db *pg.DB) *GetPrescriptionPrescriptionSets {
+func NewGetPrescriptionPrescriptionSets(prescriptionID uuid.UUID, logger *zap.Logger, db pgxload.PgxLoader) *GetPrescriptionPrescriptionSets {
 	return &GetPrescriptionPrescriptionSets{
 		prescriptionID: prescriptionID,
 		db:             db,
@@ -23,7 +23,7 @@ func NewGetPrescriptionPrescriptionSets(prescriptionID uuid.UUID, logger *zap.Lo
 
 type GetPrescriptionPrescriptionSets struct {
 	prescriptionID uuid.UUID
-	db             *pg.DB
+	db             pgxload.PgxLoader
 	logger         *zap.Logger
 }
 

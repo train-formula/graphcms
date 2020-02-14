@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/go-pg/pg/v9"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/plandb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
@@ -12,10 +12,11 @@ import (
 	"github.com/train-formula/graphcms/util"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewEditPlan(request generated.EditPlan, logger *zap.Logger, db *pg.DB) *EditPlan {
+func NewEditPlan(request generated.EditPlan, logger *zap.Logger, db pgxload.PgxLoader) *EditPlan {
 	return &EditPlan{
 		request: request,
 		db:      db,
@@ -25,26 +26,26 @@ func NewEditPlan(request generated.EditPlan, logger *zap.Logger, db *pg.DB) *Edi
 
 type EditPlan struct {
 	request generated.EditPlan
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
-func (g EditPlan) Validate(ctx context.Context) []validation.ValidatorFunc {
+func (g *EditPlan) Validate(ctx context.Context) []validation.ValidatorFunc {
 
 	return []validation.ValidatorFunc{
 		validation.CheckStringNilOrIsNotEmpty(g.request.Name, "If set, name must not be empty", true),
 	}
 }
 
-func (g EditPlan) Call(ctx context.Context) (*plan.Plan, error) {
+func (g *EditPlan) Call(ctx context.Context) (*plan.Plan, error) {
 
 	var finalPlan *plan.Plan
 
-	err := g.db.RunInTransaction(func(t *pg.Tx) error {
+	err := pgxload.RunInTransaction(ctx, g.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		pln, err := plandb.GetPlanForUpdate(ctx, t, g.request.ID)
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Plan does not exist")
 			}
 

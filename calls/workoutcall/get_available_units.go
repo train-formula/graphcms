@@ -3,14 +3,14 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewGetAvailableUnits(logger *zap.Logger, db *pg.DB) *GetAvailableUnits {
+func NewGetAvailableUnits(logger *zap.Logger, db pgxload.PgxLoader) *GetAvailableUnits {
 	return &GetAvailableUnits{
 		db:     db,
 		logger: logger.Named("GetAvailableUnits"),
@@ -18,7 +18,7 @@ func NewGetAvailableUnits(logger *zap.Logger, db *pg.DB) *GetAvailableUnits {
 }
 
 type GetAvailableUnits struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 

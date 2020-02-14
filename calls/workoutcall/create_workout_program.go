@@ -3,17 +3,17 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewCreateWorkoutProgram(request generated.CreateWorkoutProgram, logger *zap.Logger, db *pg.DB) *CreateWorkoutProgram {
+func NewCreateWorkoutProgram(request generated.CreateWorkoutProgram, logger *zap.Logger, db pgxload.PgxLoader) *CreateWorkoutProgram {
 	return &CreateWorkoutProgram{
 		request: request,
 		db:      db,
@@ -23,7 +23,7 @@ func NewCreateWorkoutProgram(request generated.CreateWorkoutProgram, logger *zap
 
 type CreateWorkoutProgram struct {
 	request generated.CreateWorkoutProgram
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -52,7 +52,7 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 
 	var finalProgram *workout.WorkoutProgram
 
-	err = c.db.RunInTransaction(func(t *pg.Tx) error {
+	err = pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		err = validation.TagsAllExistForTrainer(ctx, t, c.request.TrainerOrganizationID, c.request.Tags)
 		if err != nil {

@@ -3,17 +3,17 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/dataloader/exerciseid"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewGetExercise(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetExercise {
+func NewGetExercise(id uuid.UUID, logger *zap.Logger, db pgxload.PgxLoader) *GetExercise {
 	return &GetExercise{
 		id:     id,
 		db:     db,
@@ -23,7 +23,7 @@ func NewGetExercise(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetExercise {
 
 type GetExercise struct {
 	id     uuid.UUID
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 

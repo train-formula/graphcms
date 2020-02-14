@@ -3,17 +3,18 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewEditWorkoutCategory(request generated.EditWorkoutCategory, logger *zap.Logger, db *pg.DB) *EditWorkoutCategory {
+func NewEditWorkoutCategory(request generated.EditWorkoutCategory, logger *zap.Logger, db pgxload.PgxLoader) *EditWorkoutCategory {
 	return &EditWorkoutCategory{
 		request: request,
 		db:      db,
@@ -23,7 +24,7 @@ func NewEditWorkoutCategory(request generated.EditWorkoutCategory, logger *zap.L
 
 type EditWorkoutCategory struct {
 	request generated.EditWorkoutCategory
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -38,11 +39,11 @@ func (c EditWorkoutCategory) Call(ctx context.Context) (*workout.WorkoutCategory
 
 	var finalCategory *workout.WorkoutCategory
 
-	err := c.db.RunInTransaction(func(t *pg.Tx) error {
+	err := pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		category, err := workoutdb.GetWorkoutCategoryForUpdate(ctx, t, c.request.ID)
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Workout category does not exist")
 			}
 

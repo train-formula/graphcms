@@ -4,14 +4,14 @@ package prescriptionid
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/dataloader"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/willtrking/pgxload"
 )
 
-func NewLoader(ctx context.Context, db *pg.DB) *PrescriptionIDLoader {
+func NewLoader(ctx context.Context, db pgxload.PgxLoader) *PrescriptionIDLoader {
 
 	return NewPrescriptionIDLoader(PrescriptionIDLoaderConfig{
 		Wait:     dataloader.DefaultWaitTime,

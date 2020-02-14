@@ -4,14 +4,14 @@ package planid
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/plandb"
 	"github.com/train-formula/graphcms/dataloader"
 	"github.com/train-formula/graphcms/models/plan"
+	"github.com/willtrking/pgxload"
 )
 
-func NewLoader(ctx context.Context, db *pg.DB) *PlanIDLoader {
+func NewLoader(ctx context.Context, db pgxload.PgxLoader) *PlanIDLoader {
 
 	return NewPlanIDLoader(PlanIDLoaderConfig{
 		Wait:     dataloader.DefaultWaitTime,

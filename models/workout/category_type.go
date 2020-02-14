@@ -1,13 +1,13 @@
 package workout
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
-
-	"github.com/go-pg/pg/v9/types"
 )
 
 type BlockType uint8
@@ -48,41 +48,39 @@ func ParseBlockType(s string) BlockType {
 	return UnknownBlockType
 }
 
-var _ types.ValueAppender = (*BlockType)(nil)
-var _ types.ValueScanner = (*BlockType)(nil)
+var _ sql.Scanner = (*BlockType)(nil)
+var _ driver.Valuer = UnknownBlockType
 
-func (t *BlockType) AppendValue(b []byte, flags int) ([]byte, error) {
+func (t BlockType) Value() (driver.Value, error) {
 
-	if flags == 1 {
-		b = append(b, '\'')
-	}
-	b = append(b, t.String()...)
-	if flags == 1 {
-		b = append(b, '\'')
-	}
-
-	return b, nil
+	return t.String(), nil
 }
 
-func (t *BlockType) ScanValue(rd types.Reader, n int) error {
-	if n <= 0 {
+func (t *BlockType) Scan(src interface{}) error {
+	if src == nil {
 		return nil
 	}
 
-	tmp, err := rd.ReadFull()
-	if err != nil {
-		return err
+	switch src.(type) {
+	case string:
+		parsed := ParseBlockType(src.(string))
+		if parsed == UnknownBlockType {
+			return errors.New("Unknown block type")
+		}
+		*t = parsed
+		return nil
+	case []byte:
+		srcCopy := make([]byte, len(src.([]byte)))
+		copy(srcCopy, src.([]byte))
+		parsed := ParseBlockType(string(srcCopy))
+		if parsed == UnknownBlockType {
+			return errors.New("Unknown block type")
+		}
+		*t = parsed
+		return nil
 	}
 
-	parsed := ParseBlockType(string(tmp))
-
-	if parsed == UnknownBlockType {
-		return errors.New("Unknown block type")
-	}
-
-	*t = parsed
-
-	return nil
+	return fmt.Errorf("cannot scan %T", src)
 }
 
 func (e *BlockType) UnmarshalGQL(v interface{}) error {

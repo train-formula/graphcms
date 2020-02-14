@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/dataloader/blockexercisesbyblock"
 	"github.com/train-formula/graphcms/dataloader/exerciseid"
 	"github.com/train-formula/graphcms/dataloader/organizationid"
@@ -21,9 +20,10 @@ import (
 	"github.com/train-formula/graphcms/dataloader/workoutcategoryid"
 	"github.com/train-formula/graphcms/dataloader/workoutid"
 	"github.com/train-formula/graphcms/dataloader/workoutprogramid"
+	"github.com/willtrking/pgxload"
 )
 
-func RegisterLoaders(db *pg.DB) gin.HandlerFunc {
+func RegisterLoaders(db pgxload.PgxLoader) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		organizationid.AddContextLoader(c, db)

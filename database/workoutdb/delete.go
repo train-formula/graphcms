@@ -6,17 +6,18 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/workout"
+	"github.com/willtrking/pgxload"
 )
 
 // Delete a workout, and un-link all of the workout categories associated
-func DeleteWorkout(ctx context.Context, conn database.Tx, workoutID uuid.UUID) error {
+func DeleteWorkout(ctx context.Context, conn pgxload.PgxTxLoader, workoutID uuid.UUID) error {
 
 	err := ClearWorkoutWorkoutCategories(ctx, conn, workoutID)
 	if err != nil {
 		return err
 	}
 
-	_, err = conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.Workout{})+" WHERE id = ?", workoutID)
+	_, err = conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(workout.Workout{})+" WHERE id = ?"), workoutID)
 
 	if err != nil {
 		return err
@@ -26,8 +27,8 @@ func DeleteWorkout(ctx context.Context, conn database.Tx, workoutID uuid.UUID) e
 }
 
 // Remove all workout categories from a workout
-func ClearWorkoutWorkoutCategories(ctx context.Context, conn database.Tx, workoutID uuid.UUID) error {
-	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.WorkoutWorkoutCategory{})+" WHERE workout_id = ?", workoutID)
+func ClearWorkoutWorkoutCategories(ctx context.Context, conn pgxload.PgxTxLoader, workoutID uuid.UUID) error {
+	_, err := conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(workout.WorkoutWorkoutCategory{})+" WHERE workout_id = ?"), workoutID)
 	if err != nil {
 		return err
 	}
@@ -36,9 +37,9 @@ func ClearWorkoutWorkoutCategories(ctx context.Context, conn database.Tx, workou
 }
 
 // Delete a workout block, and un-link all of the exercises associated
-func DeleteWorkoutBlock(ctx context.Context, conn database.Tx, workoutBlockID uuid.UUID) error {
+func DeleteWorkoutBlock(ctx context.Context, conn pgxload.PgxTxLoader, workoutBlockID uuid.UUID) error {
 
-	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.WorkoutBlock{})+" WHERE id = ?", workoutBlockID)
+	_, err := conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(workout.WorkoutBlock{})+" WHERE id = ?"), workoutBlockID)
 
 	if err != nil {
 		return err
@@ -48,9 +49,9 @@ func DeleteWorkoutBlock(ctx context.Context, conn database.Tx, workoutBlockID uu
 }
 
 // Delete an exercise
-func DeleteExercise(ctx context.Context, conn database.Tx, exerciseID uuid.UUID) error {
+func DeleteExercise(ctx context.Context, conn pgxload.PgxTxLoader, exerciseID uuid.UUID) error {
 
-	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.Exercise{})+" WHERE id = ?", exerciseID)
+	_, err := conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(workout.Exercise{})+" WHERE id = ?"), exerciseID)
 
 	if err != nil {
 		return err
@@ -60,8 +61,8 @@ func DeleteExercise(ctx context.Context, conn database.Tx, exerciseID uuid.UUID)
 }
 
 // Remove all block exercises from a workout block
-func ClearWorkoutBlockBlockExercises(ctx context.Context, conn database.Tx, workoutBlockID uuid.UUID) error {
-	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.BlockExercise{})+" WHERE block_id = ?", workoutBlockID)
+func ClearWorkoutBlockBlockExercises(ctx context.Context, conn pgxload.PgxTxLoader, workoutBlockID uuid.UUID) error {
+	_, err := conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(workout.BlockExercise{})+" WHERE block_id = ?"), workoutBlockID)
 	if err != nil {
 		return err
 	}
@@ -70,9 +71,9 @@ func ClearWorkoutBlockBlockExercises(ctx context.Context, conn database.Tx, work
 }
 
 // Delete all prescription sets that are attached to a prescription
-func DeleteAllSetsFromPrescription(ctx context.Context, conn database.Tx, prescriptionID uuid.UUID) error {
+func DeleteAllSetsFromPrescription(ctx context.Context, conn pgxload.PgxTxLoader, prescriptionID uuid.UUID) error {
 
-	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.PrescriptionSet{})+" WHERE prescription_id = ?", prescriptionID)
+	_, err := conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(workout.PrescriptionSet{})+" WHERE prescription_id = ?"), prescriptionID)
 
 	if err != nil {
 		return err
@@ -83,7 +84,7 @@ func DeleteAllSetsFromPrescription(ctx context.Context, conn database.Tx, prescr
 }
 
 // Delete a prescription and all attached prescription sets
-func DeletePrescription(ctx context.Context, conn database.Tx, prescriptionID uuid.UUID) error {
+func DeletePrescription(ctx context.Context, conn pgxload.PgxTxLoader, prescriptionID uuid.UUID) error {
 
 	err := DeleteAllSetsFromPrescription(ctx, conn, prescriptionID)
 
@@ -91,7 +92,7 @@ func DeletePrescription(ctx context.Context, conn database.Tx, prescriptionID uu
 		return err
 	}
 
-	_, err = conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.Prescription{})+" WHERE id = ?", prescriptionID)
+	_, err = conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(workout.Prescription{})+" WHERE id = ?"), prescriptionID)
 
 	if err != nil {
 		return err
@@ -101,9 +102,9 @@ func DeletePrescription(ctx context.Context, conn database.Tx, prescriptionID uu
 }
 
 // Delete a prescription set
-func DeletePrescriptionSet(ctx context.Context, conn database.Tx, prescriptionSetID uuid.UUID) error {
+func DeletePrescriptionSet(ctx context.Context, conn pgxload.PgxTxLoader, prescriptionSetID uuid.UUID) error {
 
-	_, err := conn.ExecContext(ctx, "DELETE FROM "+database.TableName(workout.PrescriptionSet{})+" WHERE id = ?", prescriptionSetID)
+	_, err := conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(workout.PrescriptionSet{})+" WHERE id = ?"), prescriptionSetID)
 
 	if err != nil {
 		return err

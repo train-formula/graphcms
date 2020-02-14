@@ -3,17 +3,17 @@ package tagcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/database/cursor"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewSearchTags(request generated.TagSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db *pg.DB) *SearchTags {
+func NewSearchTags(request generated.TagSearchRequest, first int, after cursor.Cursor, logger *zap.Logger, db pgxload.PgxLoader) *SearchTags {
 	return &SearchTags{
 		request: request,
 		first:   first,
@@ -27,7 +27,7 @@ type SearchTags struct {
 	request generated.TagSearchRequest
 	first   int
 	after   cursor.Cursor
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -70,10 +70,17 @@ func (s SearchTags) Call(ctx context.Context) (*generated.TagSearchResults, erro
 		return nil, err
 	}*/
 
-	_, err := s.db.QueryContext(ctx, &tags, query, params...)
+	rows, err := s.db.Query(ctx, pgxload.RebindPositional(query), params...)
 
 	if err != nil {
 		s.logger.Error("Failed to search tags", zap.Error(err))
+
+		return nil, err
+	}
+
+	err = s.db.Scanner(rows).Scan(&tags)
+	if err != nil {
+		s.logger.Error("Failed to scan tags", zap.Error(err))
 
 		return nil, err
 	}
@@ -85,9 +92,16 @@ func (s SearchTags) Call(ctx context.Context) (*generated.TagSearchResults, erro
 
 				var count int
 
-				_, err := s.db.QueryContext(ctx, pg.Scan(&count), query, params...)
+				_, err := s.db.Query(ctx, query, params...)
 				if err != nil {
 					s.logger.Error("Failed to count tags", zap.Error(err))
+
+					return -1, err
+				}
+
+				err = s.db.Scanner(rows).Scan(&count)
+				if err != nil {
+					s.logger.Error("Failed to scan tag count", zap.Error(err))
 
 					return -1, err
 				}

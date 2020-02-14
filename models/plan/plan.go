@@ -12,8 +12,8 @@ type Plan struct {
 	tableName struct{} `sql:"plan.plan"`
 
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"created_at"`
-	UpdatedAt             time.Time `json:"updated_at"`
+	CreatedAt             time.Time `json:"created_at" pgxload:"omitZero"`
+	UpdatedAt             time.Time `json:"updated_at" pgxload:"omitZero"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	Name                  string    `json:"name"`
 	Description           *string   `json:"description"`

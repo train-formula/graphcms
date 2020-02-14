@@ -1,10 +1,11 @@
 package tag
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"errors"
+	"fmt"
 	"strings"
-
-	"github.com/go-pg/pg/v9/types"
 )
 
 type TagType uint8
@@ -59,39 +60,37 @@ func ParseTagType(s string) TagType {
 	return UnknownTagType
 }
 
-var _ types.ValueAppender = (*TagType)(nil)
-var _ types.ValueScanner = (*TagType)(nil)
+var _ sql.Scanner = (*TagType)(nil)
+var _ driver.Valuer = UnknownTagType
 
-func (t *TagType) AppendValue(b []byte, flags int) ([]byte, error) {
+func (t TagType) Value() (driver.Value, error) {
 
-	if flags == 1 {
-		b = append(b, '\'')
-	}
-	b = append(b, t.String()...)
-	if flags == 1 {
-		b = append(b, '\'')
-	}
-
-	return b, nil
+	return t.String(), nil
 }
 
-func (t *TagType) ScanValue(rd types.Reader, n int) error {
-	if n <= 0 {
+func (t *TagType) Scan(src interface{}) error {
+	if src == nil {
 		return nil
 	}
 
-	tmp, err := rd.ReadFull()
-	if err != nil {
-		return err
+	switch src.(type) {
+	case string:
+		parsed := ParseTagType(src.(string))
+		if parsed == UnknownTagType {
+			return errors.New("Unknown tag type")
+		}
+		*t = parsed
+		return nil
+	case []byte:
+		srcCopy := make([]byte, len(src.([]byte)))
+		copy(srcCopy, src.([]byte))
+		parsed := ParseTagType(string(srcCopy))
+		if parsed == UnknownTagType {
+			return errors.New("Unknown tag type")
+		}
+		*t = parsed
+		return nil
 	}
 
-	parsed := ParseTagType(string(tmp))
-
-	if parsed == UnknownTagType {
-		return errors.New("Unknown tag type")
-	}
-
-	*t = parsed
-
-	return nil
+	return fmt.Errorf("cannot scan %T", src)
 }

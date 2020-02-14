@@ -3,7 +3,6 @@ package workoutblock
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/organizationcall"
 	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/logging"
@@ -11,15 +10,16 @@ import (
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
 type WorkoutBlockResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 
-func NewWorkoutBlockResolver(db *pg.DB, logger *zap.Logger) *WorkoutBlockResolver {
+func NewWorkoutBlockResolver(db pgxload.PgxLoader, logger *zap.Logger) *WorkoutBlockResolver {
 	return &WorkoutBlockResolver{
 		db:     db,
 		logger: logger.Named("WorkoutBlockResolver"),

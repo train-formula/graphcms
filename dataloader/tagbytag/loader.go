@@ -5,13 +5,13 @@ package tagbytag
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/dataloader"
 	"github.com/train-formula/graphcms/models/tag"
+	"github.com/willtrking/pgxload"
 )
 
-func NewLoader(ctx context.Context, db *pg.DB) *TagByTagLoader {
+func NewLoader(ctx context.Context, db pgxload.PgxLoader) *TagByTagLoader {
 
 	return NewTagByTagLoader(TagByTagLoaderConfig{
 		Wait:     dataloader.DefaultWaitTime,

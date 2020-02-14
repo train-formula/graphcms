@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/generated"
+	"github.com/willtrking/pgxload"
 )
 
 // Returns an array of ValidatorFunc's that are used to validate a CreatePrescriptionSetData
 // Takes an optional index which may be specified to provide more specific error messages if the
 // CreatePrescriptionSetData was from an array (e.g. from a CreatePrescription request)
-func CheckCreatePrescriptionSetData(ctx context.Context, conn database.Conn, request generated.CreatePrescriptionSetData, idx *int) []ValidatorFunc {
+func CheckCreatePrescriptionSetData(ctx context.Context, conn pgxload.PgxLoader, request generated.CreatePrescriptionSetData, idx *int) []ValidatorFunc {
 
 	buildMessage := func(message string) string {
 

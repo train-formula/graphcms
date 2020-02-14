@@ -4,14 +4,14 @@ import (
 	"context"
 	"strings"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/plan"
+	"github.com/willtrking/pgxload"
 )
 
 // Retrieves individual plan's by their IDs
-func GetPlans(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*plan.Plan, error) {
+func GetPlans(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*plan.Plan, error) {
 
 	if len(ids) <= 0 {
 		return nil, nil
@@ -30,13 +30,18 @@ func GetPlans(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*plan
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieves individual plan schedules by their IDs
-func GetPlanSchedules(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*plan.PlanSchedule, error) {
+func GetPlanSchedules(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*plan.PlanSchedule, error) {
 
 	if len(ids) <= 0 {
 		return nil, nil
@@ -55,13 +60,18 @@ func GetPlanSchedules(ctx context.Context, conn database.Conn, ids []uuid.UUID) 
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieves plan schedules for plans mapped by their plan IDs
-func GetSchedulesForPlans(ctx context.Context, conn database.Conn, planIDs []uuid.UUID) (map[uuid.UUID][]*plan.PlanSchedule, error) {
+func GetSchedulesForPlans(ctx context.Context, conn pgxload.PgxLoader, planIDs []uuid.UUID) (map[uuid.UUID][]*plan.PlanSchedule, error) {
 
 	results := make(map[uuid.UUID][]*plan.PlanSchedule)
 
@@ -82,8 +92,12 @@ func GetSchedulesForPlans(ctx context.Context, conn database.Conn, planIDs []uui
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &queryResults, query, params...)
+	rows, err := conn.Query(ctx, query, params...)
+	if err != nil {
+		return nil, err
+	}
 
+	err = conn.Scanner(rows).Scan(&queryResults)
 	if err != nil {
 		return nil, err
 	}
@@ -96,43 +110,64 @@ func GetSchedulesForPlans(ctx context.Context, conn database.Conn, planIDs []uui
 }
 
 // Retrieves a plan by its id
-func GetPlan(ctx context.Context, conn database.Conn, id uuid.UUID) (plan.Plan, error) {
+func GetPlan(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (plan.Plan, error) {
 
 	var result plan.Plan
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ?"), id)
+	if err != nil {
+		return plan.Plan{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves a plan by its id, and locks the row
-func GetPlanForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (plan.Plan, error) {
+func GetPlanForUpdate(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (plan.Plan, error) {
 
 	var result plan.Plan
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE"), id)
+	if err != nil {
+		return plan.Plan{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Retrieves a plan schedule by its id, and locks the row
-func GetPlanScheduleForUpdate(ctx context.Context, conn database.Conn, id uuid.UUID) (plan.PlanSchedule, error) {
+func GetPlanScheduleForUpdate(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (plan.PlanSchedule, error) {
 
 	var result plan.PlanSchedule
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ? FOR UPDATE"), id)
+	if err != nil {
+		return plan.PlanSchedule{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
 }
 
 // Number of active plan subscribers. Include subscribers who have not yet started, but have not cancelled / ended either
-func CountPlanActiveSubscribers(ctx context.Context, conn database.Conn, id uuid.UUID) (int, error) {
+func CountPlanActiveSubscribers(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (int, error) {
 
-	query := "SELECT COUNT(1) FROM " + database.TableName(plan.PlanSubscriber{}) + " WHERE plan_id = ? AND cancelled_date IS NULL AND end_date IS NULL"
+	query := pgxload.RebindPositional("SELECT COUNT(1) FROM " + database.TableName(plan.PlanSubscriber{}) + " WHERE plan_id = ? AND cancelled_date IS NULL AND end_date IS NULL")
 
 	var count int
 
-	_, err := conn.QueryContext(ctx, pg.Scan(&count), query, id)
+	rows, err := conn.Query(ctx, query, id)
+	if err != nil {
+
+		return -1, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&count)
 	if err != nil {
 
 		return -1, err
@@ -143,13 +178,19 @@ func CountPlanActiveSubscribers(ctx context.Context, conn database.Conn, id uuid
 }
 
 // Number of active plan schedule subscribers. Include subscribers who have not yet started, but have not cancelled / ended either
-func CountPlanScheduleActiveSubscribers(ctx context.Context, conn database.Conn, id uuid.UUID) (int, error) {
+func CountPlanScheduleActiveSubscribers(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (int, error) {
 
-	query := "SELECT COUNT(1) FROM " + database.TableName(plan.PlanSubscriber{}) + " WHERE plan_schedule_id = ? AND cancelled_date IS NULL AND end_date IS NULL"
+	query := pgxload.RebindPositional("SELECT COUNT(1) FROM " + database.TableName(plan.PlanSubscriber{}) + " WHERE plan_schedule_id = ? AND cancelled_date IS NULL AND end_date IS NULL")
 
 	var count int
 
-	_, err := conn.QueryContext(ctx, pg.Scan(&count), query, id)
+	rows, err := conn.Query(ctx, query, id)
+	if err != nil {
+
+		return -1, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&count)
 	if err != nil {
 
 		return -1, err

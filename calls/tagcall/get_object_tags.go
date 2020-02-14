@@ -3,16 +3,16 @@ package tagcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/dataloader/tagsbyobject"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewGetObjectTags(request tagdb.TagsByObject, logger *zap.Logger, db *pg.DB) *GetObjectTags {
+func NewGetObjectTags(request tagdb.TagsByObject, logger *zap.Logger, db pgxload.PgxLoader) *GetObjectTags {
 	return &GetObjectTags{
 		request: request,
 		db:      db,
@@ -22,7 +22,7 @@ func NewGetObjectTags(request tagdb.TagsByObject, logger *zap.Logger, db *pg.DB)
 
 type GetObjectTags struct {
 	request tagdb.TagsByObject
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 

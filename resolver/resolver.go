@@ -1,7 +1,6 @@
 package resolver
 
 import (
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/connections"
 	"github.com/train-formula/graphcms/resolver/blockexercise"
@@ -17,10 +16,11 @@ import (
 	"github.com/train-formula/graphcms/resolver/workoutblock"
 	"github.com/train-formula/graphcms/resolver/workoutcategory"
 	"github.com/train-formula/graphcms/resolver/workoutprogram"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewResolver(db *pg.DB, logger *zap.Logger) *Resolver {
+func NewResolver(db pgxload.PgxLoader, logger *zap.Logger) *Resolver {
 	return &Resolver{
 		db:     db,
 		logger: logger.Named("graphql"),
@@ -28,7 +28,7 @@ func NewResolver(db *pg.DB, logger *zap.Logger) *Resolver {
 }
 
 type Resolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 

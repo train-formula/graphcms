@@ -1,14 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/gin-contrib/cors"
-	"github.com/go-pg/pg/v9"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/resolver"
 	"github.com/train-formula/october"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -32,16 +34,24 @@ func main() {
 		databaseApplicationName = "graphcms"
 	}
 
-	db := pg.Connect(&pg.Options{
-		Addr:            fmt.Sprintf("%s:%s", config.PGHost, config.PGPort),
-		User:            config.PGUsername,
-		Password:        config.PGPassword,
-		Database:        config.PGDatabase,
-		ApplicationName: databaseApplicationName,
-		MinIdleConns:    5,
-		PoolSize:        10,
-	})
-	defer db.Close()
+	pgxConf, err := pgxpool.ParseConfig(fmt.Sprintf("postgres://%s:%s@%s:%s/graphcms?sslmode=disable",
+		config.PGUsername, config.PGPassword, config.PGHost, config.PGPort))
+	if err != nil {
+		zap.L().Fatal("Failure to parse PGX config ", zap.Error(err))
+	}
+
+	pgxConf.MaxConns = 10
+	pgxConf.MinConns = 5
+
+	dbConn, err := pgxpool.ConnectConfig(context.Background(), pgxConf)
+	if err != nil {
+		zap.L().Fatal("Failure to connect to postgres ", zap.Error(err))
+	}
+
+	dbLoader, err := pgxload.NewPgxLoader(dbConn)
+	if err != nil {
+		zap.L().Fatal("Failure to create pgx loader ", zap.Error(err))
+	}
 
 	migrator, err := migrate.New("file://../schema/postgres",
 		fmt.Sprintf("postgres://%s:%s@%s:%s/graphcms?sslmode=disable&x-migrations-table=graphcms_migrations",
@@ -64,11 +74,11 @@ func main() {
 	}
 
 	ginServer.WithGinMiddleware(
-		RegisterLoaders(db),
+		RegisterLoaders(dbLoader),
 		cors.New(corsConfig),
 	)
 
-	ginServer.WithExecutableSchema(generated.NewExecutableSchema(generated.Config{Resolvers: resolver.NewResolver(db, zap.L())}))
+	ginServer.WithExecutableSchema(generated.NewExecutableSchema(generated.Config{Resolvers: resolver.NewResolver(dbLoader, zap.L())}))
 
 	octoberServer.Start(ginServer, october.DefaultGracefulShutdownSignals...)
 

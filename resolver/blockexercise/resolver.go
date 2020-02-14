@@ -3,19 +3,19 @@ package blockexercise
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
 type BlockExerciseResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 
-func NewBlockExerciseResolver(db *pg.DB, logger *zap.Logger) *BlockExerciseResolver {
+func NewBlockExerciseResolver(db pgxload.PgxLoader, logger *zap.Logger) *BlockExerciseResolver {
 	return &BlockExerciseResolver{
 		db:     db,
 		logger: logger.Named("BlockExerciseResolver"),

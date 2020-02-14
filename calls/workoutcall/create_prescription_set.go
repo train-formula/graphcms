@@ -3,16 +3,16 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewCreatePrescriptionSet(request generated.CreatePrescriptionSet, logger *zap.Logger, db *pg.DB) *CreatePrescriptionSet {
+func NewCreatePrescriptionSet(request generated.CreatePrescriptionSet, logger *zap.Logger, db pgxload.PgxLoader) *CreatePrescriptionSet {
 	return &CreatePrescriptionSet{
 		request: request,
 		db:      db,
@@ -22,7 +22,7 @@ func NewCreatePrescriptionSet(request generated.CreatePrescriptionSet, logger *z
 
 type CreatePrescriptionSet struct {
 	request generated.CreatePrescriptionSet
-	db      *pg.DB
+	db      pgxload.PgxLoader
 	logger  *zap.Logger
 }
 
@@ -51,7 +51,7 @@ func (c CreatePrescriptionSet) Call(ctx context.Context) (*workout.PrescriptionS
 
 	var finalPrescriptionSet *workout.PrescriptionSet
 
-	err = c.db.RunInTransaction(func(t *pg.Tx) error {
+	err = pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
 
 		var secondaryUnitID *uuid.UUID
 		var secondaryNumeral *int

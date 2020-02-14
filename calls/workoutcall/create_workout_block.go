@@ -3,17 +3,18 @@ package workoutcall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewCreateWorkoutBlock(request generated.CreateWorkoutBlock, logger *zap.Logger, db *pg.DB) *CreateWorkoutBlock {
+func NewCreateWorkoutBlock(request generated.CreateWorkoutBlock, logger *zap.Logger, db pgxload.PgxLoader) *CreateWorkoutBlock {
 	return &CreateWorkoutBlock{
 		request: request,
 		logger:  logger.Named("CreateWorkoutBlock"),
@@ -24,7 +25,7 @@ func NewCreateWorkoutBlock(request generated.CreateWorkoutBlock, logger *zap.Log
 type CreateWorkoutBlock struct {
 	request generated.CreateWorkoutBlock
 	logger  *zap.Logger
-	db      *pg.DB
+	db      pgxload.PgxLoader
 }
 
 func (c CreateWorkoutBlock) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -47,11 +48,12 @@ func (c CreateWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, er
 
 	var finalWorkoutBlock *workout.WorkoutBlock
 
-	err = c.db.RunInTransaction(func(t *pg.Tx) error {
+	err = pgxload.RunInTransaction(ctx, c.db, func(ctx context.Context, t pgxload.PgxTxLoader) error {
+
 		workoutCategory, err := workoutdb.GetWorkoutCategory(ctx, t, c.request.WorkoutCategoryID)
 
 		if err != nil {
-			if err == pg.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				return gqlerror.Errorf("Workout category does not exist")
 			}
 			c.logger.Error("Failed to load workout category", zap.Error(err))

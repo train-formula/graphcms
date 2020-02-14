@@ -7,6 +7,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database"
 	"github.com/train-formula/graphcms/models/tag"
+	"github.com/willtrking/pgxload"
 )
 
 // request struct to retrieve a tag by its tag + organization id
@@ -33,17 +34,23 @@ type TagsByObject struct {
 }
 
 // Retrieves an individual tag by its id
-func GetTag(ctx context.Context, conn database.Conn, id uuid.UUID) (tag.Tag, error) {
+func GetTag(ctx context.Context, conn pgxload.PgxLoader, id uuid.UUID) (tag.Tag, error) {
 
 	var result tag.Tag
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+" WHERE id = ?", id)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+" WHERE id = ?"), id)
+	if err != nil {
+		return tag.Tag{}, err
+	}
+
+	err = conn.Scanner(rows).ScanRow(&result)
 
 	return result, err
+
 }
 
 // Retrieves individual tags by their IDs
-func GetTags(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*tag.Tag, error) {
+func GetTags(ctx context.Context, conn pgxload.PgxLoader, ids []uuid.UUID) ([]*tag.Tag, error) {
 
 	if len(ids) <= 0 {
 		return nil, nil
@@ -62,24 +69,34 @@ func GetTags(ctx context.Context, conn database.Conn, ids []uuid.UUID) ([]*tag.T
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieves an individual tag by its tag and organization id
-func GetTagByTag(ctx context.Context, conn database.Conn, byTag TagByTag) (tag.Tag, error) {
+func GetTagByTag(ctx context.Context, conn pgxload.PgxLoader, byTag TagByTag) (tag.Tag, error) {
 
 	var result tag.Tag
 
-	_, err := conn.QueryOneContext(ctx, &result, "SELECT * FROM "+database.TableName(result)+
-		" WHERE trainer_organization_id = ? AND LOWER(tag) = LOWER(?)", byTag.TrainerOrganizationID, byTag.Tag)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional("SELECT * FROM "+database.TableName(result)+
+		" WHERE trainer_organization_id = ? AND LOWER(tag) = LOWER(?)"), byTag.TrainerOrganizationID, byTag.Tag)
+	if err != nil {
+		return tag.Tag{}, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieves individual tags by their organization IDs and tags
-func GetTagsByTag(ctx context.Context, conn database.Conn, byTag []TagByTag) ([]*tag.Tag, error) {
+func GetTagsByTag(ctx context.Context, conn pgxload.PgxLoader, byTag []TagByTag) ([]*tag.Tag, error) {
 
 	if len(byTag) <= 0 {
 		return nil, nil
@@ -98,13 +115,18 @@ func GetTagsByTag(ctx context.Context, conn database.Conn, byTag []TagByTag) ([]
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &result, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&result)
 
 	return result, err
 }
 
 // Retrieves tags by the object's they are attached to
-func GetTagsByObject(ctx context.Context, conn database.Conn, byObject []TagsByObject) (map[TagsByObject][]*tag.Tag, error) {
+func GetTagsByObject(ctx context.Context, conn pgxload.PgxLoader, byObject []TagsByObject) (map[TagsByObject][]*tag.Tag, error) {
 
 	if len(byObject) <= 0 {
 		return nil, nil
@@ -126,7 +148,12 @@ func GetTagsByObject(ctx context.Context, conn database.Conn, byObject []TagsByO
 
 	query = strings.TrimSuffix(query, " OR ")
 
-	_, err := conn.QueryContext(ctx, &results, query, params...)
+	rows, err := conn.Query(ctx, pgxload.RebindPositional(query), params...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Scanner(rows).Scan(&results)
 
 	if err != nil {
 		return nil, err

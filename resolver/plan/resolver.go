@@ -3,22 +3,22 @@ package plan
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/plancall"
 	"github.com/train-formula/graphcms/calls/tagcall"
 	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/models/tag"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
 type PlanResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 
-func NewPlanResolver(db *pg.DB, logger *zap.Logger) *PlanResolver {
+func NewPlanResolver(db pgxload.PgxLoader, logger *zap.Logger) *PlanResolver {
 	return &PlanResolver{
 		db:     db,
 		logger: logger.Named("PlanResolver"),

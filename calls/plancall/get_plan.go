@@ -3,17 +3,17 @@ package plancall
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/dataloader/planid"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/validation"
 	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
-func NewGetPlan(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetPlan {
+func NewGetPlan(id uuid.UUID, logger *zap.Logger, db pgxload.PgxLoader) *GetPlan {
 	return &GetPlan{
 		id:     id,
 		db:     db,
@@ -23,7 +23,7 @@ func NewGetPlan(id uuid.UUID, logger *zap.Logger, db *pg.DB) *GetPlan {
 
 type GetPlan struct {
 	id     uuid.UUID
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 

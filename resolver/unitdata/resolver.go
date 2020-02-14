@@ -3,19 +3,19 @@ package unitdata
 import (
 	"context"
 
-	"github.com/go-pg/pg/v9"
 	"github.com/train-formula/graphcms/calls/workoutcall"
 	"github.com/train-formula/graphcms/models/workout"
 	"github.com/train-formula/graphcms/validation"
+	"github.com/willtrking/pgxload"
 	"go.uber.org/zap"
 )
 
 type UnitDataResolver struct {
-	db     *pg.DB
+	db     pgxload.PgxLoader
 	logger *zap.Logger
 }
 
-func NewUnitDataResolver(db *pg.DB, logger *zap.Logger) *UnitDataResolver {
+func NewUnitDataResolver(db pgxload.PgxLoader, logger *zap.Logger) *UnitDataResolver {
 	return &UnitDataResolver{
 		db:     db,
 		logger: logger.Named("UnitDataResolver"),
