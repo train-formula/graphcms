@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/tagdb"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
@@ -72,7 +73,7 @@ func (c CreatePrescription) Call(ctx context.Context) (*workout.Prescription, er
 			TrainerOrganizationID: c.request.TrainerOrganizationID,
 			Name:                  strings.TrimSpace(c.request.Name),
 			PrescriptionCategory:  strings.TrimSpace(c.request.PrescriptionCategory),
-			DurationSeconds:       c.request.DurationSeconds,
+			DurationSeconds:       types.ReadNullInt(c.request.DurationSeconds),
 		}
 
 		finalPrescription, err = workoutdb.InsertPrescription(ctx, t, newPrescription)
@@ -102,10 +103,10 @@ func (c CreatePrescription) Call(ctx context.Context) (*workout.Prescription, er
 				ID:                        newSetUuid,
 				PrescriptionID:            finalPrescription.ID,
 				SetNumber:                 set.SetNumber,
-				PrimaryParameterNumeral:   set.PrimaryParameter.Numeral,
+				PrimaryParameterNumeral:   types.ReadNullInt(set.PrimaryParameter.Numeral),
 				PrimaryParameterText:      set.PrimaryParameter.Text,
 				PrimaryParameterUnitID:    set.PrimaryParameter.UnitID,
-				SecondaryParameterNumeral: secondaryNumeral,
+				SecondaryParameterNumeral: types.ReadNullInt(secondaryNumeral),
 				SecondaryParameterText:    secondaryText,
 				SecondaryParameterUnitID:  secondaryUnitID,
 			}

@@ -9,8 +9,8 @@ import (
 type Workout struct {
 	tableName             struct{}  `sql:"workout.workout"`
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"createdAt"`
-	UpdatedAt             time.Time `json:"updatedAt"`
+	CreatedAt             time.Time `json:"createdAt" pgxload:"defaultZero"`
+	UpdatedAt             time.Time `json:"updatedAt" pgxload:"defaultZero"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	WorkoutProgramID      uuid.UUID `json:"workoutProgramID"`
 	Name                  string    `json:"name"`

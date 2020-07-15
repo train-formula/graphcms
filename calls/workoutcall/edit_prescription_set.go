@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
@@ -66,7 +67,7 @@ func (c EditPrescriptionSet) Call(ctx context.Context) (*workout.PrescriptionSet
 		}
 
 		if c.request.PrimaryParameter != nil {
-			prescriptionSet.PrimaryParameterNumeral = c.request.PrimaryParameter.Numeral
+			prescriptionSet.PrimaryParameterNumeral = types.ReadNullInt(c.request.PrimaryParameter.Numeral)
 			prescriptionSet.PrimaryParameterText = c.request.PrimaryParameter.Text
 			prescriptionSet.PrimaryParameterUnitID = c.request.PrimaryParameter.UnitID
 		}
@@ -82,7 +83,7 @@ func (c EditPrescriptionSet) Call(ctx context.Context) (*workout.PrescriptionSet
 				secondaryText = c.request.SecondaryParameter.Value.Text
 			}
 
-			prescriptionSet.SecondaryParameterNumeral = secondaryNumeral
+			prescriptionSet.SecondaryParameterNumeral = types.ReadNullInt(secondaryNumeral)
 			prescriptionSet.SecondaryParameterText = secondaryText
 			prescriptionSet.SecondaryParameterUnitID = secondaryUnitID
 		}

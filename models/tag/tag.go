@@ -12,8 +12,8 @@ type Tag struct {
 	tableName struct{} `sql:"tag.tags"`
 
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"created_at"`
-	UpdatedAt             time.Time `json:"updated_at"`
+	CreatedAt             time.Time `json:"created_at" pgxload:"defaultZero"`
+	UpdatedAt             time.Time `json:"updated_at" pgxload:"defaultZero"`
 	Tag                   string    `json:"tag"`
 	TrainerOrganizationID uuid.UUID `json:"trainer_organization_id"`
 }

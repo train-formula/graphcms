@@ -44,7 +44,7 @@ func (r *PrescriptionSetResolver) PrimaryParameter(ctx context.Context, obj *wor
 		return nil, nil
 	}
 
-	if obj.PrimaryParameterNumeral == nil && obj.PrimaryParameterText == nil {
+	if !obj.PrimaryParameterNumeral.Valid && obj.PrimaryParameterText == nil {
 		r.logger.Error("Prescription set malformed, missing primary parameter numeral and/or primary parameter text", logging.UUID("prescriptionSet", obj.ID))
 		return nil, gqlerror.Errorf("Prescription set malformed, missing primary parameter numeral and/or primary parameter text")
 	}
@@ -62,9 +62,9 @@ func (r *PrescriptionSetResolver) SecondaryParameter(ctx context.Context, obj *w
 		return nil, nil
 	}
 
-	if obj.SecondaryParameterUnitID == nil && obj.SecondaryParameterNumeral == nil && obj.SecondaryParameterText == nil {
+	if obj.SecondaryParameterUnitID == nil && !obj.SecondaryParameterNumeral.Valid && obj.SecondaryParameterText == nil {
 		return nil, nil
-	} else if obj.SecondaryParameterUnitID == nil && (obj.SecondaryParameterNumeral != nil || obj.SecondaryParameterText != nil) {
+	} else if obj.SecondaryParameterUnitID == nil && (obj.SecondaryParameterNumeral.Valid || obj.SecondaryParameterText != nil) {
 		r.logger.Error("Prescription set malformed, has secondary parameter numeral and/or secondary parameter text but no secondary parameter unit ID", logging.UUID("prescriptionSet", obj.ID))
 		return nil, gqlerror.Errorf("Prescription set malformed, has secondary parameter numeral and/or secondary parameter text but no secondary parameter unit ID")
 	}

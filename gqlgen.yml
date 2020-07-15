@@ -26,6 +26,10 @@ models:
   ID:
     model:
       - github.com/train-formula/graphcms/models.UUID
+  Int:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int
+      - github.com/train-formula/graphcms/database/types.NullInt64
   WorkoutProgramEdge:
     model:
       - github.com/train-formula/graphcms/models/workout.WorkoutProgram

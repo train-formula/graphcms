@@ -2,9 +2,11 @@ package workoutcall
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/tagdb"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
@@ -62,13 +64,16 @@ func (c CreateWorkoutProgram) Call(ctx context.Context) (*workout.WorkoutProgram
 		new := workout.WorkoutProgram{
 			ID: newUuid,
 
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+
 			Name:                  c.request.Name,
 			Description:           description,
 			TrainerOrganizationID: c.request.TrainerOrganizationID,
 
 			ExactStartDate:           c.request.ExactStartDate,
 			StartsWhenCustomerStarts: c.request.StartsWhenCustomerStarts,
-			NumberOfDays:             c.request.NumberOfDays,
+			NumberOfDays:             types.ReadNullInt(c.request.NumberOfDays),
 			ProgramLevel:             c.request.ProgramLevel,
 		}
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
@@ -69,7 +70,7 @@ func (c EditPrescription) Call(ctx context.Context) (*workout.Prescription, erro
 		}
 
 		if c.request.DurationSeconds != nil {
-			prescription.DurationSeconds = c.request.DurationSeconds.Value
+			prescription.DurationSeconds = types.ReadNullInt(c.request.DurationSeconds.Value)
 		}
 
 		finalPrescription, err = workoutdb.UpdatePrescription(ctx, t, prescription)

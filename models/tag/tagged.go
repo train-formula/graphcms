@@ -10,8 +10,8 @@ type Tagged struct {
 	tableName struct{} `pg:",discard_unknown_columns"`
 
 	ID                    uuid.UUID
-	CreatedAt             time.Time
-	UpdatedAt             time.Time
+	CreatedAt             time.Time `pgxload:"defaultZero"`
+	UpdatedAt             time.Time `pgxload:"defaultZero"`
 	TagID                 uuid.UUID
 	TrainerOrganizationID uuid.UUID
 	TaggedID              uuid.UUID

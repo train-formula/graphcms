@@ -38,7 +38,7 @@ func (r *PlanScheduleResolver) PaymentInterval(ctx context.Context, obj *plan.Pl
 
 	return &interval.DiurnalInterval{
 		Interval: obj.PaymentInterval,
-		Count:    obj.PaymentIntervalCount,
+		Count:    int64(obj.PaymentIntervalCount),
 	}, nil
 }
 
@@ -48,13 +48,13 @@ func (r *PlanScheduleResolver) DurationInterval(ctx context.Context, obj *plan.P
 		return nil, nil
 	}
 
-	if obj.DurationInterval == nil && obj.DurationIntervalCount == nil {
+	if obj.DurationInterval == nil && !obj.DurationIntervalCount.Valid {
 		return nil, nil
-	} else if obj.DurationInterval == nil && obj.DurationIntervalCount != nil {
+	} else if obj.DurationInterval == nil && obj.DurationIntervalCount.Valid {
 
 		r.logger.Error("Plan schedule malformed, duration interval has count but no type", logging.UUID("planSchedule", obj.ID))
 		return nil, gqlerror.Errorf("Plan schedule malformed, duration interval has count but no type")
-	} else if obj.DurationInterval != nil && obj.DurationIntervalCount == nil {
+	} else if obj.DurationInterval != nil && !obj.DurationIntervalCount.Valid {
 
 		r.logger.Error("Plan schedule malformed, duration interval has type but no count", logging.UUID("planSchedule", obj.ID))
 		return nil, gqlerror.Errorf("Plan schedule malformed, duration interval has type but no count")
@@ -65,7 +65,7 @@ func (r *PlanScheduleResolver) DurationInterval(ctx context.Context, obj *plan.P
 
 	return &interval.DiurnalInterval{
 		Interval: *obj.DurationInterval,
-		Count:    *obj.DurationIntervalCount,
+		Count:    obj.DurationIntervalCount.Int64,
 	}, nil
 }
 

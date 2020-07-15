@@ -10,8 +10,8 @@ type Organization struct {
 	tableName struct{} `pg:",discard_unknown_columns"`
 
 	ID          uuid.UUID `json:"id"`
-	CreatedAt   time.Time `pgxload:"omitZero"`
-	UpdatedAt   time.Time `pgxload:"omitZero"`
+	CreatedAt   time.Time `json:"created_at" pgxload:"defaultZero"`
+	UpdatedAt   time.Time `json:"updated_at" pgxload:"defaultZero"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 }

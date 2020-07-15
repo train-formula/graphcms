@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/models/interval"
 )
 
@@ -11,8 +12,8 @@ type PlanSchedule struct {
 	tableName struct{} `sql:"plan.plan_schedule"`
 
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"created_at"`
-	UpdatedAt             time.Time `json:"updated_at"`
+	CreatedAt             time.Time `json:"created_at" pgxload:"defaultZero"`
+	UpdatedAt             time.Time `json:"updated_at" pgxload:"defaultZero"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	PlanID                uuid.UUID `json:"planID"`
 
@@ -22,11 +23,11 @@ type PlanSchedule struct {
 	PaymentInterval      interval.DiurnalIntervalInterval
 	PaymentIntervalCount int
 
-	PricePerInterval    int  `json:"pricePerInterval"`
-	PriceMarkedDownFrom *int `json:"priceMarkedDownFrom"`
+	PricePerInterval    int             `json:"pricePerInterval"`
+	PriceMarkedDownFrom types.NullInt64 `json:"priceMarkedDownFrom"`
 
 	DurationInterval      *interval.DiurnalIntervalInterval
-	DurationIntervalCount *int
+	DurationIntervalCount types.NullInt64
 
 	RegistrationAvailable bool `json:"registrationAvailable"`
 	Archived              bool `json:"archived"`

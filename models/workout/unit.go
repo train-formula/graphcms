@@ -10,8 +10,8 @@ type Unit struct {
 	tableName struct{}  `sql:"workout.unit"`
 	ID        uuid.UUID `json:"id"`
 
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	CreatedAt time.Time `json:"createdAt" pgxload:"defaultZero"`
+	UpdatedAt time.Time `json:"updatedAt" pgxload:"defaultZero"`
 
 	Name               string `json:"name"`
 	NameMedium         string `json:"nameMedium"`

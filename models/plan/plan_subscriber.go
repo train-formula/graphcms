@@ -10,8 +10,8 @@ type PlanSubscriber struct {
 	tableName struct{} `sql:"plan.plan_subscriber"`
 
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"created_at"`
-	UpdatedAt             time.Time `json:"updated_at"`
+	CreatedAt             time.Time `json:"created_at" pgxload:"defaultZero"`
+	UpdatedAt             time.Time `json:"updated_at" pgxload:"defaultZero"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	PlanID                uuid.UUID `json:"planID"`
 	PlanScheduleID        uuid.UUID `json:"planScheduleID"`

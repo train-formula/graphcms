@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
@@ -67,10 +68,10 @@ func (c CreatePrescriptionSet) Call(ctx context.Context) (*workout.PrescriptionS
 			ID:                        newUuid,
 			PrescriptionID:            c.request.PrescriptionID,
 			SetNumber:                 c.request.Data.SetNumber,
-			PrimaryParameterNumeral:   c.request.Data.PrimaryParameter.Numeral,
+			PrimaryParameterNumeral:   types.ReadNullInt(c.request.Data.PrimaryParameter.Numeral),
 			PrimaryParameterText:      c.request.Data.PrimaryParameter.Text,
 			PrimaryParameterUnitID:    c.request.Data.PrimaryParameter.UnitID,
-			SecondaryParameterNumeral: secondaryNumeral,
+			SecondaryParameterNumeral: types.ReadNullInt(secondaryNumeral),
 			SecondaryParameterText:    secondaryText,
 			SecondaryParameterUnitID:  secondaryUnitID,
 		}

@@ -6,22 +6,23 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/cursor"
+	"github.com/train-formula/graphcms/database/types"
 )
 
 type PrescriptionSet struct {
 	tableName      struct{}  `sql:"workout.prescription_set"`
 	ID             uuid.UUID `json:"id"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	CreatedAt      time.Time `json:"createdAt" pgxload:"defaultZero"`
+	UpdatedAt      time.Time `json:"updatedAt" pgxload:"defaultZero"`
 	PrescriptionID uuid.UUID `json:"prescriptionID"`
 
 	SetNumber int `json:"setNumber"`
 
-	PrimaryParameterNumeral *int
+	PrimaryParameterNumeral types.NullInt64
 	PrimaryParameterText    *string
 	PrimaryParameterUnitID  uuid.UUID
 
-	SecondaryParameterNumeral *int
+	SecondaryParameterNumeral types.NullInt64
 	SecondaryParameterText    *string
 	SecondaryParameterUnitID  *uuid.UUID
 }

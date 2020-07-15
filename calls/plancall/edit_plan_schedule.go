@@ -5,6 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/train-formula/graphcms/database/plandb"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
 	"github.com/train-formula/graphcms/models/plan"
@@ -70,7 +71,7 @@ func (g *EditPlanSchedule) Call(ctx context.Context) (*plan.PlanSchedule, error)
 		}
 
 		if g.request.PriceMarkedDownFrom != nil {
-			planSchedule.PriceMarkedDownFrom = g.request.PriceMarkedDownFrom.Value
+			planSchedule.PriceMarkedDownFrom = types.ReadNullInt(g.request.PriceMarkedDownFrom.Value)
 		}
 
 		if g.request.RegistrationAvailable != nil {

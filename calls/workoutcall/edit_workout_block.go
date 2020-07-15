@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
@@ -83,24 +84,24 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 				roundUnitID = &c.request.Round.Value.UnitID
 			}
 
-			workoutBlock.RoundNumeral = roundNumeral
+			workoutBlock.RoundNumeral = types.ReadNullInt(roundNumeral)
 			workoutBlock.RoundText = roundText
 			workoutBlock.RoundUnitID = roundUnitID
 		}
 
 		if c.request.RoundRestDuration != nil {
-			workoutBlock.RoundRestDuration = c.request.RoundRestDuration.Value
+			workoutBlock.RoundRestDuration = types.ReadNullInt(c.request.RoundRestDuration.Value)
 		}
 
 		if c.request.NumberOfRounds != nil {
-			workoutBlock.NumberOfRounds = c.request.NumberOfRounds.Value
+			workoutBlock.NumberOfRounds = types.ReadNullInt(c.request.NumberOfRounds.Value)
 		}
 
 		if c.request.DurationSeconds != nil {
-			workoutBlock.DurationSeconds = c.request.DurationSeconds.Value
+			workoutBlock.DurationSeconds = types.ReadNullInt(c.request.DurationSeconds.Value)
 		}
 
-		if workoutBlock.RoundNumeral != nil && workoutBlock.RoundUnitID == nil {
+		if workoutBlock.RoundNumeral.Valid && workoutBlock.RoundUnitID == nil {
 			return gqlerror.Errorf("If round numeral is set, round unit id must also be set")
 		}
 

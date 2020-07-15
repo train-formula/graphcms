@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/plandb"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/plan"
 	"github.com/train-formula/graphcms/util"
@@ -76,9 +77,9 @@ func (g CreatePlanSchedule) Call(ctx context.Context) (*plan.PlanSchedule, error
 			PaymentInterval:       *g.request.PaymentInterval.Interval,
 			PaymentIntervalCount:  g.request.PaymentInterval.Count,
 			PricePerInterval:      g.request.PricePerInterval,
-			PriceMarkedDownFrom:   g.request.PriceMarkedDownFrom,
+			PriceMarkedDownFrom:   types.ReadNullInt(g.request.PriceMarkedDownFrom),
 			DurationInterval:      g.request.DurationInterval.Interval,
-			DurationIntervalCount: &g.request.DurationInterval.Count,
+			DurationIntervalCount: types.ReadNullInt(&g.request.DurationInterval.Count),
 
 			RegistrationAvailable: g.request.RegistrationAvailable,
 			Archived:              false,

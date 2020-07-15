@@ -11,8 +11,8 @@ import (
 type WorkoutCategory struct {
 	tableName             struct{}  `sql:"workout.category"`
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"createdAt"`
-	UpdatedAt             time.Time `json:"updatedAt"`
+	CreatedAt             time.Time `json:"createdAt" pgxload:"defaultZero"`
+	UpdatedAt             time.Time `json:"updatedAt" pgxload:"defaultZero"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	Name                  string    `json:"name"`
 	Description           string    `json:"description"`

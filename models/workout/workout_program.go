@@ -6,20 +6,21 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/cursor"
+	"github.com/train-formula/graphcms/database/types"
 )
 
 type WorkoutProgram struct {
-	tableName                struct{}     `sql:"workout.program"`
-	ID                       uuid.UUID    `json:"id"`
-	CreatedAt                time.Time    `json:"createdAt"`
-	UpdatedAt                time.Time    `json:"updatedAt"`
-	TrainerOrganizationID    uuid.UUID    `json:"trainerOrganizationID"`
-	Name                     string       `json:"name"`
-	Description              string       `json:"description" pg:",use_zero"`
-	ExactStartDate           *time.Time   `json:"exactStartDate"`
-	StartsWhenCustomerStarts bool         `json:"startsWhenCustomerStarts"`
-	NumberOfDays             *int         `json:"numberOfDays"`
-	ProgramLevel             ProgramLevel `json:"programLevel"`
+	tableName                struct{}        `sql:"workout.program"`
+	ID                       uuid.UUID       `json:"id"`
+	CreatedAt                time.Time       `json:"createdAt" pgxload:"defaultZero"`
+	UpdatedAt                time.Time       `json:"updatedAt" pgxload:"defaultZero"`
+	TrainerOrganizationID    uuid.UUID       `json:"trainerOrganizationID"`
+	Name                     string          `json:"name"`
+	Description              string          `json:"description" pg:",use_zero"`
+	ExactStartDate           *time.Time      `json:"exactStartDate"`
+	StartsWhenCustomerStarts bool            `json:"startsWhenCustomerStarts"`
+	NumberOfDays             types.NullInt64 `json:"numberOfDays"`
+	ProgramLevel             ProgramLevel    `json:"programLevel"`
 }
 
 func (w WorkoutProgram) TableName() string {

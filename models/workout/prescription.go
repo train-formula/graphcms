@@ -6,18 +6,19 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/cursor"
+	"github.com/train-formula/graphcms/database/types"
 )
 
 type Prescription struct {
 	tableName             struct{}  `sql:"workout.prescription"`
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"createdAt"`
-	UpdatedAt             time.Time `json:"updatedAt"`
+	CreatedAt             time.Time `json:"createdAt" pgxload:"defaultZero"`
+	UpdatedAt             time.Time `json:"updatedAt" pgxload:"defaultZero"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	Name                  string    `json:"name"`
 	PrescriptionCategory  string    `json:"prescriptionCategory"`
 
-	DurationSeconds *int `json:"durationSeconds"`
+	DurationSeconds types.NullInt64 `json:"durationSeconds"`
 }
 
 func (p Prescription) TableName() string {

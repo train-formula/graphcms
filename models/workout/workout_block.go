@@ -6,22 +6,23 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/cursor"
+	"github.com/train-formula/graphcms/database/types"
 )
 
 type WorkoutBlock struct {
 	tableName             struct{}  `sql:"workout.category"`
 	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"createdAt"`
-	UpdatedAt             time.Time `json:"updatedAt"`
+	CreatedAt             time.Time `json:"createdAt" pgxload:"defaultZero"`
+	UpdatedAt             time.Time `json:"updatedAt" pgxload:"defaultZero"`
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	WorkoutCategoryID     uuid.UUID `json:"workoutCategoryID"`
 	CategoryOrder         int       `json:"categoryOrder"`
-	RoundNumeral          *int
+	RoundNumeral          types.NullInt64
 	RoundText             *string
 	RoundUnitID           *uuid.UUID
-	DurationSeconds       *int `json:"durationSeconds"`
-	RoundRestDuration     *int `json:"roundRestDuration"`
-	NumberOfRounds        *int `json:"numberOfRounds"`
+	DurationSeconds       types.NullInt64 `json:"durationSeconds"`
+	RoundRestDuration     types.NullInt64 `json:"roundRestDuration"`
+	NumberOfRounds        types.NullInt64 `json:"numberOfRounds"`
 }
 
 func (w WorkoutBlock) TableName() string {

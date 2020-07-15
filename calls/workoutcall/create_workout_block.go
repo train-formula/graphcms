@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
@@ -76,12 +77,12 @@ func (c CreateWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, er
 			WorkoutCategoryID:     workoutCategory.ID,
 			CategoryOrder:         c.request.CategoryOrder,
 
-			RoundNumeral:      roundNumeral,
+			RoundNumeral:      types.ReadNullInt(roundNumeral),
 			RoundText:         roundText,
 			RoundUnitID:       roundUnitID,
-			DurationSeconds:   c.request.DurationSeconds,
-			RoundRestDuration: c.request.RoundRestDuration,
-			NumberOfRounds:    c.request.NumberOfRounds,
+			DurationSeconds:   types.ReadNullInt(c.request.DurationSeconds),
+			RoundRestDuration: types.ReadNullInt(c.request.RoundRestDuration),
+			NumberOfRounds:    types.ReadNullInt(c.request.NumberOfRounds),
 		}
 
 		finalWorkoutBlock, err = workoutdb.InsertWorkoutBlock(ctx, t, new)
