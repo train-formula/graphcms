@@ -92,7 +92,7 @@ func (s SearchTags) Call(ctx context.Context) (*generated.TagSearchResults, erro
 
 				var count int
 
-				_, err := s.db.Query(ctx, query, params...)
+				rows, err := s.db.Query(ctx, query, params...)
 				if err != nil {
 					s.logger.Error("Failed to count tags", zap.Error(err))
 

@@ -109,7 +109,7 @@ func (s SearchPlans) Call(ctx context.Context) (*generated.PlanSearchResults, er
 
 				var count int
 
-				_, err := s.db.Query(ctx, query, params...)
+				rows, err := s.db.Query(ctx, query, params...)
 				if err != nil {
 					s.logger.Error("Failed to count plans", zap.Error(err))
 

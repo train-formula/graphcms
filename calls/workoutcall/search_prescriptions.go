@@ -109,7 +109,7 @@ func (s SearchPrescriptions) Call(ctx context.Context) (*generated.PrescriptionS
 
 				var count int
 
-				_, err := s.db.Query(ctx, query, params...)
+				rows, err := s.db.Query(ctx, query, params...)
 				if err != nil {
 					s.logger.Error("Failed to count prescriptions", zap.Error(err))
 

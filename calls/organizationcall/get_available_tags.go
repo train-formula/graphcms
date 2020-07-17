@@ -93,7 +93,7 @@ func (g GetOrganizationAvailableTags) Call(ctx context.Context) (*connections.Ta
 
 			var count int
 
-			_, err := g.db.Query(ctx, query, params...)
+			rows, err := g.db.Query(ctx, query, params...)
 			if err != nil {
 				g.logger.Error("Failed to count organization tags", zap.Error(err),
 					logging.UUID("trainerOrganizationID", g.trainerOrganizationID), zap.Int("first", g.first),

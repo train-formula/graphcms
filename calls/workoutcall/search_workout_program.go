@@ -90,7 +90,7 @@ func (s SearchWorkoutProgram) Call(ctx context.Context) (*generated.WorkoutProgr
 
 				var count int
 
-				_, err := s.db.Query(ctx, pgxload.RebindPositional(query), params...)
+				rows, err := s.db.Query(ctx, pgxload.RebindPositional(query), params...)
 				if err != nil {
 					s.logger.Error("Failed to count workout programs", zap.Error(err))
 

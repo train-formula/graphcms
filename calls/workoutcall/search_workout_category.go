@@ -109,7 +109,7 @@ func (s SearchWorkoutCategory) Call(ctx context.Context) (*generated.WorkoutCate
 
 				var count int
 
-				_, err := s.db.Query(ctx, query, params...)
+				rows, err := s.db.Query(ctx, query, params...)
 				if err != nil {
 					s.logger.Error("Failed to count workout categories", zap.Error(err))
 
