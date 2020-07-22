@@ -17,8 +17,8 @@ type PlanSchedule struct {
 	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
 	PlanID                uuid.UUID `json:"planID"`
 
-	Name        *string `json:"plan"`
-	Description *string `json:"description"`
+	Name        types.NullString `json:"plan"`
+	Description types.NullString `json:"description"`
 
 	PaymentInterval      interval.DiurnalIntervalInterval
 	PaymentIntervalCount int

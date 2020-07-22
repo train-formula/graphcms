@@ -6,17 +6,18 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/cursor"
+	"github.com/train-formula/graphcms/database/types"
 )
 
 type Exercise struct {
-	tableName             struct{}  `sql:"workout.exercise"`
-	ID                    uuid.UUID `json:"id"`
-	CreatedAt             time.Time `json:"createdAt" pgxload:"defaultZero"`
-	UpdatedAt             time.Time `json:"updatedAt" pgxload:"defaultZero"`
-	TrainerOrganizationID uuid.UUID `json:"trainerOrganizationID"`
-	Name                  string    `json:"name"`
-	Description           string    `json:"description"`
-	VideoURL              *string   `json:"videoURL"`
+	tableName             struct{}         `sql:"workout.exercise"`
+	ID                    uuid.UUID        `json:"id"`
+	CreatedAt             time.Time        `json:"createdAt" pgxload:"defaultZero"`
+	UpdatedAt             time.Time        `json:"updatedAt" pgxload:"defaultZero"`
+	TrainerOrganizationID uuid.UUID        `json:"trainerOrganizationID"`
+	Name                  string           `json:"name"`
+	Description           string           `json:"description"`
+	VideoURL              types.NullString `json:"videoURL"`
 }
 
 func (e Exercise) TableName() string {

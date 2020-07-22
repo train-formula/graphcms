@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/train-formula/graphcms/database/tagdb"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/models/workout"
@@ -62,7 +63,7 @@ func (c CreateExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 			Name:        strings.TrimSpace(c.request.Name),
 			Description: strings.TrimSpace(c.request.Description),
 
-			VideoURL: c.request.VideoURL,
+			VideoURL: types.ReadNullString(c.request.VideoURL),
 		}
 
 		finalExercise, err = workoutdb.InsertExercise(ctx, t, new)

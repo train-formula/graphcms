@@ -4639,9 +4639,9 @@ func (ec *executionContext) _DiurnalInterval_count(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNInt2int64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Exercise_id(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
@@ -4874,9 +4874,9 @@ func (ec *executionContext) _Exercise_videoURL(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(types.NullString)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋdatabaseᚋtypesᚐNullString(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Exercise_tags(ctx context.Context, field graphql.CollectedField, obj *workout.Exercise) (ret graphql.Marshaler) {
@@ -7171,9 +7171,9 @@ func (ec *executionContext) _PlanSchedule_name(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(types.NullString)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋdatabaseᚋtypesᚐNullString(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PlanSchedule_description(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
@@ -7202,9 +7202,9 @@ func (ec *executionContext) _PlanSchedule_description(ctx context.Context, field
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(types.NullString)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋdatabaseᚋtypesᚐNullString(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PlanSchedule_paymentInterval(ctx context.Context, field graphql.CollectedField, obj *plan.PlanSchedule) (ret graphql.Marshaler) {
@@ -9854,9 +9854,9 @@ func (ec *executionContext) _UnitData_numeral(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(types.NullInt64)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOInt2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋdatabaseᚋtypesᚐNullInt64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _UnitData_text(ctx context.Context, field graphql.CollectedField, obj *workout.UnitData) (ret graphql.Marshaler) {
@@ -9885,9 +9885,9 @@ func (ec *executionContext) _UnitData_text(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(types.NullString)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋdatabaseᚋtypesᚐNullString(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _UnitData_unitID(ctx context.Context, field graphql.CollectedField, obj *workout.UnitData) (ret graphql.Marshaler) {
@@ -16973,6 +16973,20 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2int64(ctx context.Context, v interface{}) (int64, error) {
+	return graphql.UnmarshalInt64(v)
+}
+
+func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	res := graphql.MarshalInt64(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNPageInfo2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v models.PageInfo) graphql.Marshaler {
 	return ec._PageInfo(ctx, sel, &v)
 }
@@ -18292,6 +18306,15 @@ func (ec *executionContext) unmarshalOProgramLevel2githubᚗcomᚋtrainᚑformul
 }
 
 func (ec *executionContext) marshalOProgramLevel2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚋworkoutᚐProgramLevel(ctx context.Context, sel ast.SelectionSet, v workout.ProgramLevel) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOString2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋdatabaseᚋtypesᚐNullString(ctx context.Context, v interface{}) (types.NullString, error) {
+	var res types.NullString
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOString2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋdatabaseᚋtypesᚐNullString(ctx context.Context, sel ast.SelectionSet, v types.NullString) graphql.Marshaler {
 	return v
 }
 

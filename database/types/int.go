@@ -11,40 +11,37 @@ var nullBytes = []byte("null")
 
 func ReadNullInt64(i *int64) NullInt64 {
 
+	var returnVal NullInt64
+
 	if i == nil {
-		return NullInt64{
+		returnVal = NullInt64{
 			delegate: sql.NullInt64{
 				Int64: 0,
 				Valid: false,
 			},
 		}
+	} else {
+		returnVal = NullInt64{
+			delegate: sql.NullInt64{
+				Int64: *i,
+				Valid: true,
+			},
+		}
 	}
 
-	return NullInt64{
-		delegate: sql.NullInt64{
-			Int64: *i,
-			Valid: true,
-		},
-	}
+	returnVal.assignFromDelegate()
+	return returnVal
 }
 
 func ReadNullInt(i *int) NullInt64 {
 
 	if i == nil {
-		return NullInt64{
-			delegate: sql.NullInt64{
-				Int64: 0,
-				Valid: false,
-			},
-		}
+		return ReadNullInt64(nil)
 	}
 
-	return NullInt64{
-		delegate: sql.NullInt64{
-			Int64: int64(*i),
-			Valid: true,
-		},
-	}
+	var v int64
+	v = int64(*i)
+	return ReadNullInt64(&v)
 }
 
 // NullInt64 represents an int64 that may be null.
@@ -100,7 +97,7 @@ func (y *NullInt64) UnmarshalGQL(v interface{}) error {
 
 	y.delegate = sql.NullInt64{
 		Int64: i,
-		Valid: false,
+		Valid: true,
 	}
 
 	y.assignFromDelegate()

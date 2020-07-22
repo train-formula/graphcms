@@ -26,7 +26,7 @@ require (
 	github.com/vektah/dataloaden v0.3.0
 	github.com/vektah/gqlparser v1.2.0
 	github.com/vektah/gqlparser/v2 v2.0.1
-	github.com/willtrking/pgxload v0.1.1
+	github.com/willtrking/pgxload v0.1.2
 	go.uber.org/zap v1.13.0
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect

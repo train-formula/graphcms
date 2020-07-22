@@ -78,7 +78,7 @@ func (c CreateWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, er
 			CategoryOrder:         c.request.CategoryOrder,
 
 			RoundNumeral:      types.ReadNullInt(roundNumeral),
-			RoundText:         roundText,
+			RoundText:         types.ReadNullString(roundText),
 			RoundUnitID:       roundUnitID,
 			DurationSeconds:   types.ReadNullInt(c.request.DurationSeconds),
 			RoundRestDuration: types.ReadNullInt(c.request.RoundRestDuration),

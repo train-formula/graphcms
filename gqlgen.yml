@@ -29,7 +29,13 @@ models:
   Int:
     model:
       - github.com/99designs/gqlgen/graphql.Int
+      - github.com/99designs/gqlgen/graphql.Int64
+      - github.com/99designs/gqlgen/graphql.Int32
       - github.com/train-formula/graphcms/database/types.NullInt64
+  String:
+    model:
+      - github.com/99designs/gqlgen/graphql.String
+      - github.com/train-formula/graphcms/database/types.NullString
   WorkoutProgramEdge:
     model:
       - github.com/train-formula/graphcms/models/workout.WorkoutProgram

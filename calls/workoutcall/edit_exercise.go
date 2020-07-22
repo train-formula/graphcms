@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
 	"github.com/train-formula/graphcms/logging"
@@ -69,7 +70,7 @@ func (c EditExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 		}
 
 		if c.request.VideoURL != nil {
-			exercise.VideoURL = c.request.VideoURL.Value
+			exercise.VideoURL = types.ReadNullString(c.request.VideoURL.Value)
 		}
 
 		finalExercise, err = workoutdb.UpdateExercise(ctx, t, exercise)

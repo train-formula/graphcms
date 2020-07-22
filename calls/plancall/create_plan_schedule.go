@@ -71,8 +71,8 @@ func (g CreatePlanSchedule) Call(ctx context.Context) (*plan.PlanSchedule, error
 			TrainerOrganizationID: g.request.TrainerOrganizationID,
 			PlanID:                g.request.PlanID,
 
-			Name:        util.TrimSpaceNotNil(g.request.Name),
-			Description: util.TrimSpaceNotNil(g.request.Description),
+			Name:        types.ReadNullString(util.TrimSpaceNotNil(g.request.Name)),
+			Description: types.ReadNullString(util.TrimSpaceNotNil(g.request.Description)),
 
 			PaymentInterval:       *g.request.PaymentInterval.Interval,
 			PaymentIntervalCount:  g.request.PaymentInterval.Count,

@@ -19,11 +19,11 @@ type PrescriptionSet struct {
 	SetNumber int `json:"setNumber"`
 
 	PrimaryParameterNumeral types.NullInt64
-	PrimaryParameterText    *string
+	PrimaryParameterText    types.NullString
 	PrimaryParameterUnitID  uuid.UUID
 
 	SecondaryParameterNumeral types.NullInt64
-	SecondaryParameterText    *string
+	SecondaryParameterText    types.NullString
 	SecondaryParameterUnitID  *uuid.UUID
 }
 

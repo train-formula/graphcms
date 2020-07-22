@@ -2,6 +2,7 @@ package tagdb
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/gofrs/uuid"
@@ -145,6 +146,8 @@ func GetTagsByObject(ctx context.Context, conn pgxload.PgxLoader, byObject []Tag
 		query += "(tg.tagged_id = ? AND tag_type = ?) OR "
 		params = append(params, bo.ObjectUUID, bo.ObjectType.String())
 	}
+
+	fmt.Println(query)
 
 	query = strings.TrimSuffix(query, " OR ")
 

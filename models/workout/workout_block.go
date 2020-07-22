@@ -18,7 +18,7 @@ type WorkoutBlock struct {
 	WorkoutCategoryID     uuid.UUID `json:"workoutCategoryID"`
 	CategoryOrder         int       `json:"categoryOrder"`
 	RoundNumeral          types.NullInt64
-	RoundText             *string
+	RoundText             types.NullString
 	RoundUnitID           *uuid.UUID
 	DurationSeconds       types.NullInt64 `json:"durationSeconds"`
 	RoundRestDuration     types.NullInt64 `json:"roundRestDuration"`

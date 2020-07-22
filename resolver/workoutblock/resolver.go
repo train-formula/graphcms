@@ -32,9 +32,9 @@ func (r *WorkoutBlockResolver) Round(ctx context.Context, obj *workout.WorkoutBl
 		return nil, nil
 	}
 
-	if obj.RoundUnitID == nil && !obj.RoundNumeral.Valid && obj.RoundText == nil {
+	if obj.RoundUnitID == nil && !obj.RoundNumeral.Valid && !obj.RoundText.Valid {
 		return nil, nil
-	} else if obj.RoundUnitID == nil && (obj.RoundNumeral.Valid || obj.RoundText != nil) {
+	} else if obj.RoundUnitID == nil && (obj.RoundNumeral.Valid || obj.RoundText.Valid) {
 		r.logger.Error("Workout block malformed, has round numeral and/or round text but no round unit ID", logging.UUID("workoutBlockID", obj.ID))
 		return nil, gqlerror.Errorf("Workout block malformed, has round numeral and/or round text but no round unit ID")
 	}

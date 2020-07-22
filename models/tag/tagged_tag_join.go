@@ -33,9 +33,16 @@ func (t *TaggedTagJoin) Tag() *Tag {
 // Extract the columns to use in a SELECT statement
 func (t TaggedTagJoin) SelectColumns(tagTablePrefix, taggedTablePrefix string) string {
 
-	columns := database.StructColumns(Tag{}, tagTablePrefix)
-	columns = append(columns, database.PGPrefixedColumn("tagged_id", taggedTablePrefix))
-	columns = append(columns, database.PGPrefixedColumn("tag_type", taggedTablePrefix))
+	columns := []string{
+		database.PGPrefixedColumn("id", tagTablePrefix) + " AS tag_id",
+		database.PGPrefixedColumn("created_at", tagTablePrefix) + " AS tag_created_at",
+		database.PGPrefixedColumn("updated_at", tagTablePrefix) + " AS tag_updated_at",
+		database.PGPrefixedColumn("tag", tagTablePrefix) + " AS tag_tag",
+		database.PGPrefixedColumn("trainer_organization_id", tagTablePrefix) + " AS tag_trainer_organization_id",
+		database.PGPrefixedColumn("trainer_organization_id", tagTablePrefix) + " AS tag_trainer_organization_id",
+		database.PGPrefixedColumn("tagged_id", taggedTablePrefix) + " AS tagged_tagged_id",
+		database.PGPrefixedColumn("tag_type", taggedTablePrefix) + " AS tagged_tag_type",
+	}
 
 	return strings.Join(columns, ",")
 }

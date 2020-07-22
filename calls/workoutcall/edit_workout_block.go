@@ -85,7 +85,7 @@ func (c EditWorkoutBlock) Call(ctx context.Context) (*workout.WorkoutBlock, erro
 			}
 
 			workoutBlock.RoundNumeral = types.ReadNullInt(roundNumeral)
-			workoutBlock.RoundText = roundText
+			workoutBlock.RoundText = types.ReadNullString(roundText)
 			workoutBlock.RoundUnitID = roundUnitID
 		}
 

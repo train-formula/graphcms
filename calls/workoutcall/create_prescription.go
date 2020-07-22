@@ -104,10 +104,10 @@ func (c CreatePrescription) Call(ctx context.Context) (*workout.Prescription, er
 				PrescriptionID:            finalPrescription.ID,
 				SetNumber:                 set.SetNumber,
 				PrimaryParameterNumeral:   types.ReadNullInt(set.PrimaryParameter.Numeral),
-				PrimaryParameterText:      set.PrimaryParameter.Text,
+				PrimaryParameterText:      types.ReadNullString(set.PrimaryParameter.Text),
 				PrimaryParameterUnitID:    set.PrimaryParameter.UnitID,
 				SecondaryParameterNumeral: types.ReadNullInt(secondaryNumeral),
-				SecondaryParameterText:    secondaryText,
+				SecondaryParameterText:    types.ReadNullString(secondaryText),
 				SecondaryParameterUnitID:  secondaryUnitID,
 			}
 

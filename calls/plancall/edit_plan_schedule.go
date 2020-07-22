@@ -63,11 +63,11 @@ func (g *EditPlanSchedule) Call(ctx context.Context) (*plan.PlanSchedule, error)
 		}
 
 		if g.request.Name != nil {
-			planSchedule.Name = util.TrimSpaceNotNil(g.request.Name.Value)
+			planSchedule.Name = types.ReadNullString(util.TrimSpaceNotNil(g.request.Name.Value))
 		}
 
 		if g.request.Description != nil {
-			planSchedule.Description = util.TrimSpaceNotNil(g.request.Description.Value)
+			planSchedule.Description = types.ReadNullString(util.TrimSpaceNotNil(g.request.Description.Value))
 		}
 
 		if g.request.PriceMarkedDownFrom != nil {

@@ -448,6 +448,8 @@ github.com/vektah/gqlparser/v2 v2.0.1 h1:xgl5abVnsd4hkN9rk65OJID9bfcLSMuTaTcZj77
 github.com/vektah/gqlparser/v2 v2.0.1/go.mod h1:SyUiHgLATUR8BiYURfTirrTcGpcE+4XkV2se04Px1Ms=
 github.com/willtrking/pgxload v0.1.1 h1:u0eR+lrRi+7iLINfDOFZzNm6fOfRjwcbfDI5Q8Pj2/0=
 github.com/willtrking/pgxload v0.1.1/go.mod h1:TBuMDzT0bVMlGxP+4H1OfJPgYmLBD9R0okgjjnkbVco=
+github.com/willtrking/pgxload v0.1.2 h1:BO1+vanUXv93NPxhCl25UTv3kYJM8pr6xZyU3mH4i2M=
+github.com/willtrking/pgxload v0.1.2/go.mod h1:TBuMDzT0bVMlGxP+4H1OfJPgYmLBD9R0okgjjnkbVco=
 github.com/xanzy/go-gitlab v0.15.0/go.mod h1:8zdQa/ri1dfn8eS3Ir1SyfvOKlw7WBJ8DVThkpGiXrs=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhemzwFU4jHLhdvlE6uDZjXFejJXr49I=
 github.com/xdg/stringprep v1.0.0/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0HrGL1Y=

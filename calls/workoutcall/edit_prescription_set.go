@@ -68,7 +68,7 @@ func (c EditPrescriptionSet) Call(ctx context.Context) (*workout.PrescriptionSet
 
 		if c.request.PrimaryParameter != nil {
 			prescriptionSet.PrimaryParameterNumeral = types.ReadNullInt(c.request.PrimaryParameter.Numeral)
-			prescriptionSet.PrimaryParameterText = c.request.PrimaryParameter.Text
+			prescriptionSet.PrimaryParameterText = types.ReadNullString(c.request.PrimaryParameter.Text)
 			prescriptionSet.PrimaryParameterUnitID = c.request.PrimaryParameter.UnitID
 		}
 
@@ -84,7 +84,7 @@ func (c EditPrescriptionSet) Call(ctx context.Context) (*workout.PrescriptionSet
 			}
 
 			prescriptionSet.SecondaryParameterNumeral = types.ReadNullInt(secondaryNumeral)
-			prescriptionSet.SecondaryParameterText = secondaryText
+			prescriptionSet.SecondaryParameterText = types.ReadNullString(secondaryText)
 			prescriptionSet.SecondaryParameterUnitID = secondaryUnitID
 		}
 
