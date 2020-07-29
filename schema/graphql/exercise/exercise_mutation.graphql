@@ -36,4 +36,7 @@ input EditExercise {
 
     videoURL: NullableStringEditor
 
+    # Will remove all existing tags and set new ones
+    tags: NullableIDListEditor
+
 }

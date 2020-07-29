@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/train-formula/graphcms/database/tagdb"
 	"github.com/train-formula/graphcms/database/types"
 	"github.com/train-formula/graphcms/database/workoutdb"
 	"github.com/train-formula/graphcms/generated"
@@ -20,14 +21,14 @@ func NewEditExercise(request generated.EditExercise, logger *zap.Logger, db pgxl
 	return &EditExercise{
 		request: request,
 		db:      db,
-		kogger:  logger.Named("EditExercise"),
+		logger:  logger.Named("EditExercise"),
 	}
 }
 
 type EditExercise struct {
 	request generated.EditExercise
 	db      pgxload.PgxLoader
-	kogger  *zap.Logger
+	logger  *zap.Logger
 }
 
 func (c EditExercise) Validate(ctx context.Context) []validation.ValidatorFunc {
@@ -56,7 +57,7 @@ func (c EditExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 				return gqlerror.Errorf("Exercise does not exist")
 			}
 
-			c.kogger.Error("Error retrieving exercise", zap.Error(err),
+			c.logger.Error("Error retrieving exercise", zap.Error(err),
 				logging.UUID("exerciseID", c.request.ID))
 			return err
 		}
@@ -75,9 +76,28 @@ func (c EditExercise) Call(ctx context.Context) (*workout.Exercise, error) {
 
 		finalExercise, err = workoutdb.UpdateExercise(ctx, t, exercise)
 		if err != nil {
-			c.kogger.Error("Error updating exercise", zap.Error(err),
+			c.logger.Error("Error updating exercise", zap.Error(err),
 				logging.UUID("exerciseID", c.request.ID))
 			return err
+		}
+
+		if c.request.Tags != nil {
+			err := tagdb.ClearExerciseTags(ctx, t, exercise.TrainerOrganizationID, exercise.ID)
+			if err != nil {
+				c.logger.Error("Error clearing exercise tags", zap.Error(err),
+					logging.UUID("exerciseID", finalExercise.ID),
+					logging.UUID("trainerOrganizationID", finalExercise.TrainerOrganizationID))
+				return err
+			}
+
+			for _, tagUUID := range c.request.Tags.Value {
+
+				_, err := tagdb.TagExercise(ctx, t, tagUUID, finalExercise.TrainerOrganizationID, finalExercise.ID)
+				if err != nil {
+					c.logger.Error("Failed to tag exercise", zap.Error(err))
+					return err
+				}
+			}
 		}
 
 		return nil

@@ -69,6 +69,11 @@ func TagObject(ctx context.Context, conn pgxload.PgxTxLoader, tagID uuid.UUID, t
 
 }
 
+func ClearObjectTags(ctx context.Context, conn pgxload.PgxTxLoader, trainerOrganizationID uuid.UUID, objectID uuid.UUID, tagType tag.TagType) error {
+	_, err := conn.Exec(ctx, pgxload.RebindPositional("DELETE FROM "+database.TableName(tag.Tagged{})+" WHERE trainer_organization_id = ? AND tagged_id = ? AND tag_type = ?"), trainerOrganizationID, objectID, tagType)
+	return err
+}
+
 func TagWorkoutProgram(ctx context.Context, conn pgxload.PgxTxLoader, tagID uuid.UUID, trainerOrganizationID uuid.UUID, workoutProgramID uuid.UUID) (*tag.Tagged, error) {
 	return TagObject(ctx, conn, tagID, trainerOrganizationID, workoutProgramID, tag.WorkoutProgramTagType)
 }
@@ -83,6 +88,10 @@ func TagWorkout(ctx context.Context, conn pgxload.PgxTxLoader, tagID uuid.UUID, 
 
 func TagExercise(ctx context.Context, conn pgxload.PgxTxLoader, tagID uuid.UUID, trainerOrganizationID uuid.UUID, exerciseID uuid.UUID) (*tag.Tagged, error) {
 	return TagObject(ctx, conn, tagID, trainerOrganizationID, exerciseID, tag.ExerciseTagType)
+}
+
+func ClearExerciseTags(ctx context.Context, conn pgxload.PgxTxLoader, trainerOrganizationID uuid.UUID, objectID uuid.UUID) error {
+	return ClearObjectTags(ctx, conn, trainerOrganizationID, objectID, tag.ExerciseTagType)
 }
 
 func TagPrescription(ctx context.Context, conn pgxload.PgxTxLoader, tagID uuid.UUID, trainerOrganizationID uuid.UUID, prescriptionID uuid.UUID) (*tag.Tagged, error) {

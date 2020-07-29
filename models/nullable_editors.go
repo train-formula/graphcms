@@ -34,3 +34,7 @@ type NullableIntEditor struct {
 func (n *NullableIntEditor) ContainsValue() bool {
 	return n != nil
 }
+
+type NullableIDListEditor struct {
+	Value []uuid.UUID `json:"value"`
+}

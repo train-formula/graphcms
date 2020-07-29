@@ -36,3 +36,10 @@ input NullableIDEditor {
 input NullableIntEditor {
     value: Int
 }
+
+# Allows editing of IDs lists that may not want to be changed
+# The generated code for lists will never result in a null value
+# This type can be used to detect if the client sent the list or not
+input NullableIDListEditor {
+    value: [ID!]
+}

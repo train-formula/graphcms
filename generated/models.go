@@ -124,6 +124,7 @@ type EditExercise struct {
 	Name        *string                      `json:"name"`
 	Description *string                      `json:"description"`
 	VideoURL    *models.NullableStringEditor `json:"videoURL"`
+	Tags        *models.NullableIDListEditor `json:"tags"`
 }
 
 type EditPlan struct {

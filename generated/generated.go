@@ -2503,6 +2503,9 @@ input EditExercise {
 
     videoURL: NullableStringEditor
 
+    # Will remove all existing tags and set new ones
+    tags: NullableIDListEditor
+
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "schema/graphql/exercise/exercise_search.graphql", Input: `extend type Query {
@@ -2943,6 +2946,13 @@ input NullableIDEditor {
 # However, if the outer value is null (meaning this whole data structure is omitted), nothing will change
 input NullableIntEditor {
     value: Int
+}
+
+# Allows editing of IDs lists that may not want to be changed
+# The generated code for lists will never result in a null value
+# This type can be used to detect if the client sent the list or not
+input NullableIDListEditor {
+    value: [ID!]
 }`, BuiltIn: false},
 	&ast.Source{Name: "schema/graphql/tag/facets.graphql", Input: `
 type TagFacet {
@@ -13684,6 +13694,12 @@ func (ec *executionContext) unmarshalInputEditExercise(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
+		case "tags":
+			var err error
+			it.Tags, err = ec.unmarshalONullableIDListEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIDListEditor(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -14005,6 +14021,24 @@ func (ec *executionContext) unmarshalInputNullableIDEditor(ctx context.Context, 
 		case "value":
 			var err error
 			it.Value, err = ec.unmarshalOID2ᚖgithubᚗcomᚋgofrsᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNullableIDListEditor(ctx context.Context, obj interface{}) (models.NullableIDListEditor, error) {
+	var it models.NullableIDListEditor
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "value":
+			var err error
+			it.Value, err = ec.unmarshalOID2ᚕgithubᚗcomᚋgofrsᚋuuidᚐUUIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -18116,6 +18150,18 @@ func (ec *executionContext) unmarshalONullableAttachUnitData2ᚖgithubᚗcomᚋt
 		return nil, nil
 	}
 	res, err := ec.unmarshalONullableAttachUnitData2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋgeneratedᚐNullableAttachUnitData(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) unmarshalONullableIDListEditor2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIDListEditor(ctx context.Context, v interface{}) (models.NullableIDListEditor, error) {
+	return ec.unmarshalInputNullableIDListEditor(ctx, v)
+}
+
+func (ec *executionContext) unmarshalONullableIDListEditor2ᚖgithubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIDListEditor(ctx context.Context, v interface{}) (*models.NullableIDListEditor, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalONullableIDListEditor2githubᚗcomᚋtrainᚑformulaᚋgraphcmsᚋmodelsᚐNullableIDListEditor(ctx, v)
 	return &res, err
 }
 
